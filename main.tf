@@ -160,6 +160,7 @@ resource "azurerm_function_app" "func" {
           --name ${self.name} \
           --src functionapp.zip
     EOT
+    
   }
 }
 
