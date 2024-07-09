@@ -8,7 +8,7 @@ provider "azurerm" {
 terraform {
   backend "azurerm" {
     resource_group_name   = "myResourceGroup"
-    storage_account_name  = "mystorageaccount"
+    storage_account_name  = "chrldemostorageaccount"
     container_name        = "tfstate"
     key                   = "terraform.tfstate"
   }
