@@ -29,7 +29,7 @@ resource "azurerm_resource_group" "main" {
 }
 
 resource "azurerm_api_management" "demo-charsett" {
-  name                = "apim-${var.collectionname}"
+  name                = "apim-test-${var.collectionname}"
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
   publisher_name      = "PublisherName"
