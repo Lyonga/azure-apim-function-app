@@ -13,10 +13,8 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up Terraform
+    - name: Install Terraform
       uses: hashicorp/setup-terraform@v1
-      with:
-        terraform_version: 1.0.11
 
     - name: Terraform Init
       run: terraform init
