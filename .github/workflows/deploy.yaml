@@ -33,3 +33,10 @@ jobs:
       ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+# # Create the resource group
+# az group create --name myResourceGroup --location "West Europe"
+
+# # Create the storage account
+# az storage account create --name mystorageaccount --resource-group myResourceGroup --location "West Europe" --sku Standard_LRS
+
