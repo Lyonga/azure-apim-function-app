@@ -150,6 +150,17 @@ resource "azurerm_function_app" "func" {
   site_config {
     linux_fx_version = "PYTHON|3.7"
   }
+
+  provisioner "local-exec" {
+    command = <<EOT
+      cd func
+      zip -r funcapp.zip .
+      az funcapp deployment source config-zip \
+          --resource-group ${azurerm_resource_group.main.name} \
+          --name ${self.name} \
+          --src funcapp.zip
+    EOT
+  }
 }
 
 # We use the host key in the APIM to authenticate requests
