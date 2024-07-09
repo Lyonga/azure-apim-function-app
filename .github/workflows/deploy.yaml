@@ -20,6 +20,13 @@ jobs:
       run: |
         az login --service-principal -u ${{ secrets.ARM_CLIENT_ID }} -p ${{ secrets.ARM_CLIENT_SECRET }} --tenant ${{ secrets.ARM_TENANT_ID }}
 
+    - name: Purge Soft-Deleted API Management Service
+      run: |
+        API_MANAGEMENT_ID=$(az resource list --resource-type "Microsoft.ApiManagement/service" --query "[?contains(name, 'apim-someone-testing-apim')].id" -o tsv)
+        if [ -n "$API_MANAGEMENT_ID" ]; then
+          az resource delete --ids $API_MANAGEMENT_ID --force-deletion
+        fi
+
     - name: Terraform Init
       run: terraform init
 
