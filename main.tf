@@ -1,16 +1,9 @@
 
-
-
-terraform {
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "2.47.0"
-    }
-  }
-
 provider "azurerm" {
-  features {}
+    // Credentials should be set, az login is the easiest
+    // other options are described here: https://www.terraform.io/docs/providers/azurerm/index.html
+    version = "=2.47.0"
+    features {}
 }
 
 terraform {
