@@ -154,11 +154,11 @@ resource "azurerm_function_app" "func" {
   provisioner "local-exec" {
     command = <<EOT
       cd func
-      zip -r funcapp.zip .
-      az funcapp deployment source config-zip \
+      zip -r functionapp.zip .
+      az functionapp deployment source config-zip \
           --resource-group ${azurerm_resource_group.main.name} \
           --name ${self.name} \
-          --src funcapp.zip
+          --src functionapp.zip
     EOT
   }
 }
