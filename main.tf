@@ -19,7 +19,7 @@ terraform {
 variable "location" { default = "West Europe" }
 # A name to make sure resources don't clash, we use them in naming  our
 # components, as some things (like functions) need a globally unique name
-variable "collectionname" { default = "someone-testing-apim" }
+variable "collectionname" { default = "someone-demo-apim" }
 variable "adminemail" { default = "c.lyonga03@yahoo.com.com" }
 variable "clientemail" { default = "chrlslyonga@gmail.com.com" }
 
