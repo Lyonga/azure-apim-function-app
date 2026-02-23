@@ -133,8 +133,6 @@ resource "azurerm_service_plan" "main" {
   location            = azurerm_resource_group.main.location
   os_type             = "Linux"
   sku_name            = "Y1"
-
-  reserved            = true
 }
 
 resource "azurerm_log_analytics_workspace" "law" {
@@ -239,7 +237,7 @@ resource "azurerm_key_vault_secret" "kv_example" {
 resource "azurerm_key_vault_access_policy" "apim" {
   key_vault_id = azurerm_key_vault.kv_example.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = azurerm_api_management.demo-charsett.identity.principal_id
+  object_id    = azurerm_api_management.demo-charsett.identity[0].principal_id
 
   secret_permissions = [
     "Get"
