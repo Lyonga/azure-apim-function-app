@@ -212,13 +212,22 @@ resource "azurerm_key_vault" "kv_example" {
   sku_name                    = "standard"
   purge_protection_enabled    = true
   //enable_rbac_authorization  = true
-  rbac_authorization_enabled = true
+  # rbac_authorization_enabled = true
 }
 
-resource "azurerm_role_assignment" "pipeline_kv_secrets_officer" {
-  scope                = azurerm_key_vault.kv_example.id
-  role_definition_name = "Key Vault Secrets Officer"
-  principal_id         = data.azurerm_client_config.current.object_id
+# resource "azurerm_role_assignment" "pipeline_kv_secrets_officer" {
+#   scope                = azurerm_key_vault.kv_example.id
+#   role_definition_name = "Key Vault Secrets Officer"
+#   principal_id         = data.azurerm_client_config.current.object_id
+# }
+resource "azurerm_key_vault_access_policy" "pipeline" {
+  key_vault_id = azurerm_key_vault.kv_example.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = data.azurerm_client_config.current.object_id
+
+  secret_permissions = [
+    "Get", "List", "Set", "Delete", "Purge", "Recover"
+  ]
 }
 
 resource "azurerm_key_vault_secret" "kv_example" {
