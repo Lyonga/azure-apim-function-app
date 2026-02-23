@@ -106,6 +106,7 @@ resource "azurerm_api_management_named_value" "demo-charsett" {
     secret_id = azurerm_key_vault_secret.kv_example.id # Replace with the actual Key Vault secret ID
   }
   secret              = true
+  depends_on = [ azurerm_key_vault.kv_example ]
 }
 
 # We use a policy on our API to set the backend, which has the configuration for the authentication code
