@@ -102,9 +102,10 @@ resource "azurerm_api_management_named_value" "demo-charsett" {
   resource_group_name = azurerm_resource_group.main.name
   api_management_name = azurerm_api_management.demo-charsett.name
   display_name        = "func-functionkey"
-  value_from_key_vault {
-    secret_id = azurerm_key_vault_secret.kv_example.id # Replace with the actual Key Vault secret ID
-  }
+  # value_from_key_vault {
+  #   secret_id = azurerm_key_vault_secret.kv_example.id # Replace with the actual Key Vault secret ID
+  # }
+  value  = data.azurerm_function_app_host_keys.app_function_key.default_function_key
   secret              = true
   depends_on = [ azurerm_key_vault.kv_example ]
 }
