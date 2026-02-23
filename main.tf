@@ -24,6 +24,22 @@ variable "location" { default = "West Europe" }
 variable "collectionname" { default = "someone-demo-apim" }
 variable "adminemail" { default = "c.lyonga03@yahoo.com.com" }
 variable "clientemail" { default = "chrlslyonga@gmail.com.com" }
+variable "environment" {
+  default = "dev"
+}
+variable "project_name" { default = "demo" }
+
+resource "random_string" "kv_suffix" {
+  length  = 6
+  upper   = false
+  special = false
+}
+
+locals {
+  key_vault_name = lower("kv-${var.environment}-${var.project_name}-${random_string.kv_suffix.result}")
+}
+
+data "azurerm_client_config" "current" {}
 
 resource "azurerm_resource_group" "main" {
   name     = "rg-${var.collectionname}"
@@ -181,7 +197,8 @@ resource "azurerm_key_vault" "example" {
   name                        = "example-keyvault"
   location                    = azurerm_resource_group.main.location
   resource_group_name         = azurerm_resource_group.main.name
-  tenant_id                   = "79dd759b-3fbe-4ab1-9439-ff87b14ba8f2" # Updated tenant ID
+  # tenant_id                   = "79dd759b-3fbe-4ab1-9439-ff87b14ba8f2" # Updated tenant ID
+  tenant_id           = data.azurerm_client_config.current.tenant_id
   sku_name                    = "standard"
   purge_protection_enabled    = true
 }
