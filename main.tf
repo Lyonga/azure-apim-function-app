@@ -161,16 +161,14 @@ resource "azurerm_storage_account" "main" {
   account_replication_type = "LRS"
 }
 
-resource "azurerm_function_app" "func" {
+resource "azurerm_linux_function_app" "func" {
   name                       = "fa-${var.collectionname}-func"
   resource_group_name        = azurerm_resource_group.main.name
   location                   = azurerm_resource_group.main.location
-  app_service_plan_id        = azurerm_service_plan.main.id
+  service_plan_id            = azurerm_service_plan.main.id
   storage_account_name       = azurerm_storage_account.main.name
   storage_account_access_key = azurerm_storage_account.main.primary_access_key
 
-  os_type = "linux"
-  version = "~3"
   app_settings = {
     FUNCTIONS_WORKER_RUNTIME         = "python"
     APPINSIGHTS_INSTRUMENTATIONKEY   = azurerm_application_insights.main.instrumentation_key
@@ -189,7 +187,6 @@ resource "azurerm_function_app" "func" {
           --name ${self.name} \
           --src functionapp.zip
     EOT
-    
   }
 }
 
