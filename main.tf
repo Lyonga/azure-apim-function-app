@@ -239,12 +239,24 @@ resource "azurerm_key_vault_secret" "kv_example" {
   ]
 }
 
+# resource "azurerm_key_vault_access_policy" "apim" {
+#   key_vault_id = azurerm_key_vault.kv_example.id
+#   tenant_id    = data.azurerm_client_config.current.tenant_id
+#   object_id    = azurerm_api_management.demo-charsett.identity[0].principal_id
+
+#   secret_permissions = [
+#     "Get"
+#   ]
+# }
+
 resource "azurerm_key_vault_access_policy" "apim" {
   key_vault_id = azurerm_key_vault.kv_example.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = azurerm_api_management.demo-charsett.identity[0].principal_id
 
-  secret_permissions = [
-    "Get"
-  ]
+  # ✅ correct for azurerm_api_management identity
+  object_id    = azurerm_api_management.demo-charsett.identity[0].principal_id
+  # If the above still fails in your provider build, use:
+  # object_id = azurerm_api_management.demo-charsett.identity.principal_id
+
+  secret_permissions = ["Get", "List"]
 }
