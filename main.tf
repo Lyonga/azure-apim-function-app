@@ -1,18 +1,20 @@
-
-provider "azurerm" {
-    // Credentials should be set, az login is the easiest
-    // other options are described here: https://www.terraform.io/docs/providers/azurerm/index.html
-    version = "=2.47.0"
-    features {}
-}
-
 terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "2.47.0"
+    }
+  }
   backend "azurerm" {
     resource_group_name   = "myResourceGroup"
     storage_account_name  = "chrldemostorageaccount"
     container_name        = "tfstate"
     key                   = "terraform.tfstate"
   }
+}
+
+provider "azurerm" {
+  features {}
 }
 
 # We use variables for repeat settings
