@@ -174,12 +174,14 @@ data "azurerm_function_app_host_keys" "app_function_key" {
   resource_group_name = azurerm_resource_group.main.name
 }
 
-# Adding the missing Key Vault Secret resource
+# Adding Azure tenant ID to the data source for use in the Key Vault resource
+data "azurerm_client_config" "current" {}
+
 resource "azurerm_key_vault" "example" {
   name                        = "example-keyvault"
   location                    = azurerm_resource_group.main.location
   resource_group_name         = azurerm_resource_group.main.name
-  tenant_id                   = data.azurerm_client_config.current.tenant_id
+  tenant_id                   = "79dd759b-3fbe-4ab1-9439-ff87b14ba8f2" # Updated tenant ID
   sku_name                    = "standard"
   purge_protection_enabled    = true
 }
