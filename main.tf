@@ -127,17 +127,14 @@ resource "azurerm_api_management_api_policy" "demo-charsett" {
 }
 
 # Below just a generic app service plan and python function setup
-resource "azurerm_app_service_plan" "main" {
+resource "azurerm_service_plan" "main" {
   name                = "asp-${var.collectionname}"
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
-  kind                = "functionapp"
-  reserved            = true
+  os_type             = "Linux"
+  sku_name            = "Y1"
 
-  sku {
-    tier = "Dynamic"
-    size = "Y1"
-  }
+  reserved            = true
 }
 
 resource "azurerm_log_analytics_workspace" "law" {
@@ -170,7 +167,7 @@ resource "azurerm_function_app" "func" {
   name                       = "fa-${var.collectionname}-func"
   resource_group_name        = azurerm_resource_group.main.name
   location                   = azurerm_resource_group.main.location
-  app_service_plan_id        = azurerm_app_service_plan.main.id
+  app_service_plan_id        = azurerm_service_plan.main.id
   storage_account_name       = azurerm_storage_account.main.name
   storage_account_access_key = azurerm_storage_account.main.primary_access_key
 
@@ -242,7 +239,7 @@ resource "azurerm_key_vault_secret" "kv_example" {
 resource "azurerm_key_vault_access_policy" "apim" {
   key_vault_id = azurerm_key_vault.kv_example.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = azurerm_api_management.demo-charsett.identity[0].principal_id
+  object_id    = azurerm_api_management.demo-charsett.identity.principal_id
 
   secret_permissions = [
     "Get"
