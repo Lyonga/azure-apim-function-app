@@ -82,7 +82,7 @@ resource "azurerm_api_management_backend" "demo-charsett" {
   resource_group_name = azurerm_resource_group.main.name
   api_management_name = azurerm_api_management.demo-charsett.name
   protocol            = "http"
-  url                 = "https://${azurerm_function_app.func.default_hostname}/api/"
+  url                 = "https://${azurerm_linux_function_app.func.default_hostname}/api/"
 
   # This depends on the existence of the named value, however terraform doesn't know this
   # so we have to define it explicitly
@@ -175,7 +175,6 @@ resource "azurerm_linux_function_app" "func" {
   }
 
   site_config {
-    linux_fx_version = "PYTHON|3.7"
   }
 
   provisioner "local-exec" {
@@ -192,7 +191,7 @@ resource "azurerm_linux_function_app" "func" {
 
 # We use the host key in the APIM to authenticate requests
 data "azurerm_function_app_host_keys" "app_function_key" {
-  name                = azurerm_function_app.func.name
+  name                = azurerm_linux_function_app.func.name
   resource_group_name = azurerm_resource_group.main.name
 }
 
