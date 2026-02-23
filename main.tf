@@ -37,6 +37,7 @@ resource "random_string" "kv_suffix" {
 
 locals {
   key_vault_name = lower("kv-${var.environment}-${var.project_name}-${random_string.kv_suffix.result}")
+  key_vault_secret_name = lower("kv-${var.environment}-${var.project_name}-${random_string.kv_suffix.result}")
 }
 
 data "azurerm_client_config" "current" {}
@@ -99,7 +100,7 @@ resource "azurerm_api_management_named_value" "demo-charsett" {
   api_management_name = azurerm_api_management.demo-charsett.name
   display_name        = "func-functionkey"
   value_from_key_vault {
-    secret_id = azurerm_key_vault_secret.example.id # Replace with the actual Key Vault secret ID
+    secret_id = azurerm_key_vault_secret.kv_example.id # Replace with the actual Key Vault secret ID
   }
   secret              = true
 }
@@ -193,18 +194,17 @@ data "azurerm_function_app_host_keys" "app_function_key" {
 # Adding Azure tenant ID to the data source for use in the Key Vault resource
 # data "azurerm_client_config" "current" {}
 
-resource "azurerm_key_vault" "example" {
-  name                        = "example-keyvault"
+resource "azurerm_key_vault" "kv_example" {
+  name                        = local.key_vault_name
   location                    = azurerm_resource_group.main.location
   resource_group_name         = azurerm_resource_group.main.name
-  # tenant_id                   = "79dd759b-3fbe-4ab1-9439-ff87b14ba8f2" # Updated tenant ID
   tenant_id           = data.azurerm_client_config.current.tenant_id
   sku_name                    = "standard"
   purge_protection_enabled    = true
 }
 
-resource "azurerm_key_vault_secret" "example" {
-  name         = "example-secret"
-  value        = "example-value" # Replace with the actual secret value
-  key_vault_id = azurerm_key_vault.example.id
+resource "azurerm_key_vault_secret" "kv_example" {
+  name         = local.key_vault_secret_name
+  value        = "kv_example-value" # Replace with the actual secret value
+  key_vault_id = azurerm_key_vault.kv_example.id
 }
