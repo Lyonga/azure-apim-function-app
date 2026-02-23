@@ -137,11 +137,21 @@ resource "azurerm_app_service_plan" "main" {
   }
 }
 
+resource "azurerm_log_analytics_workspace" "law" {
+  name                = "law-${var.environment}-${var.project_name}"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+  # tags                = local.common_tags
+}
+
 resource "azurerm_application_insights" "main" {
   name                = "aai-${var.collectionname}"
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
   application_type    = "web"
+  workspace_id        = azurerm_log_analytics_workspace.law.id
 }
 
 resource "azurerm_storage_account" "main" {
@@ -201,6 +211,14 @@ resource "azurerm_key_vault" "kv_example" {
   tenant_id           = data.azurerm_client_config.current.tenant_id
   sku_name                    = "standard"
   purge_protection_enabled    = true
+  //enable_rbac_authorization  = true
+  rbac_authorization_enabled = true
+}
+
+resource "azurerm_role_assignment" "pipeline_kv_secrets_officer" {
+  scope                = azurerm_key_vault.kv_example.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = data.azurerm_client_config.current.object_id
 }
 
 resource "azurerm_key_vault_secret" "kv_example" {
