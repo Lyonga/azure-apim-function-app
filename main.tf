@@ -191,7 +191,7 @@ data "azurerm_function_app_host_keys" "app_function_key" {
 }
 
 # Adding Azure tenant ID to the data source for use in the Key Vault resource
-data "azurerm_client_config" "current" {}
+# data "azurerm_client_config" "current" {}
 
 resource "azurerm_key_vault" "example" {
   name                        = "example-keyvault"
