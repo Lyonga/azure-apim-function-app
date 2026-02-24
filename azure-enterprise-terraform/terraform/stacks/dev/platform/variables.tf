@@ -8,7 +8,10 @@ variable "location" {
   default     = "eastus"
 }
 
-variable "use_existing_subscription" { type = bool default = true }
+variable "use_existing_subscription" {
+  type    = bool
+  default = true
+}
 variable "subscription_id" { type = string default = null }
 
 variable "create_resource_group" { type = bool default = true }
