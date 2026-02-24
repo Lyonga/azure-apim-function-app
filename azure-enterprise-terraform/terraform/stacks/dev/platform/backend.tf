@@ -3,7 +3,7 @@
 terraform {
   backend "azurerm" {
     resource_group_name  = "demo-test"
-    storage_account_name = "demo-test"
+    storage_account_name = "demotest822e"
     container_name       = "deploy-container"
     key                  = "dev.platform.tfstate"
   }
