@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'azure-enterprise-terraform/**'
 
 jobs:
   terraform:

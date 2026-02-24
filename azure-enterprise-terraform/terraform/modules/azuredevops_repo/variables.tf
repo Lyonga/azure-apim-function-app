@@ -3,9 +3,20 @@ variable "enable" {
   default = false
 }
 
-variable "project_name" { type = string default = null }
-variable "repo_name" { type = string default = null }
-variable "default_branch" { type = string default = "refs/heads/main" }
+variable "project_name" {
+  type    = string
+  default = null
+}
+
+variable "repository_name" {
+  type    = string
+  default = null
+}
+
+variable "branch_name" {
+  type    = string
+  default = "main"
+}
 
 # Optional basic policy (build validation requires pipeline id; left as placeholder)
 variable "enable_min_reviewers_policy" { type = bool default = false }
