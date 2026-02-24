@@ -23,4 +23,7 @@ variable "enable_min_reviewers_policy" {
   type    = bool
   default = false
 }
-variable "min_reviewer_count" { type = number default = 1 }
+variable "min_reviewer_count" {
+  type    = number
+  default = 1
+}
