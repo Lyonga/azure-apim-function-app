@@ -172,24 +172,49 @@ resource "azurerm_linux_function_app" "func" {
   storage_account_access_key = azurerm_storage_account.main.primary_access_key
 
   app_settings = {
-    FUNCTIONS_WORKER_RUNTIME         = "python"
-    APPINSIGHTS_INSTRUMENTATIONKEY   = azurerm_application_insights.main.instrumentation_key
+    FUNCTIONS_WORKER_RUNTIME       = "python"
+    APPINSIGHTS_INSTRUMENTATIONKEY = azurerm_application_insights.main.instrumentation_key
+    WEBSITE_RUN_FROM_PACKAGE       = "1"
   }
 
   site_config {
+    application_stack {
+      python_version = "3.11"
+    }
   }
+  depends_on = [
+    time_sleep.wait_for_func
+  ]
+}
 
-  provisioner "local-exec" {
+resource "time_sleep" "wait_for_func" {
+  depends_on      = [azurerm_linux_function_app.func]
+  create_duration = "30s"
+}
+
+provisioner "local-exec" {
     command = <<EOT
       cd func
       zip -r functionapp.zip .
       az functionapp deployment source config-zip \
-          --resource-group ${azurerm_resource_group.main.name} \
-          --name ${self.name} \
-          --src functionapp.zip
+        --resource-group ${azurerm_resource_group.main.name} \
+        --name ${self.name} \
+        --src functionapp.zip
     EOT
-  }
+  //}
 }
+
+#   provisioner "local-exec" {
+#     command = <<EOT
+#       cd func
+#       zip -r functionapp.zip .
+#       az functionapp deployment source config-zip \
+#           --resource-group ${azurerm_resource_group.main.name} \
+#           --name ${self.name} \
+#           --src functionapp.zip
+#     EOT
+#   }
+# }
 
 # We use the host key in the APIM to authenticate requests
 data "azurerm_function_app_host_keys" "app_function_key" {
