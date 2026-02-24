@@ -12,17 +12,41 @@ variable "use_existing_subscription" {
   type    = bool
   default = true
 }
-variable "subscription_id" { type = string default = null }
+variable "subscription_id" {
+  type    = string
+  default = "ce792f64-9e63-483b-8136-a2538b764f3d"
+}
 
-variable "create_resource_group" { type = bool default = true }
-variable "resource_group_name" { type = string default = "rg-dev-platform" }
+variable "create_resource_group" {
+  type    = bool
+  default = true
+}
 
-variable "project_name" { type = string default = "azure-enterprise-lab" }
-variable "owner" { type = string default = "platform-team" }
-variable "cost_center" { type = string default = "cc-0001" }
+variable "resource_group_name" {
+  type    = string
+  default = "rg-dev-platform"
+}
+
+variable "project_name" {
+  type    = string
+  default = "azure-enterprise-lab"
+}
+
+variable "owner" {
+  type    = string
+  default = "platform-team"
+}
+
+variable "cost_center" {
+  type    = string
+  default = "cc-0001"
+}
 
 # Network
-variable "vnet_address_space" { type = list(string) default = ["10.10.0.0/16"] }
+variable "vnet_address_space" {
+  type    = list(string)
+  default = ["10.10.0.0/16"]
+}
 
 variable "subnets" {
   type = map(any)
@@ -53,27 +77,55 @@ variable "aks_node_pool" {
 }
 
 # Storage (general-purpose)
-variable "storage_account_name" { type = string default = "stdevlab001" } # must be globally unique and <=24 chars
+variable "storage_account_name" {
+  type    = string
+  default = "stdevlab001"
+}
 
 # ACR
-variable "acr_name" { type = string default = "acrdevlab001" } # must be globally unique
+variable "acr_name" {
+  type    = string
+  default = "acrdevlab001"
+}
 
 # Key Vault
-variable "keyvault_name" { type = string default = "kv-dev-lab-001" } # must be globally unique and follow KV naming rules
+variable "keyvault_name" {
+  type    = string
+  default = "kv-dev-lab-001"
+}
 
 # Optional subscription creation (OFF by default)
-variable "enable_subscription_creation" { type = bool default = false }
-variable "new_subscription_display_name" { type = string default = null }
-variable "billing_scope_id" { type = string default = null }
+variable "enable_subscription_creation" {
+  type    = bool
+  default = false
+}
+
+variable "new_subscription_display_name" {
+  type    = string
+  default = null
+}
+
+variable "billing_scope_id" {
+  type    = string
+  default = null
+}
 
 # Optional Azure DevOps (OFF by default)
-variable "enable_azuredevops_repo" { type = bool default = false }
-variable "azuredevops_project_name" { type = string default = null }
-variable "azuredevops_repo_name" { type = string default = null }
-# variable "azuredevops_org_service_url" { type = string default = null }
-# variable "azuredevops_pat" { type = string default = null sensitive = true }
+variable "enable_azuredevops_repo" {
+  type    = bool
+  default = false
+}
 
-# Adding missing variable definitions
+variable "azuredevops_project_name" {
+  type    = string
+  default = null
+}
+
+variable "azuredevops_repo_name" {
+  type    = string
+  default = null
+}
+
 variable "tenant_id" {
   description = "The tenant ID for the Azure subscription."
   type        = string
