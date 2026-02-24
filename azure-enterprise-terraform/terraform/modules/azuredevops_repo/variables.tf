@@ -19,5 +19,8 @@ variable "branch_name" {
 }
 
 # Optional basic policy (build validation requires pipeline id; left as placeholder)
-variable "enable_min_reviewers_policy" { type = bool default = false }
+variable "enable_min_reviewers_policy" {
+  type    = bool
+  default = false
+}
 variable "min_reviewer_count" { type = number default = 1 }
