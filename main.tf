@@ -38,6 +38,12 @@ resource "random_string" "kv_suffix" {
 locals {
   key_vault_name = lower("kv-${var.environment}-${var.project_name}-${random_string.kv_suffix.result}")
   key_vault_secret_name = lower("kv-${var.environment}-${var.project_name}-${random_string.kv_suffix.result}")
+
+  enterprise_tags = {
+    environment = var.environment
+    project     = var.project_name
+    owner       = "Enterprise Team"
+  }
 }
 
 data "azurerm_client_config" "current" {}
@@ -45,6 +51,7 @@ data "azurerm_client_config" "current" {}
 resource "azurerm_resource_group" "main" {
   name     = "rg-${var.collectionname}"
   location = var.location
+  tags     = local.enterprise_tags
 }
 
 resource "azurerm_api_management" "demo-charsett" {
@@ -58,6 +65,7 @@ resource "azurerm_api_management" "demo-charsett" {
   identity {
     type = "SystemAssigned"
   }
+  tags = local.enterprise_tags
 }
 
 # Our general API definition, here we could include a nice swagger file or something
@@ -152,6 +160,7 @@ resource "azurerm_application_insights" "main" {
   location            = azurerm_resource_group.main.location
   application_type    = "web"
   workspace_id        = azurerm_log_analytics_workspace.law.id
+  tags = local.enterprise_tags
 }
 
 resource "azurerm_storage_account" "main" {
@@ -161,6 +170,7 @@ resource "azurerm_storage_account" "main" {
   location                 = azurerm_resource_group.main.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
+  tags = local.enterprise_tags
 }
 
 resource "azurerm_linux_function_app" "func" {
