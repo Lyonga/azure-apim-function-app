@@ -187,10 +187,10 @@ resource "azurerm_linux_function_app" "func" {
   ]
 }
 
-resource "time_sleep" "wait_for_func" {
-  depends_on      = [azurerm_linux_function_app.func]
-  create_duration = "30s"
-}
+# resource "time_sleep" "wait_for_func" {
+#   depends_on      = [azurerm_linux_function_app.func]
+#   create_duration = "30s"
+# }
 
 resource "null_resource" "deploy_function_app" {
   provisioner "local-exec" {
