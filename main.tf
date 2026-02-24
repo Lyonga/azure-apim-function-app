@@ -192,29 +192,20 @@ resource "time_sleep" "wait_for_func" {
   create_duration = "30s"
 }
 
-provisioner "local-exec" {
+resource "null_resource" "deploy_function_app" {
+  provisioner "local-exec" {
     command = <<EOT
       cd func
       zip -r functionapp.zip .
       az functionapp deployment source config-zip \
         --resource-group ${azurerm_resource_group.main.name} \
-        --name ${self.name} \
+        --name ${azurerm_linux_function_app.func.name} \
         --src functionapp.zip
     EOT
-  //}
-}
+  }
 
-#   provisioner "local-exec" {
-#     command = <<EOT
-#       cd func
-#       zip -r functionapp.zip .
-#       az functionapp deployment source config-zip \
-#           --resource-group ${azurerm_resource_group.main.name} \
-#           --name ${self.name} \
-#           --src functionapp.zip
-#     EOT
-#   }
-# }
+  depends_on = [azurerm_linux_function_app.func]
+}
 
 # We use the host key in the APIM to authenticate requests
 data "azurerm_function_app_host_keys" "app_function_key" {
