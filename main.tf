@@ -182,9 +182,7 @@ resource "azurerm_linux_function_app" "func" {
       python_version = "3.11"
     }
   }
-  depends_on = [
-    time_sleep.wait_for_func
-  ]
+  
 }
 
 # resource "time_sleep" "wait_for_func" {
