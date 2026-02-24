@@ -33,3 +33,8 @@ variable "aks_node_pool" {
 variable "storage_account_name" { type = string default = "stprodlab001" }
 variable "acr_name" { type = string default = "acrprodlab001" }
 variable "keyvault_name" { type = string default = "kv-prod-lab-001" }
+
+variable "use_existing_subscription" {
+  type    = bool
+  default = true
+}
