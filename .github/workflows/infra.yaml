@@ -21,13 +21,13 @@ jobs:
         az login --service-principal -u ${{ secrets.ARM_CLIENT_ID }} -p ${{ secrets.ARM_CLIENT_SECRET }} --tenant ${{ secrets.ARM_TENANT_ID }}
 
     - name: Terraform Init
-      working-directory: ./azure-enterprise-terraform/terraform
+      working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
       run: terraform init
 
     - name: Terraform Plan
-      working-directory: ./azure-enterprise-terraform/terraform
+      working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
       run: terraform plan
 
     - name: Terraform Apply
-      working-directory: ./azure-enterprise-terraform/terraform
+      working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
       run: terraform apply -auto-approve
