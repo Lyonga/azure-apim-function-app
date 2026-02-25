@@ -1,1 +1,1 @@
-output "id" { value = azurerm_policy_assignment.this.id }
+output "id" { value = azurerm_resource_policy_assignment.this.id }
