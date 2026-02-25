@@ -129,7 +129,7 @@ variable "azuredevops_repo_name" {
 variable "tenant_id" {
   description = "The tenant ID for the Azure subscription."
   type        = string
-  default     = ""
+  default     = "ce792f64-9e63-483b-8136-a2538b764f3d"
 }
 
 variable "acr_admin_enabled" {
@@ -183,12 +183,12 @@ variable "min_reviewer_count" {
 variable "acr_sku" {
   description = "The SKU for the Azure Container Registry."
   type        = string
-  default     = "Standard"
+  default     = "standard"
 }
 
 variable "sku" {
   type    = string
-  default = "Standard"
+  default = "standard"
 }
 
 variable "retention_in_days" {
@@ -208,7 +208,7 @@ variable "storage_account_min_tls_version" {
 
 variable "storage_account_tier" {
   type    = string
-  default = "Standard"
+  default = "standard"
 }
 
 variable "storage_account_containers" {

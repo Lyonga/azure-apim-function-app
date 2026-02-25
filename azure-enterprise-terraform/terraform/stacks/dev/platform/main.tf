@@ -101,7 +101,7 @@ module "policy_audit_vms" {
   display_name         = "Audit VMs without managed disks"
   parameters           = var.policy_parameters
   policy_definition_id = var.policy_definition_id
-  scope                = var.policy_scope
+  scope                = module.rg.id
   tags                 = local.common_tags
 }
 
