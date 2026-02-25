@@ -95,8 +95,6 @@ module "acr" {
   tags                = local.common_tags
 }
 
-# Example: assign a common built-in policy (audit VMs without managed disks, etc).
-# Swap in your org-approved policy IDs.
 module "policy_audit_vms" {
   source               = "../../../modules/policy_assignment"
   name                 = "audit-vm-manageddisks"
@@ -107,7 +105,6 @@ module "policy_audit_vms" {
   tags                 = local.common_tags
 }
 
-# Optional Azure DevOps repo + branch policy (OFF by default)
 module "ado_repo" {
   source                     = "../../../modules/azuredevops_repo"
   enable                     = var.enable_azuredevops_repo
