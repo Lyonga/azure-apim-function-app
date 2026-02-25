@@ -63,7 +63,7 @@ module "keyvault" {
 
   enable_rbac_authorization   = true
   soft_delete_retention_days  = 30
-  sku_name                    = var.sku
+  sku_name                    = var.kv_sku
   purge_protection_enabled    = true
   tags                = local.common_tags
 }

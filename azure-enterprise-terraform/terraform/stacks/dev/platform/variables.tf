@@ -187,6 +187,12 @@ variable "acr_sku" {
   default     = "Standard"
 }
 
+variable "kv_sku" {
+  description = "The SKU for the Azure Container Registry."
+  type        = string
+  default     = "standard"
+}
+
 variable "sku" {
   type    = string
   default = "Standard"
