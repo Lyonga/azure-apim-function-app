@@ -6,6 +6,12 @@ on:
       - main
     paths:
       - "azure-enterprise-terraform/**"
+  workflow_dispatch:
+    inputs:
+      unlock:
+        description: "Force unlock the state"
+        required: false
+        default: "false"
 
 jobs:
   terraform:
@@ -42,7 +48,7 @@ jobs:
       run: terraform init -upgrade
 
     - name: Force unlock (manual use)
-      if: ${{ github.event_name == 'workflow_dispatch' }}
+      if: ${{ github.event_name == 'workflow_dispatch' && inputs.unlock == 'true' }}
       run: terraform force-unlock -force 81aab101-491e-be8d-de94-4ad3e39a3acb
 
     - name: Terraform providers (debug)
@@ -53,8 +59,8 @@ jobs:
 
     - name: Terraform Plan
       working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
-      run: terraform plan
+      run: terraform plan -lock-timeout=5m
 
     - name: Terraform Apply
       working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
-      run: terraform apply -auto-approve
+      run: terraform apply -lock-timeout=5m -auto-approve
