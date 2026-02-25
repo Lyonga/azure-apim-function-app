@@ -31,3 +31,24 @@ variable "containers" {
   }))
   default = {}
 }
+
+variable "account_tier" { 
+  type = string 
+  default = "Standard" 
+  }
+variable "account_replication_type" { 
+  type = string 
+  default = "LRS" 
+  }
+variable "account_kind" { 
+  type = string 
+default = "StorageV2" 
+}
+variable "min_tls_version" { 
+  type = string 
+  default = "TLS1_2" 
+  }
+variable "allow_blob_public_access" { 
+  type = bool 
+  default = false 
+  }

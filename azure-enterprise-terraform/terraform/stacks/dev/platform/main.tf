@@ -14,6 +14,7 @@ module "subscription" {
 provider "azurerm" {
   alias           = "sub"
   subscription_id = var.subscription_id
+  tenant_id       = var.tenant_id
   features {}
 }
 
@@ -33,11 +34,11 @@ locals {
 # Observability baseline
 module "log_analytics" {
   source              = "../../../modules/observability"
-  workspace_name      = "log-${var.environment}-${var.project_name}"
+  name      = "log-${var.environment}-${var.project_name}"
   resource_group_name = local.rg_name
   location            = var.location
-  sku                 = "Standard"
-  retention_in_days   = 30
+  sku                 = var.sku
+  retention_in_days   = var.retention_in_days
   tags                = local.common_tags
 }
 
@@ -59,9 +60,10 @@ module "keyvault" {
   resource_group_name         = local.rg_name
   location                    = var.location
   tenant_id                   = var.tenant_id
+
   enable_rbac_authorization   = "RBAC"
   soft_delete_retention_days  = 30
-  sku_name                    = "Standard"
+  sku_name                    = var.sku
   purge_protection_enabled    = true
   tags                = local.common_tags
 }
@@ -72,16 +74,14 @@ module "storage" {
   name                        = var.storage_account_name
   resource_group_name         = local.rg_name
   location                    = var.location
-  allow_blob_public_access    = "Disabled"
-  account_kind                = "Standard"
-  account_replication_type    = "LRS"
-  min_tls_version             = "1.2"
-  account_tier                = "Standard"
-  containers = {
-    appdata = { access_type = "private" }
-    logs    = { access_type = "private" }
-  }
-  tags = local.common_tags
+  allow_blob_public_access    = var.allow_blob_public_access
+
+  account_kind                = var.storage_account_kind
+  account_replication_type    = var.storage_account_replication_type
+  min_tls_version             = var.storage_account_min_tls_version
+  account_tier                = var.storage_account_tier
+  containers                  = var.storage_account_containers
+  tags                        = local.common_tags
 }
 
 # Container Registry
@@ -91,22 +91,9 @@ module "acr" {
   resource_group_name = local.rg_name
   location            = var.location
   admin_enabled       = var.acr_admin_enabled
-  sku                 = "Standard"
+  sku                 = var.acr_sku
   tags                = local.common_tags
 }
-
-# AKS
-# module "aks" {
-#   source                     = "../../../modules/aks"
-#   name                       = "aks-${var.environment}-${var.project_name}"
-#   resource_group_name        = local.rg_name
-#   location                   = var.location
-#   dns_prefix                 = "aks-${var.environment}-${var.project_name}"
-#   subnet_id                  = module.network.subnet_ids["aks"]
-#   node_pool                  = var.aks_node_pool
-#   log_analytics_workspace_id = module.log_analytics.workspace_id
-#   tags                       = local.common_tags
-# }
 
 # Example: assign a common built-in policy (audit VMs without managed disks, etc).
 # Swap in your org-approved policy IDs.
@@ -114,10 +101,10 @@ module "policy_audit_vms" {
   source               = "../../../modules/policy_assignment"
   name                 = "audit-vm-manageddisks"
   display_name         = "Audit VMs without managed disks"
-  parameters           = "<REQUIRED_VALUE>"
-  policy_definition_id = "/providers/Microsoft.Authorization/policyDefinitions/06a78e20-9358-41c9-923c-fb736d382a4d"
-  scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}"
-  tags                 = "<REQUIRED_VALUE>"
+  parameters           = var.policy_parameters
+  policy_definition_id = var.policy_definition_id
+  scope                = var.policy_scope
+  tags                 = local.common_tags
 }
 
 # Optional Azure DevOps repo + branch policy (OFF by default)
@@ -125,8 +112,21 @@ module "ado_repo" {
   source                     = "../../../modules/azuredevops_repo"
   enable                     = var.enable_azuredevops_repo
   project_name               = var.azuredevops_project
-  default_branch             = "<REQUIRED_VALUE>"
-  repo_name                  = var.azuredevops_repo_name
-  enable_min_reviewers_policy = true
-  min_reviewer_count          = 1
+  branch_name            = var.azuredevops_default_branch
+  repository_name                 = var.azuredevops_repo_name
+  enable_min_reviewers_policy = var.enable_min_reviewers_policy
+  min_reviewer_count          = var.min_reviewer_count
+}
+
+terraform {
+  required_providers {
+    azapi = {
+      source  = "azure/azapi"
+      version = "~> 1.0"
+    }
+    azuredevops = {
+      source  = "microsoft/azuredevops"
+      version = "~> 0.5"
+    }
+  }
 }

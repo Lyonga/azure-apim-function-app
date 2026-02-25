@@ -19,3 +19,9 @@ variable "tags" {
   type    = map(string)
   default = {}
 }
+
+variable "sku" {
+  description = "The SKU for the Log Analytics workspace."
+  type        = string
+  default     = "Standard"
+}

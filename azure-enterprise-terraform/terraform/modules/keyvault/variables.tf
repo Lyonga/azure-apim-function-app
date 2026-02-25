@@ -10,7 +10,7 @@ variable "location" {
   type = string
 }
 
-variable "sku" {
+variable "sku_name" {
   type    = string
   default = "standard"
 }
@@ -24,3 +24,23 @@ variable "tags" {
   type    = map(string)
   default = {}
 }
+
+variable "tenant_id" { type = string }
+
+variable "enable_rbac_authorization" { 
+  type = bool 
+  default = true 
+  }
+
+variable "soft_delete_retention_days" { 
+  type = number 
+  default = 90 
+  }
+variable "purge_protection_enabled" { 
+  type = bool 
+  default = true 
+  }
+variable "tags" { 
+  type = map(string) 
+  default = {} 
+  }

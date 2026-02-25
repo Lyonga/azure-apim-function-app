@@ -9,7 +9,7 @@ data "azuredevops_project" "this" {
 resource "azuredevops_git_repository" "this" {
   count      = var.enable ? 1 : 0
   project_id = data.azuredevops_project.this[0].id
-  name       = var.repo_name
+  name       = var.repository_name
 
   initialization {
     init_type = "Clean"
@@ -34,7 +34,7 @@ resource "azuredevops_branch_policy_min_reviewers" "min_reviewers" {
 
     scope {
       repository_id  = azuredevops_git_repository.this[0].id
-      repository_ref = var.default_branch
+      repository_ref = var.branch_name
       match_type     = "Exact"
     }
   }

@@ -143,3 +143,88 @@ variable "azuredevops_project" {
   type        = string
   default     = "my-azure-devops-project"
 }
+
+variable "policy_parameters" {
+  description = "Parameters for the policy assignment."
+  type        = any
+  default     = null
+}
+
+variable "policy_definition_id" {
+  description = "The ID of the policy definition to assign."
+  type        = string
+  default     = ""
+}
+
+variable "policy_scope" {
+  description = "The scope for the policy assignment."
+  type        = string
+  default     = ""
+}
+
+variable "azuredevops_default_branch" {
+  description = "The default branch for the Azure DevOps repository."
+  type        = string
+  default     = "main"
+}
+
+variable "enable_min_reviewers_policy" {
+  description = "Enable the minimum reviewers policy for Azure DevOps."
+  type        = bool
+  default     = false
+}
+
+variable "min_reviewer_count" {
+  description = "The minimum number of reviewers required for Azure DevOps."
+  type        = number
+  default     = 1
+}
+
+variable "acr_sku" {
+  description = "The SKU for the Azure Container Registry."
+  type        = string
+  default     = "Standard"
+}
+
+variable "sku" {
+  type    = string
+  default = "Standard"
+}
+
+variable "retention_in_days" {
+  type    = number
+  default = 30
+}
+
+variable "storage_account_replication_type" {
+  type    = string
+  default = "LRS"
+}
+
+variable "storage_account_min_tls_version" {
+  type    = string
+  default = "TLS1_2"
+}
+
+variable "storage_account_tier" {
+  type    = string
+  default = "Standard"
+}
+
+variable "storage_account_containers" {
+  description = "Map of containers to create in the storage account."
+  type = map(object({
+    access_type = optional(string, "private")
+  }))
+  default = {}
+}
+
+variable "allow_blob_public_access" {
+  type    = bool
+  default = false
+}
+
+variable "storage_account_kind" {
+  type    = string
+  default = "StorageV2"
+}
