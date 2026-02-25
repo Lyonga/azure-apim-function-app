@@ -154,6 +154,7 @@ variable "policy_definition_id" {
   description = "The ID of the policy definition to assign."
   type        = string
   # default     = null
+  default = "/providers/Microsoft.Authorization/policyDefinitions/06a78e20-9358-41c9-923c-fb736d382a4d"
 }
 
 variable "policy_scope" {
