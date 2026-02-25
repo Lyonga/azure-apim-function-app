@@ -61,7 +61,7 @@ module "keyvault" {
   location                    = var.location
   tenant_id                   = var.tenant_id
 
-  enable_rbac_authorization   = "RBAC"
+  enable_rbac_authorization   = true
   soft_delete_retention_days  = 30
   sku_name                    = var.sku
   purge_protection_enabled    = true

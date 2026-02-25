@@ -1,3 +1,12 @@
+locals {
+  # Flatten subnet->rules into a map keyed by "subnetName-ruleName"
+  nsg_rules = merge([
+    for subnet_name, subnet in var.subnets : {
+      for r in try(subnet.nsg_rules, []) :
+      "${subnet_name}-${r.name}" => merge(r, { subnet_name = subnet_name })
+    }
+  ]...)
+}
 resource "azurerm_virtual_network" "this" {
   name                = var.name
   location            = var.location
@@ -15,38 +24,21 @@ resource "azurerm_network_security_group" "this" {
   tags                = var.tags
 }
 
-resource "azurerm_network_security_rule" "rules" {
-  for_each = {
-    for subnet_name, subnet in var.subnets :
-    subnet_name => subnet
-    if length(try(subnet.nsg_rules, [])) > 0
-  }
+resource "azurerm_network_security_rule" "this" {
+  for_each = local.nsg_rules
 
-  network_security_group_name = "<REQUIRED_VALUE>"
-  access                      = "<REQUIRED_VALUE>"
-  name                        = "<REQUIRED_VALUE>"
-  resource_group_name         = "<REQUIRED_VALUE>"
-  priority                    = "<REQUIRED_VALUE>"
-  direction                   = "<REQUIRED_VALUE>"
-  protocol                    = "<REQUIRED_VALUE>"
+  name                        = each.value.name
+  priority                    = each.value.priority
+  direction                   = each.value.direction
+  access                       = each.value.access
+  protocol                    = each.value.protocol
+  source_port_range           = try(each.value.source_port_range, "*")
+  destination_port_range      = try(each.value.destination_port_range, "*")
+  source_address_prefix       = try(each.value.source_address_prefix, "*")
+  destination_address_prefix  = try(each.value.destination_address_prefix, "*")
 
-  # flatten rules
-  dynamic "rule" {
-    for_each = try(each.value.nsg_rules, [])
-    content {
-      name                       = rule.value.name
-      priority                   = rule.value.priority
-      direction                  = rule.value.direction
-      access                     = rule.value.access
-      protocol                   = rule.value.protocol
-      source_port_range          = rule.value.source_port_range
-      destination_port_range     = rule.value.destination_port_range
-      source_address_prefix      = rule.value.source_address_prefix
-      destination_address_prefix = rule.value.destination_address_prefix
-    }
-  }
-
-  lifecycle { ignore_changes = [rule] }
+  resource_group_name         = var.resource_group_name
+  network_security_group_name = azurerm_network_security_group.this[each.value.subnet_name].name
 }
 
 resource "azurerm_subnet" "this" {

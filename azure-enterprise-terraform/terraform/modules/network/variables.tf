@@ -15,16 +15,20 @@ variable "address_space" {
 }
 
 variable "subnets" {
-  description = "Map of subnets. Example: { app = { address_prefixes=[\"10.10.1.0/24\"], nsg_rules=[...] } }"
   type = map(object({
     address_prefixes = list(string)
-    service_endpoints = optional(list(string), [])
-    delegations = optional(list(object({
-      name = string
-      service_delegation = object({
-        name = string
-        actions = list(string)
-      })
+
+    nsg_rules = optional(list(object({
+      name                       = string
+      priority                   = number
+      direction                  = string   # Inbound/Outbound
+      access                     = string   # Allow/Deny
+      protocol                   = string   # Tcp/Udp/*
+
+      source_port_range          = optional(string, "*")
+      destination_port_range     = optional(string, "*")
+      source_address_prefix      = optional(string, "*")
+      destination_address_prefix = optional(string, "*")
     })), [])
   }))
 }

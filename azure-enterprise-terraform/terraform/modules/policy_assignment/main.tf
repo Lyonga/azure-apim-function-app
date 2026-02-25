@@ -1,11 +1,10 @@
-resource "azurerm_policy_assignment" "this" {
+resource "azurerm_resource_policy_assignment" "this" {
   name                 = var.name
   display_name         = var.display_name
   policy_definition_id = var.policy_definition_id
-  scope                = var.scope
-  parameters           = var.parameters == null ? null : jsonencode(var.parameters)
+  resource_id          = var.scope  # for resource-level assignments, this is the resource ID (e.g., RG id)
 
-  metadata = jsonencode({
-    deployedBy = "terraform"
-  })
+  parameters = var.parameters == null ? null : jsonencode(var.parameters)
+
+  metadata = jsonencode({ deployedBy = "terraform" })
 }
