@@ -118,15 +118,15 @@ module "ado_repo" {
   min_reviewer_count          = var.min_reviewer_count
 }
 
-terraform {
-  required_providers {
-    azapi = {
-      source  = "azure/azapi"
-      version = "~> 1.0"
-    }
-    azuredevops = {
-      source  = "microsoft/azuredevops"
-      version = "~> 0.5"
-    }
-  }
-}
+# terraform {
+#   required_providers {
+#     azapi = {
+#       source  = "azure/azapi"
+#       version = "~> 1.0"
+#     }
+#     azuredevops = {
+#       source  = "microsoft/azuredevops"
+#       version = "~> 0.5"
+#     }
+#   }
+# }

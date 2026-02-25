@@ -36,11 +36,3 @@ variable "soft_delete_retention_days" {
   type = number 
   default = 90 
   }
-variable "purge_protection_enabled" { 
-  type = bool 
-  default = true 
-  }
-variable "tags" { 
-  type = map(string) 
-  default = {} 
-  }

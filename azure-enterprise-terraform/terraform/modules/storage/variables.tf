@@ -31,15 +31,6 @@ variable "containers" {
   }))
   default = {}
 }
-
-variable "account_tier" { 
-  type = string 
-  default = "Standard" 
-  }
-variable "account_replication_type" { 
-  type = string 
-  default = "LRS" 
-  }
 variable "account_kind" { 
   type = string 
 default = "StorageV2" 
