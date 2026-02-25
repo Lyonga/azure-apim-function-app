@@ -24,7 +24,7 @@ jobs:
 
     - name: Terraform Init
       working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
-      run: terraform init
+      run: terraform init -upgrade
 
     - name: Terraform Plan
       working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
