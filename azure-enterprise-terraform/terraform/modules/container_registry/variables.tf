@@ -17,7 +17,7 @@ variable "admin_enabled" {
 
 variable "sku" {
   type    = string
-  default = "Basic"
+  default = "Standard" 
 }
 
 variable "tags" {

@@ -10,9 +10,10 @@ variable "location" {
   type = string
 }
 
-# variable "workspace_name" {
-#   type = string
-# }
+variable "sku" {
+  type    = string
+  default = "PerGB2018"  # ✅ recommended common value
+}
 
 variable "retention_in_days" {
   type    = number
@@ -24,8 +25,8 @@ variable "tags" {
   default = {}
 }
 
-variable "sku" {
-  description = "The SKU for the Log Analytics workspace."
-  type        = string
-  default     = "Standard"
-}
+# variable "sku" {
+#   description = "The SKU for the Log Analytics workspace."
+#   type        = string
+#   default     = "Standard"
+# }

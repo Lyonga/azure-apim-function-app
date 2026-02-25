@@ -153,7 +153,7 @@ variable "policy_parameters" {
 variable "policy_definition_id" {
   description = "The ID of the policy definition to assign."
   type        = string
-  default     = ""
+  default     = null
 }
 
 variable "policy_scope" {
@@ -183,12 +183,12 @@ variable "min_reviewer_count" {
 variable "acr_sku" {
   description = "The SKU for the Azure Container Registry."
   type        = string
-  default     = "standard"
+  default     = "Standard"
 }
 
 variable "sku" {
   type    = string
-  default = "standard"
+  default = "Standard"
 }
 
 variable "retention_in_days" {
@@ -208,7 +208,7 @@ variable "storage_account_min_tls_version" {
 
 variable "storage_account_tier" {
   type    = string
-  default = "standard"
+  default = "Standard"
 }
 
 variable "storage_account_containers" {

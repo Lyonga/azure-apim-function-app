@@ -12,7 +12,7 @@ variable "location" {
 
 variable "account_tier" {
   type    = string
-  default = "Standard"
+  default = "Standard"  
 }
 
 variable "account_replication_type" {
