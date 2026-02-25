@@ -1,13 +1,13 @@
 data "azurerm_client_config" "current" {}
 
 # Optionally create a subscription (enterprise-specific). Disabled by default.
-module "subscription" {
-  source                    = "../../../modules/subscription"
-  enable                    = var.enable_subscription_creation
-  subscription_display_name = var.new_subscription_display_name
-  billing_scope_id          = var.billing_scope_id
-  workload                  = "DevTest"
-}
+# module "subscription" {
+#   source                    = "../../../modules/subscription"
+#   enable                    = var.enable_subscription_creation
+#   subscription_display_name = var.new_subscription_display_name
+#   billing_scope_id          = var.billing_scope_id
+#   workload                  = "DevTest"
+# }
 
 # Optionally pin provider to a subscription (common in enterprise with per-env subscriptions).
 # If you set var.subscription_id, ensure your auth context has access.
