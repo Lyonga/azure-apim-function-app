@@ -1,66 +1,60 @@
-name: Terraform Infra Deploy
+name: Terraform Azure Deploy
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "azure-enterprise-terraform/**"
   workflow_dispatch:
     inputs:
-      unlock:
-        description: "Force unlock the state"
+      stack_path:
+        description: "Terraform working dir (e.g. terraform/stacks/dev/platform)"
+        required: true
+        default: "terraform/stacks/dev/platform"
+      force_unlock:
+        description: "Force unlock state (ONLY if you know it's stale)"
+        type: boolean
         required: false
-        default: "false"
+        default: false
+      lock_id:
+        description: "Lock ID from the error output (GUID)"
+        required: false
+        default: ""
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
 
+    # Prevent concurrent runs from fighting over the same state
+    concurrency:
+      group: tf-${{ github.ref }}-${{ inputs.stack_path }}
+      cancel-in-progress: false
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Install Terraform
-      uses: hashicorp/setup-terraform@v1
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
-    - name: Azure CLI Login
-      run: |
-        az login --service-principal -u ${{ secrets.ARM_CLIENT_ID }} -p ${{ secrets.ARM_CLIENT_SECRET }} --tenant ${{ secrets.ARM_TENANT_ID }}
+      - name: Azure Login
+        run: |
+          az login --service-principal \
+            -u "${{ secrets.ARM_CLIENT_ID }}" \
+            -p "${{ secrets.ARM_CLIENT_SECRET }}" \
+            --tenant "${{ secrets.ARM_TENANT_ID }}"
+          az account set --subscription "${{ secrets.ARM_SUBSCRIPTION_ID }}"
 
-    - name: Find wrong provider sources
-      working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
-      run: |
-        echo "Searching for bad provider namespaces..."
-        grep -R "hashicorp/azapi\|hashicorp/azuredevops" -n ../.. || true
-        echo "-----"
-        echo "Show required_providers blocks:"
-        grep -R "required_providers" -n . ../.. || true
+      - name: Terraform Init
+        working-directory: ${{ inputs.stack_path }}
+        run: terraform init -upgrade
 
-    - name: Clean terraform cache + lock
-      working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
-      run: |
-        rm -rf .terraform
-        rm -f .terraform.lock.hcl
+      - name: Force unlock (manual use)
+        if: ${{ inputs.force_unlock == true && inputs.lock_id != '' }}
+        working-directory: ${{ inputs.stack_path }}
+        run: terraform force-unlock -force "${{ inputs.lock_id }}"
 
-    - name: Terraform Init
-      working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
-      run: terraform init -upgrade
+      - name: Terraform Plan
+        working-directory: ${{ inputs.stack_path }}
+        run: terraform plan -lock-timeout=10m
 
-    - name: Force unlock (manual use)
-      if: ${{ github.event_name == 'workflow_dispatch' && inputs.unlock == 'true' }}
-      run: terraform force-unlock -force 81aab101-491e-be8d-de94-4ad3e39a3acb
-
-    - name: Terraform providers (debug)
-      if: always()
-      working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
-      run: |
-        terraform providers || true
-
-    - name: Terraform Plan
-      working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
-      run: terraform plan -lock-timeout=5m
-
-    - name: Terraform Apply
-      working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
-      run: terraform apply -lock-timeout=5m -auto-approve
+      # Uncomment when ready
+      # - name: Terraform Apply
+      #   working-directory: ${{ inputs.stack_path }}
+      #   run: terraform apply -auto-approve -lock-timeout=10m
