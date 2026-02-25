@@ -41,6 +41,10 @@ jobs:
       working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
       run: terraform init -upgrade
 
+    - name: Force unlock (manual use)
+      if: ${{ github.event_name == 'workflow_dispatch' }}
+      run: terraform force-unlock -force 81aab101-491e-be8d-de94-4ad3e39a3acb
+
     - name: Terraform providers (debug)
       if: always()
       working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
