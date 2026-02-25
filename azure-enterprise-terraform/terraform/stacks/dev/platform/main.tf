@@ -67,7 +67,7 @@ module "keyvault" {
   tags                = local.common_tags
 }
 
-# Storage Account + containers
+# Storage Account + containers to test
 module "storage" {
   source                      = "../../../modules/storage"
   name                        = var.storage_account_name

@@ -58,6 +58,6 @@ jobs:
       - name: Terraform Plan
         working-directory: ${{ inputs.stack_path }}
         run: terraform plan -lock-timeout=5m
-      - name: Terraform Apply
+      - name: Terraform Destroy
         working-directory: ${{ inputs.stack_path }}
-        run: terraform apply -auto-approve -lock-timeout=5m
+        run: terraform destroy -auto-approve -lock-timeout=5m
