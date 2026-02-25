@@ -105,13 +105,13 @@ module "policy_audit_vms" {
   tags                 = local.common_tags
 }
 
-module "ado_repo" {
-  source                     = "../../../modules/azuredevops_repo"
-  enable                     = var.enable_azuredevops_repo
-  project_name               = var.azuredevops_project
-  branch_name            = var.azuredevops_default_branch
-  repository_name                 = var.azuredevops_repo_name
-  enable_min_reviewers_policy = var.enable_min_reviewers_policy
-  min_reviewer_count          = var.min_reviewer_count
-}
+# module "ado_repo" {
+#   source                     = "../../../modules/azuredevops_repo"
+#   enable                     = var.enable_azuredevops_repo
+#   project_name               = var.azuredevops_project
+#   branch_name            = var.azuredevops_default_branch
+#   repository_name                 = var.azuredevops_repo_name
+#   enable_min_reviewers_policy = var.enable_min_reviewers_policy
+#   min_reviewer_count          = var.min_reviewer_count
+# }
 
