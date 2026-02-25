@@ -9,7 +9,6 @@ data "azurerm_client_config" "current" {}
 #   workload                  = "DevTest"
 # }
 
-# Optionally pin provider to a subscription (common in enterprise with per-env subscriptions).
 # If you set var.subscription_id, ensure your auth context has access.
 provider "azurerm" {
   alias           = "sub"

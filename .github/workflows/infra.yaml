@@ -1,6 +1,11 @@
 name: Terraform Azure Deploy
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - "azure-enterprise-terraform/**"
   workflow_dispatch:
     inputs:
       stack_path:
