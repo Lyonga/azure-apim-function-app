@@ -12,7 +12,7 @@ variable "location" {
 
 variable "sku_name" {
   type    = string
-  default = "Standard"
+  //default = "Standard"
 }
 
 variable "purge_protection_enabled" {

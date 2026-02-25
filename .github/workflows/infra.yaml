@@ -52,9 +52,7 @@ jobs:
 
       - name: Terraform Plan
         working-directory: ${{ inputs.stack_path }}
-        run: terraform plan -lock-timeout=10m
-
-      # Uncomment when ready
-      # - name: Terraform Apply
-      #   working-directory: ${{ inputs.stack_path }}
-      #   run: terraform apply -auto-approve -lock-timeout=10m
+        run: terraform plan -lock-timeout=5m
+      - name: Terraform Apply
+        working-directory: ${{ inputs.stack_path }}
+        run: terraform apply -auto-approve -lock-timeout=5m
