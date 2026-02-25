@@ -1,14 +1,14 @@
 # This module is OFF by default to keep the project deployable even if you don't use Azure DevOps.
 # If enabled, configure the azuredevops provider in the stack's provider.tf.
 
-terraform {
-  required_providers {
-    azuredevops = {
-      source  = "microsoft/azuredevops"
-      version = "~> 1.3"
-    }
-  }
-}
+# terraform {
+#   required_providers {
+#     azuredevops = {
+#       source  = "microsoft/azuredevops"
+#       version = "~> 1.3"
+#     }
+#   }
+# }
 
 data "azuredevops_project" "this" {
   count = var.enable ? 1 : 0
