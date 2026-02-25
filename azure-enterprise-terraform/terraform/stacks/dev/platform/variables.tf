@@ -153,7 +153,7 @@ variable "policy_parameters" {
 variable "policy_definition_id" {
   description = "The ID of the policy definition to assign."
   type        = string
-  default     = null
+  # default     = null
 }
 
 variable "policy_scope" {
