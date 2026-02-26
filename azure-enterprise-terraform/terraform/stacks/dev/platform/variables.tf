@@ -79,19 +79,19 @@ variable "aks_node_pool" {
 # Storage (general-purpose)
 variable "storage_account_name" {
   type    = string
-  default = "stdevlab001"
+  //default = "stdevlab001"
 }
 
 # ACR
 variable "acr_name" {
   type    = string
-  default = "acrdevlab001"
+  //default = "acrdevlab001"
 }
 
 # Key Vault
 variable "keyvault_name" {
   type    = string
-  default = "kv-dev-lab-001"
+  //default = "kv-dev-lab-001"
 }
 
 # Optional subscription creation (OFF by default)
