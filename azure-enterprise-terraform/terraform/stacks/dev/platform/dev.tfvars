@@ -5,7 +5,7 @@ resource_group_name  = "${var.environment}-rg-demo-labs-platform"
 
 project_name = "azure-enterprise-lab"
 owner        = "charles"
-cost_center  = "cc-1001"
+cost_center  = "demo-cc-1001"
 
 # Make these unique per your Azure tenant:
 storage_account_name = "${var.environment}-demo-labs-storage001-acc"
