@@ -1,4 +1,4 @@
-name: Terraform Azure Deploy
+name: Deploy Terraform modules
 
 on:
   push:
@@ -58,6 +58,6 @@ jobs:
       - name: Terraform Plan
         working-directory: ${{ inputs.stack_path }}
         run: terraform plan -lock-timeout=5m
-      - name: Terraform Destroy
+      - name: Terraform Apply
         working-directory: ${{ inputs.stack_path }}
-        run: terraform destroy -auto-approve -lock-timeout=5m
+        run: terraform apply -auto-approve -lock-timeout=5m

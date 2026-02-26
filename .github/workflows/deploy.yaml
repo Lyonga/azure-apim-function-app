@@ -1,4 +1,4 @@
-name: Terraform Deploy
+name: Terraform apim Deploy
 
 on:
   push:
@@ -39,7 +39,7 @@ jobs:
     #   run: terraform apply -auto-approve
 
     - name: Terraform Destroy
-      run: terraform destroy -auto-approve
+      run: terraform  -auto-approve
 
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}

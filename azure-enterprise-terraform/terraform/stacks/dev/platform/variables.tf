@@ -182,7 +182,7 @@ variable "min_reviewer_count" {
 }
 
 variable "acr_sku" {
-  description = "The SKU for the Azure Container Registry."
+  description = "The SKU for the Azure Container Registry. for example: Basic, Standard, Premium."
   type        = string
   default     = "Standard"
 }
