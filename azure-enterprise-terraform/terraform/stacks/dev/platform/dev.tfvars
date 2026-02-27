@@ -1,7 +1,7 @@
 environment          = "dev"
 location             = "eastus"
 create_resource_group = true
-resource_group_name  = "${var.environment}-rg-demo-labs-platform"
+resource_group_name  = "demo-labs-platform"
 project     = "demo-labs"
 name_suffix = "0012"
 
