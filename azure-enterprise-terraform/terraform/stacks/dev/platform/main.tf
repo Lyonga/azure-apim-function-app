@@ -21,7 +21,7 @@ provider "azurerm" {
 module "rg" {
   source   = "../../../modules/resource_group"
   count    = var.create_resource_group ? 1 : 0
-  name     = var.resource_group_name
+  name     = local.rg_name
   location = var.location
   tags     = local.common_tags
 }
@@ -33,7 +33,7 @@ locals {
 # Observability baseline
 module "log_analytics" {
   source              = "../../../modules/observability"
-  name      = "log-${var.environment}-${var.project_name}"
+  name                = local.analytics_name
   resource_group_name = local.rg_name
   location            = var.location
   sku                 = var.sku
@@ -44,7 +44,7 @@ module "log_analytics" {
 # Network baseline
 module "network" {
   source              = "../../../modules/network"
-  name                = "vnet-${var.environment}-${var.project_name}"
+  name                = local.Vnet_name
   resource_group_name = local.rg_name
   location            = var.location
   address_space       = var.vnet_address_space
@@ -55,7 +55,7 @@ module "network" {
 # Key Vault
 module "keyvault" {
   source                      = "../../../modules/keyvault"
-  name                        = var.keyvault_name
+  name                        = local.kv_name
   resource_group_name         = local.rg_name
   location                    = var.location
   tenant_id                   = var.tenant_id
@@ -70,7 +70,7 @@ module "keyvault" {
 # Storage Account + containers to test
 module "storage" {
   source                      = "../../../modules/storage"
-  name                        = var.storage_account_name
+  name                        = local.sa_name
   resource_group_name         = local.rg_name
   location                    = var.location
   allow_blob_public_access    = var.allow_blob_public_access
@@ -86,7 +86,7 @@ module "storage" {
 # Container Registry
 module "acr" {
   source              = "../../../modules/container_registry"
-  name                = var.acr_name
+  name                = local.acr_name
   resource_group_name = local.rg_name
   location            = var.location
   admin_enabled       = var.acr_admin_enabled
@@ -96,7 +96,7 @@ module "acr" {
 
 module "policy_audit_vms" {
   source               = "../../../modules/policy_assignment"
-  name                 = "audit-vm-manageddisks"
+  name                 = local.plocy_audit_vms_name
   display_name         = "Audit VMs without managed disks"
   parameters           = var.policy_parameters
   policy_definition_id = var.policy_definition_id

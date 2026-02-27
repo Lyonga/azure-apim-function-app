@@ -62,18 +62,13 @@ variable "subnets" {
   }
 }
 
-# AKS
-variable "aks_node_pool" {
-  type = any
-  default = {
-    name                = "sys"
-    vm_size             = "Standard_D4s_v5"
-    node_count          = 2
-    enable_auto_scaling = true
-    min_count           = 2
-    max_count           = 5
-    os_disk_size_gb     = 128
-  }
+variable "name_suffix" {
+  type    = string
+  default = null
+}
+
+variable "project" {
+  type = string
 }
 
 # Storage (general-purpose)

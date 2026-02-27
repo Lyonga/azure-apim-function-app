@@ -8,6 +8,7 @@ resource "azurerm_storage_account" "this" {
   account_kind                    = var.account_kind
   min_tls_version                 = var.min_tls_version
   allow_nested_items_to_be_public = var.allow_blob_public_access
+  public_network_access_enabled   = var.public_network_access_enabled
 
   blob_properties {
     versioning_enabled = true
