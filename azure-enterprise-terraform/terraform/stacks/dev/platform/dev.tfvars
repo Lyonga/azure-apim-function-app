@@ -2,7 +2,7 @@ environment          = "dev"
 location             = "eastus"
 create_resource_group = true
 resource_group_name  = "demo-labs-platform"
-project     = "demo-labs"
+project     = "demolabs"
 name_suffix = "0012"
 
 project_name = "azure-enterprise-lab"
