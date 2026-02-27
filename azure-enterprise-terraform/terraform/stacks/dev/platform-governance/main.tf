@@ -1,18 +1,12 @@
-terraform {
-  required_version = ">= 1.6.0"
 
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 3.115"
-    }
+
+provider "azurerm" { 
+  alias           = "sub"
+  subscription_id = var.subscription_id
+  tenant_id       = var.tenant_id
+  features {} 
   }
-}
 
-provider "azurerm" { features {} }
-
-# IMPORTANT:
-# Azure already has a tenant root MG. You typically manage child MGs.
 data "azurerm_management_group" "root" {
   name = var.root_management_group_id
 }
@@ -78,7 +72,3 @@ module "policy_nonprod" {
   allowed_locations = var.allowed_locations
   required_tags    = var.required_tags
 }
-
-output "mg_platform_id" { value = azurerm_management_group.platform.id }
-output "mg_prod_id" { value = azurerm_management_group.prod.id }
-output "mg_nonprod_id" { value = azurerm_management_group.nonprod.id }

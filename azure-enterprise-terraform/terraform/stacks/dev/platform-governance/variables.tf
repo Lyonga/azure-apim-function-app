@@ -24,3 +24,14 @@ variable "policy_mode" {
   type    = string
   default = "Audit"
 }
+
+variable "subscription_id" {
+  type    = string
+  default = "ce792f64-9e63-483b-8136-a2538b764f3d"
+}
+
+variable "tenant_id" {
+  description = "The tenant ID for the Azure subscription."
+  type        = string
+  default     = "79dd759b-3fbe-4ab1-9439-ff87b14ba8f2"
+}
