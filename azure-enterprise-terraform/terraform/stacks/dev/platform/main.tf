@@ -26,9 +26,9 @@ module "rg" {
   tags     = local.common_tags
 }
 
-locals {
-  rg_name = var.create_resource_group ? module.rg[0].name : var.resource_group_name
-}
+# locals {
+#   rg_name = var.create_resource_group ? module.rg[0].name : var.resource_group_name
+# }
 
 # Observability baseline
 module "log_analytics" {
