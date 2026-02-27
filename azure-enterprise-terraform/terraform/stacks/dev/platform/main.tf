@@ -91,15 +91,15 @@ module "acr" {
   tags                = local.common_tags
 }
 
-module "policy_audit_vms" {
-  source               = "../../../modules/policy_assignment"
-  name                 = local.plocy_audit_vms_name
-  display_name         = "Audit VMs without managed disks"
-  parameters           = var.policy_parameters
-  policy_definition_id = var.policy_definition_id
-  scope               = module.rg[0].id
-  tags                 = local.common_tags
-}
+# module "policy_audit_vms" {
+#   source               = "../../../modules/policy_assignment"
+#   name                 = local.plocy_audit_vms_name
+#   display_name         = "Audit VMs without managed disks"
+#   parameters           = var.policy_parameters
+#   policy_definition_id = var.policy_definition_id
+#   scope               = module.rg[0].id
+#   tags                 = local.common_tags
+# }
 
 # module "ado_repo" {
 #   source                     = "../../../modules/azuredevops_repo"
