@@ -4,12 +4,12 @@ create_resource_group = true
 resource_group_name  = "demo-labs-platform"
 project     = "demolabs"
 name_suffix = "0012"
+analytics_sku = "PerGB2018" 
 
 project_name = "azure-enterprise-lab"
 owner        = "charles"
 cost_center  = "demo-cc-1001"
 
-# Make these unique per your Azure tenant:
 storage_account_name = "demo-labs-storage001-acc"
 acr_name             = "demo-labs"
 keyvault_name        = "kv-demo-labs"

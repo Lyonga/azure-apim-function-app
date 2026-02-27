@@ -17,6 +17,12 @@ variable "subscription_id" {
   default = "ce792f64-9e63-483b-8136-a2538b764f3d"
 }
 
+variable "analytics_sku" {
+  description = "The SKU for the Log Analytics workspace."
+  type        = string
+  default     = null
+}
+
 variable "create_resource_group" {
   type    = bool
   default = true
