@@ -1,0 +1,4 @@
+resource_group_name  = "<RG_FROM_BOOTSTRAP>"
+storage_account_name = "<STORAGE_ACCOUNT_FROM_BOOTSTRAP>"
+container_name       = "tfstate"
+key                  = "platform-management/dev.tfstate"

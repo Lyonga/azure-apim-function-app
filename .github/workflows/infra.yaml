@@ -72,8 +72,8 @@ jobs:
 
       - name: Terraform Plan Modules
         working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
-        run: terraform plan -lock-timeout=5m -vars-file=dev.auto.tfvars
+        run: terraform plan -lock-timeout=5m -var-file=dev.tfvars
 
       - name: Terraform Apply Modules
         working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
-        run: terraform apply -lock-timeout=5m -auto-approve -vars-file=dev.auto.tfvars
+        run: terraform apply -lock-timeout=5m -auto-approve -var-file=dev.tfvars
