@@ -3,7 +3,7 @@ locals {
 
   rg_name  = "rg-${var.environment}-${var.project}-platform"
   sa_name  = lower(replace("${var.environment}${var.project}st${local.suffix}", "-", "")) # storage has rules
-  acr_name = "acr-${var.environment}-${var.project}-${local.suffix}"
+  acr_name = "acr-${var.environment}-${var.project}"
   kv_name  = "kv-${var.environment}-${var.project}-${local.suffix}"
   plocy_audit_vms_name = "audit-vm-manageddisks-${var.environment}-${var.project}"
   Vnet_name = "vnet-${var.environment}-${var.project}"
