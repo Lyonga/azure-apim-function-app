@@ -50,19 +50,19 @@ module "network" {
 }
 
 # Key Vault
-module "keyvault" {
-  source                      = "../../../modules/keyvault"
-  name                        = local.kv_name
-  resource_group_name         = local.project_rg_name
-  location                    = var.location
-  tenant_id                   = var.tenant_id
+# module "keyvault" {
+#   source                      = "../../../modules/keyvault"
+#   name                        = local.kv_name
+#   resource_group_name         = local.project_rg_name
+#   location                    = var.location
+#   tenant_id                   = var.tenant_id
 
-  enable_rbac_authorization   = true
-  soft_delete_retention_days  = 30
-  sku_name                    = var.kv_sku
-  purge_protection_enabled    = true
-  tags                = local.common_tags
-}
+#   enable_rbac_authorization   = true
+#   soft_delete_retention_days  = 30
+#   sku_name                    = var.kv_sku
+#   purge_protection_enabled    = true
+#   tags                = local.common_tags
+# }
 
 # Storage Account + containers to test
 module "storage" {
