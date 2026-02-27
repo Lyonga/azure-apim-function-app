@@ -26,15 +26,12 @@ module "rg" {
   tags     = local.common_tags
 }
 
-# locals {
-#   rg_name = var.create_resource_group ? module.rg[0].name : var.resource_group_name
-# }
 
 # Observability baseline
 module "log_analytics" {
   source              = "../../../modules/observability"
   name                = local.analytics_name
-  resource_group_name = local.rg_name
+  resource_group_name = local.project_rg_name
   location            = var.location
   sku                 = var.sku
   retention_in_days   = var.retention_in_days
@@ -45,7 +42,7 @@ module "log_analytics" {
 module "network" {
   source              = "../../../modules/network"
   name                = local.Vnet_name
-  resource_group_name = local.rg_name
+  resource_group_name = local.project_rg_name
   location            = var.location
   address_space       = var.vnet_address_space
   subnets             = var.subnets
@@ -56,7 +53,7 @@ module "network" {
 module "keyvault" {
   source                      = "../../../modules/keyvault"
   name                        = local.kv_name
-  resource_group_name         = local.rg_name
+  resource_group_name         = local.project_rg_name
   location                    = var.location
   tenant_id                   = var.tenant_id
 
@@ -71,7 +68,7 @@ module "keyvault" {
 module "storage" {
   source                      = "../../../modules/storage"
   name                        = local.sa_name
-  resource_group_name         = local.rg_name
+  resource_group_name         = local.project_rg_name
   location                    = var.location
   allow_blob_public_access    = var.allow_blob_public_access
 
@@ -100,7 +97,7 @@ module "policy_audit_vms" {
   display_name         = "Audit VMs without managed disks"
   parameters           = var.policy_parameters
   policy_definition_id = var.policy_definition_id
-  scope                = module.rg[0].id
+  scope               = module.rg[0].id
   tags                 = local.common_tags
 }
 
