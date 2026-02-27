@@ -74,19 +74,19 @@ variable "project" {
 # Storage (general-purpose)
 variable "storage_account_name" {
   type    = string
-  //default = "stdevlab001"
+  default = null
 }
 
 # ACR
 variable "acr_name" {
   type    = string
-  //default = "acrdevlab001"
+  default = null
 }
 
 # Key Vault
 variable "keyvault_name" {
   type    = string
-  //default = "kv-dev-lab-001"
+  default = null
 }
 
 # Optional subscription creation (OFF by default)
