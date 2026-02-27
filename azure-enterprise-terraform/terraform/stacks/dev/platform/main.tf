@@ -28,15 +28,15 @@ module "rg" {
 
 
 # Observability baseline
-module "log_analytics" {
-  source              = "../../../modules/observability"
-  name                = local.analytics_name
-  resource_group_name = local.project_rg_name
-  location            = var.location
-  sku                 = var.analytics_sku
-  retention_in_days   = var.retention_in_days
-  tags                = local.common_tags
-}
+# module "log_analytics" {
+#   source              = "../../../modules/observability"
+#   name                = local.analytics_name
+#   resource_group_name = local.project_rg_name
+#   location            = var.location
+#   sku                 = var.analytics_sku
+#   retention_in_days   = var.retention_in_days
+#   tags                = local.common_tags
+# }
 
 # Network baseline
 module "network" {
