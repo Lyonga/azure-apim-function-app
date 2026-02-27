@@ -9,6 +9,6 @@ cost_center  = "demo-cc-1001"
 
 # Make these unique per your Azure tenant:
 storage_account_name = "${var.environment}-demo-labs-storage001-acc"
-acr_name             = "${var.environment}-acr-demo-lab-001"
-keyvault_name        = "${var.environment}-kv-demo-lab-001"
+acr_name             = "${var.environment}-acr-demo-lab-0012"
+keyvault_name        = "${var.environment}-kv-demo-lab-0012"
 policy_definition_id = "/providers/Microsoft.Authorization/policyDefinitions/06a78e20-9358-41c9-923c-fb736d382a4d"
