@@ -55,7 +55,7 @@ module "keyvault" {
   name                        = local.kv_name
   resource_group_name         = local.project_rg_name
   location                    = var.location
-  tenant_id                   = var.tenant_id
+  tenant_id                   = "79dd759b-3fbe-4ab1-9439-ff87b14ba8f2" //var.tenant_id
 
   enable_rbac_authorization   = true
   soft_delete_retention_days  = 30
