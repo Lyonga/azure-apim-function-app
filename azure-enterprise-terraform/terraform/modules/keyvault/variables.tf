@@ -28,12 +28,10 @@ variable "tags" {
 # variable "tenant_id" { 
 #   type = string 
 #   }
-
 variable "enable_rbac_authorization" { 
   type = bool 
   default = true 
   }
-
 variable "soft_delete_retention_days" { 
   type = number 
   default = 90 

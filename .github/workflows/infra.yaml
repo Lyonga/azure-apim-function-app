@@ -62,16 +62,32 @@ jobs:
         working-directory: ${{ inputs.stack_path }}
         run: terraform destroy -lock-timeout=5m -auto-approve
 
+      - name: Remove Key Vault objects from state (unblock refresh)
+        shell: bash
+        working-directory: ${{ inputs.stack_path }}
+        run: |
+            set -euo pipefail
+            terraform init -reconfigure
+
+            echo "State objects containing keyvault:"
+            terraform state list | grep -i keyvault || true
+
+            # Remove ALL keyvault-related objects from state (safe: does NOT delete Azure resources)
+            for addr in $(terraform state list | grep -i keyvault || true); do
+            echo "Removing from state: $addr"
+            terraform state rm "$addr" || true
+            done
+
+      - name: Reset terraform local dir (safe)
+        shell: bash
+        working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
+        run: |
+            rm -rf .terraform .terraform.lock.hcl
+            terraform init -reconfigure
+
       - name: Terraform Init Modules
         working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
         run: terraform init -upgrade
-
-      - name: Debug Azure context
-        working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
-        run: |
-          az account show --query "{name:name, tenantId:tenantId, id:id, user:user.name}" -o json
-          rm -rf .terraform
-          terraform init -reconfigure
 
       - name: Terraform Plan Modules
         working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
