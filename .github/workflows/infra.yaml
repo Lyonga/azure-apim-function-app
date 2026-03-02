@@ -68,8 +68,8 @@ jobs:
 
       - name: Debug Azure context
         run: |
-          az account show --query "{name:name, tenantId:tenantId, id:id, user:user.name}" -o json\
-          rm -rf .terraform\
+          az account show --query "{name:name, tenantId:tenantId, id:id, user:user.name}" -o json
+          rm -rf .terraform
           terraform init -reconfigure
 
       - name: Terraform Plan Modules

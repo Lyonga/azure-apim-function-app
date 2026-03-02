@@ -25,9 +25,6 @@ variable "tags" {
   default = {}
 }
 
-# variable "tenant_id" { 
-#   type = string 
-#   }
 
 variable "enable_rbac_authorization" { 
   type = bool 
