@@ -66,9 +66,11 @@ jobs:
         working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
         run: terraform init -upgrade
 
-    #   - name: Force unlock (manual use)
-    #     if: ${{ github.event_name == 'workflow_dispatch' && inputs.unlock == 'true' }}
-    #     run: terraform force-unlock -force 81aab101-491e-be8d-de94-4ad3e39a3acb
+      - name: Debug Azure context
+        run: |
+          az account show --query "{name:name, tenantId:tenantId, id:id, user:user.name}" -o json\
+          rm -rf .terraform\
+          terraform init -reconfigure
 
       - name: Terraform Plan Modules
         working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
