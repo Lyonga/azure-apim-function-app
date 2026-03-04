@@ -21,9 +21,6 @@ resource "azurerm_key_vault" "this" {
   tags = var.tags
 }
 
-
-# Give your deployment principal full admin on the KV
-# (If you deploy with Azure CLI user, this is your user objectId)
 resource "azurerm_role_assignment" "kv_admin" {
   scope                = azurerm_key_vault.this.id
   role_definition_name = "Key Vault Administrator"
