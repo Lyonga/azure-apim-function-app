@@ -82,6 +82,7 @@ jobs:
         shell: bash
         working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
         run: |
+            terraform state rm module.keyvault.azurerm_key_vault.this
             rm -rf .terraform .terraform.lock.hcl
             terraform init -reconfigure
 
