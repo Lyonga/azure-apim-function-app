@@ -114,7 +114,7 @@ jobs:
 
       - name: Terraform Apply RGs
         working-directory: ./azure-enterprise-terraform/terraform/global/resource_grouping
-        run: terraform apply -lock-timeout=5m -auto-approve -var-file=dev.autotfvars
+        run: terraform apply -lock-timeout=5m -auto-approve -var-file=dev.auto.tfvars
 
       - name: Terraform Init workkloads
         working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/workloads
