@@ -11,7 +11,6 @@ locals {
     managed_by  = "terraform"
   })
   # Names
-  rg_name      = "rg-${local.name_prefix}"
   law_name     = "law-${local.env}-${local.project}"
   appi_name    = "aai-${local.name_prefix}"
   sa_name      = "st${replace(local.name_prefix, "-", "")}"

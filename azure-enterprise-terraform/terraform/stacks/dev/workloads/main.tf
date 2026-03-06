@@ -13,7 +13,7 @@ module "vm" {
   resource_group_name = local.rg_name
   image               = var.vm_image
   //source_image       = var.source_image
-  location            = local.workload_rg_location
+  location            = data.terraform_remote_state.global.outputs.workload_rg_location
   vm_size             = var.vm_size
   admin_username      = var.admin_username
   os_disk_size_gb     = var.os_disk_size_gb
@@ -29,7 +29,7 @@ module "pip" {
   resource_group_name = local.rg_name
   allocation_method   = var.allocation_method
   sku                 = var.sku
-  location            = local.workload_rg_location
+  location            = data.terraform_remote_state.global.outputs.workload_rg_location
   tags                = local.tags_common
 }
 
@@ -38,71 +38,53 @@ module "lb" {
   source              = "../../../modules/load_balancer"
   name                = "lb-${var.environment}-${var.project_name}"
   resource_group_name = local.rg_name
-  location            = local.workload_rg_location
+  location            = data.terraform_remote_state.global.outputs.workload_rg_location
   backend_pool_name   = var.backend_pool_name
   frontend_name       = var.frontend_name
   public_ip_id        = module.pip[0].id
   tags                = local.tags_common
 }
 
-# Resource group
-resource "azurerm_resource_group" "rg" {
-  name     = local.rg_name
-  location = var.location
-  tags     = local.tags_common
-}
-
 # Log Analytics
-resource "azurerm_log_analytics_workspace" "law" {
-  name                = local.law_name
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  sku                 = "PerGB2018"
-  retention_in_days   = 30
+# Random suffix for KV
+resource "random_string" "kv_suffix" {
+  length  = 6
+  upper   = false
+  special = false
+}
+
+# ───────────────────────────────────────────────────────────────────────────────
+# Observability: LAW + App Insights
+module "observability" {
+  source              = "../../../modules/observability"
+  name =               "law-${var.environment}-${var.project_name}"
+  resource_group_name = local.rg_name
+  location            = local.workload_rg_location
+  insights_name       = "appi-${var.environment}-${var.project_name}"
+  retention_in_days   = var.retention_in_days
+  sku                 = var.analytics_sku
   tags                = local.tags_common
 }
 
-# App Insights (workspace-based)
-resource "azurerm_application_insights" "appi" {
-  name                = local.appi_name
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
-  application_type    = "web"
-  workspace_id        = azurerm_log_analytics_workspace.law.id
-  tags                = local.tags_common
-}
-
-# Storage account
-resource "azurerm_storage_account" "sa" {
-  name                     = local.sa_name
-  resource_group_name      = data.terraform_remote_state.global.outputs.workload_rg_name
-  location                 = azurerm_resource_group.rg.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-  allow_nested_items_to_be_public = false
-  min_tls_version          = "TLS1_2"
-  tags                     = local.tags_common
-}
 
 # Function App
 module "function_app" {
-  source = "../../modules/function_app"
+  source = "../../../modules/function_app"
 
   name                       = "fa-${local.name_prefix}-func"
   resource_group_name        = data.terraform_remote_state.global.outputs.workload_rg_name
-  location                   = var.location
-
+  location                   = data.terraform_remote_state.global.outputs.workload_rg_location
   runtime               = "python"
   runtime_version       = "3.11"
-  service_plan_sku      = "Y1"
+  #service_plan_sku      = "Y1"
 
-  storage_account_name       = azurerm_storage_account.sa.name
-  storage_account_access_key = azurerm_storage_account.sa.primary_access_key
+  storage_account_name       = module.storage_account.name
+  storage_account_access_key = module.storage_account.primary_access_key
 
   app_settings = {
     FUNCTIONS_WORKER_RUNTIME       = "python"
     WEBSITE_RUN_FROM_PACKAGE       = "1"
-    APPINSIGHTS_INSTRUMENTATIONKEY = azurerm_application_insights.appi.instrumentation_key
+    APPINSIGHTS_INSTRUMENTATIONKEY = module.observability.appi_instrumentation_key
   }
 
   tags = local.tags_common
@@ -116,10 +98,10 @@ resource "random_string" "kv_suffix" {
 }
 
 module "keyvault" {
-  source = "../../modules/keyvault"
+  source = "../../../modules/keyvault"
 
   name                        = lower("kv-${local.env}-${local.project}-${random_string.kv_suffix.result}")
-  location                    = var.location
+  location                    = data.terraform_remote_state.global.outputs.workload_rg_location
   resource_group_name         = data.terraform_remote_state.global.outputs.workload_rg_name
   sku_name                    = "standard"
   enable_rbac_authorization   = var.kv_enable_rbac
@@ -156,10 +138,10 @@ resource "azurerm_key_vault_secret" "hello" {
 
 # APIM
 module "apim" {
-  source = "../../modules/apim" 
+  source = "../.../../modules/apim" 
   name                = "apim-test-${local.name_prefix}"
   resource_group_name = data.terraform_remote_state.global.outputs.workload_rg_name
-  location            = local.workload_rg_location
+  location            = data.terraform_remote_state.global.outputs.workload_rg_location
   sku_name            = "Consumption_0"
   publisher_name  = var.publisher_name
   publisher_email = var.publisher_email

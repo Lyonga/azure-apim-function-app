@@ -5,5 +5,11 @@ variable "allocation_method" {
   type    = string
   default = "Static"
 }
-variable "sku" { type = string default = "Standard" }
-variable "tags" { type = map(string) default = {} }
+variable "sku" { 
+  type = string
+  default = "Standard" 
+  }
+variable "tags" { 
+  type = map(string) 
+  default = {} 
+  }

@@ -64,6 +64,17 @@ variable "vm_image" {
   })
 }
 
+variable "retention_in_days" {
+  description = "The retention period for the Log Analytics workspace in days."
+  type        = number
+  default     = 30
+}
+
+variable "analytics_sku" {
+  description = "The SKU of the Log Analytics workspace."
+  type        = string
+  default     = "PerGB2018"
+}
 
 variable "service_plan_sku"     { type = string  default = "Y1" }
 variable "runtime"              { type = string  default = "python" }

@@ -6,5 +6,11 @@ variable "frontend_name" {
   type    = string
   default = "fe"
 }
-variable "backend_pool_name" { type = string default = "be" }
-variable "tags" { type = map(string) default = {} }
+variable "backend_pool_name" { 
+  type = string 
+  default = "be" 
+  }
+variable "tags" { 
+  type = map(string) 
+  default = {} 
+}

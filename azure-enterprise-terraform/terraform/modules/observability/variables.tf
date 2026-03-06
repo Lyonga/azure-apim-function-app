@@ -25,8 +25,7 @@ variable "tags" {
   default = {}
 }
 
-# variable "sku" {
-#   description = "The SKU for the Log Analytics workspace."
-#   type        = string
-#   default     = "Standard"
-# }
+variable "insights_name" {
+  type        = string
+  default     = null
+}
