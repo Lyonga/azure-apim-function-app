@@ -17,3 +17,9 @@ tags = {
   owner       = "charles"
   cost_center = "demo-cc-1001"
 }
+
+vm_image = {
+  publisher = "Canonical"
+  offer     = "UbuntuServer"
+  sku       = "18.04-LTS"
+}
