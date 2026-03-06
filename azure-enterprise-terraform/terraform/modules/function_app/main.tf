@@ -25,3 +25,5 @@ resource "azurerm_linux_function_app" "this" {
   app_settings = var.app_settings
   tags         = var.tags
 }
+
+

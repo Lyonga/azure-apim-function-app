@@ -1,0 +1,1 @@
+output "policy_assignment_id" { value = module.policy_assignment.id }

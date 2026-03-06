@@ -55,3 +55,19 @@ variable "frontend_name" {
   type        = string
   default     = "frontend-config"
 }
+
+variable "vm_image" {
+  type = object({
+    publisher = string
+    offer     = string
+    sku       = string
+  })
+}
+
+
+variable "service_plan_sku"     { type = string  default = "Y1" }
+variable "runtime"              { type = string  default = "python" }
+variable "runtime_version"      { type = string  default = "3.11" }
+variable "collection_name"      { type = string  default = "default-collection" }
+variable "tags"            { type = map(string) default = {} }
+variable "kv_enable_rbac"  { type = bool default = false }

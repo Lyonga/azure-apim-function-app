@@ -99,6 +99,38 @@ jobs:
     #     working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
     #     run: terraform apply -lock-timeout=5m -auto-approve -var-file=dev.tfvars
 
-      - name: Terraform Destroy Modules
-        working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
-        run: terraform destroy -lock-timeout=5m -auto-approve -var-file=dev.tfvars
+    #   - name: Terraform Destroy Modules
+    #     working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
+    #     run: terraform destroy -lock-timeout=5m -auto-approve -var-file=dev.tfvars
+
+      - name: Terraform Init RGs
+        working-directory: ./azure-enterprise-terraform/terraform/global/resource_grouping
+        run: |
+            terraform init -upgrade
+            ###terraform state rm module.keyvault.azurerm_key_vault.this
+
+      - name: Terraform Plan Modules
+        working-directory: ./azure-enterprise-terraform/terraform/global/resource_grouping
+        run: terraform plan -lock-timeout=5m -var-file=dev.tfvars
+
+      - name: Terraform Apply Modules
+        working-directory: ./azure-enterprise-terraform/terraform/global/resource_grouping
+        run: terraform apply -lock-timeout=5m -auto-approve -var-file=dev.tfvars
+
+      - name: Terraform Init workkloads
+        working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/workloads
+        run: |
+            terraform init -upgrade
+            ###terraform state rm module.keyvault.azurerm_key_vault.this
+
+      - name: Terraform Plan workloads
+        working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/workloads
+        run: terraform plan -lock-timeout=5m -var-file=dev.tfvars
+
+    #   - name: Terraform Apply Modules
+    #     working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
+    #     run: terraform apply -lock-timeout=5m -auto-approve -var-file=dev.tfvars
+
+    #   - name: Terraform Destroy workloads
+    #     working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/workloads
+    #     run: terraform destroy -lock-timeout=5m -auto-approve -var-file=dev.tfvars

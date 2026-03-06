@@ -1,5 +1,3 @@
-
-
 provider "azurerm" { 
   alias           = "sub"
   subscription_id = var.subscription_id
@@ -54,21 +52,4 @@ resource "azurerm_management_group_subscription_association" "nonprod_workloads"
   count              = var.nonprod_workload_subscription_id != "" ? 1 : 0
   management_group_id = azurerm_management_group.nonprod.id
   subscription_id     = "/subscriptions/${var.nonprod_workload_subscription_id}"
-}
-
-# Baseline policy assignments at MG scope
-module "policy_prod" {
-  source           = "../../modules/policy-baseline"
-  scope_id         = azurerm_management_group.prod.id
-  policy_mode      = var.policy_mode
-  allowed_locations = var.allowed_locations
-  required_tags    = var.required_tags
-}
-
-module "policy_nonprod" {
-  source           = "../../modules/policy-baseline"
-  scope_id         = azurerm_management_group.nonprod.id
-  policy_mode      = var.policy_mode
-  allowed_locations = var.allowed_locations
-  required_tags    = var.required_tags
 }
