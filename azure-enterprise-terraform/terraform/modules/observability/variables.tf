@@ -27,5 +27,5 @@ variable "tags" {
 
 variable "insights_name" {
   type        = string
-  default     = null
+  default     = "demolo-analytics-insights"
 }
