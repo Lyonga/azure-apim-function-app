@@ -107,7 +107,6 @@ jobs:
         working-directory: ./azure-enterprise-terraform/terraform/global/resource_grouping
         run: |
             terraform init -upgrade
-            ###terraform state rm module.keyvault.azurerm_key_vault.this
 
       - name: Terraform Plan Modules
         working-directory: ./azure-enterprise-terraform/terraform/global/resource_grouping
@@ -121,7 +120,6 @@ jobs:
         working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/workloads
         run: |
             terraform init -upgrade
-            ###terraform state rm module.keyvault.azurerm_key_vault.this
 
       - name: Terraform Plan workloads
         working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/workloads

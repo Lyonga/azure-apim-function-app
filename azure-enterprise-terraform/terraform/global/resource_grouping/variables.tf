@@ -6,7 +6,7 @@ variable "create_resource_group" {
 variable "workload_rg_location" {
   description = "The location where resources will be deployed."
   type        = string
-  default     = "eastus"
+  default     = null
 }
 
 variable "environment" {
