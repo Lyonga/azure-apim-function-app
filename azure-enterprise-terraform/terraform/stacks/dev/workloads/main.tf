@@ -119,39 +119,37 @@ resource "azurerm_key_vault_access_policy" "deployer" {
 
   secret_permissions = ["Get", "List", "Set", "Delete", "Recover", "Purge"]
 }
+resource "time_sleep" "kv_policy_propagation" {
+  count           = var.kv_enable_rbac ? 0 : 1
+  depends_on      = [azurerm_key_vault_access_policy.deployer]
+  create_duration = "30s"
+}
 
-# Example: put a secret (wait a bit for policy propagation)
-# resource "time_sleep" "kv_policy_propagation" {
-#   count           = var.kv_enable_rbac ? 0 : 1
-#   depends_on      = [azurerm_key_vault_access_policy.deployer]
-#   create_duration = "30s"
-# }
+resource "azurerm_key_vault_secret" "hello" {
+  count        = var.kv_enable_rbac ? 0 : 1
+  name         = "hello-secret"
+  value        = "world"
+  key_vault_id = module.keyvault.id
 
-# resource "azurerm_key_vault_secret" "hello" {
-#   count        = var.kv_enable_rbac ? 0 : 1
-#   name         = "hello-secret"
-#   value        = "world"
-#   key_vault_id = module.keyvault.id
-
-#   depends_on = [time_sleep.kv_policy_propagation]
-# }
+  depends_on = [time_sleep.kv_policy_propagation]
+}
 
 # APIM
-module "apim" {
-  source = "../.../../modules/apim" 
-  name                = "apim-test-${local.name_prefix}"
-  resource_group_name = data.terraform_remote_state.global.outputs.workload_rg_name
-  location            = data.terraform_remote_state.global.outputs.workload_rg_location
-  sku_name            = "Consumption_0"
-  publisher_name  = var.publisher_name
-  publisher_email = var.publisher_email
-  api_name             = "demo-charsett-api"
-  api_display_name     = "demo-charsett API"
-  api_path             = "demo-charsett"
-  openapi_file         = "api-spec.yml"
+# module "apim" {
+#   source = "../.../../modules/apim" 
+#   name                = "apim-test-${local.name_prefix}"
+#   resource_group_name = data.terraform_remote_state.global.outputs.workload_rg_name
+#   location            = data.terraform_remote_state.global.outputs.workload_rg_location
+#   sku_name            = "Consumption_0"
+#   publisher_name  = var.publisher_name
+#   publisher_email = var.publisher_email
+#   api_name             = "demo-charsett-api"
+#   api_display_name     = "demo-charsett API"
+#   api_path             = "demo-charsett"
+#   openapi_file         = "api-spec.yml"
 
-  backend_url          = "https://${module.function_app.default_hostname}/api/"
-  named_value_name     = "func-functionkey"
-  named_value_secret   = null
-  tags = local.tags_common
-}
+#   backend_url          = "https://${module.function_app.default_hostname}/api/"
+#   named_value_name     = "func-functionkey"
+#   named_value_secret   = null
+#   tags = local.tags_common
+# }
