@@ -91,11 +91,11 @@ module "function_app" {
 }
 
 # Key Vault (Access Policy or RBAC based on toggle)
-resource "random_string" "kv_suffix" {
-  length  = 5
-  upper   = false
-  special = false
-}
+# resource "random_string" "kv_suffix" {
+#   length  = 5
+#   upper   = false
+#   special = false
+# }
 
 module "keyvault" {
   source = "../../../modules/keyvault"
@@ -121,20 +121,20 @@ resource "azurerm_key_vault_access_policy" "deployer" {
 }
 
 # Example: put a secret (wait a bit for policy propagation)
-resource "time_sleep" "kv_policy_propagation" {
-  count           = var.kv_enable_rbac ? 0 : 1
-  depends_on      = [azurerm_key_vault_access_policy.deployer]
-  create_duration = "30s"
-}
+# resource "time_sleep" "kv_policy_propagation" {
+#   count           = var.kv_enable_rbac ? 0 : 1
+#   depends_on      = [azurerm_key_vault_access_policy.deployer]
+#   create_duration = "30s"
+# }
 
-resource "azurerm_key_vault_secret" "hello" {
-  count        = var.kv_enable_rbac ? 0 : 1
-  name         = "hello-secret"
-  value        = "world"
-  key_vault_id = module.keyvault.id
+# resource "azurerm_key_vault_secret" "hello" {
+#   count        = var.kv_enable_rbac ? 0 : 1
+#   name         = "hello-secret"
+#   value        = "world"
+#   key_vault_id = module.keyvault.id
 
-  depends_on = [time_sleep.kv_policy_propagation]
-}
+#   depends_on = [time_sleep.kv_policy_propagation]
+# }
 
 # APIM
 module "apim" {
