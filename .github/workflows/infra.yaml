@@ -110,7 +110,7 @@ jobs:
 
       - name: Terraform Plan Modules
         working-directory: ./azure-enterprise-terraform/terraform/global/resource_grouping
-        run: terraform plan -lock-timeout=5m -var-file=dev.tfvars
+        run: terraform plan -lock-timeout=5m -var-file=dev.auto.tfvars
 
       - name: Terraform Apply Modules
         working-directory: ./azure-enterprise-terraform/terraform/global/resource_grouping

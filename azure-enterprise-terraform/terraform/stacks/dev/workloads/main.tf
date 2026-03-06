@@ -22,7 +22,6 @@ module "vm" {
   tags                = local.tags_common
 }
 
-# Demo Public IP + Load Balancer (to learn Azure LB building blocks)
 module "pip" {
   count               = var.create_demo_lb ? 1 : 0
   source              = "../../../modules/public_ip"
