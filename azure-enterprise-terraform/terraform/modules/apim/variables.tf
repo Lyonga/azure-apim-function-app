@@ -30,7 +30,6 @@ variable "tags"                {
   default = {} 
   }
 
-# API import
 variable "api_name"            { type = string }
 variable "api_display_name"    { type = string }
 variable "api_path"            { type = string }
@@ -40,6 +39,5 @@ variable "openapi_file"        { type = string }
 variable "backend_url"         { type = string }
 variable "named_value_name"    { type = string }
 
-# Function App identity
 variable "function_app_name"       { type = string }
 variable "function_resource_group" { type = string }

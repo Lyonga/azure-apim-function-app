@@ -121,6 +121,10 @@ jobs:
         run: |
             terraform init -upgrade
 
+      - name: Force unlock (auto)
+        working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/workloads
+        run: terraform force-unlock -force "b8738b6e-907c-720c-b07e-52e1a0054a20"
+
       - name: Terraform Plan workloads
         working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/workloads
         run: terraform plan -lock-timeout=5m -var-file=dev.tfvars
