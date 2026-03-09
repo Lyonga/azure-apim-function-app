@@ -135,21 +135,21 @@ resource "azurerm_key_vault_secret" "hello" {
 }
 
 # APIM
-# module "apim" {
-#   source = "../.../../modules/apim" 
-#   name                = "apim-test-${local.name_prefix}"
-#   resource_group_name = data.terraform_remote_state.global.outputs.workload_rg_name
-#   location            = data.terraform_remote_state.global.outputs.workload_rg_location
-#   sku_name            = "Consumption_0"
-#   publisher_name  = var.publisher_name
-#   publisher_email = var.publisher_email
-#   api_name             = "demo-charsett-api"
-#   api_display_name     = "demo-charsett API"
-#   api_path             = "demo-charsett"
-#   openapi_file         = "api-spec.yml"
+module "apim" {
+  source = "../../modules/apim" 
+  name                = "apim-test-${local.name_prefix}"
+  resource_group_name = data.terraform_remote_state.global.outputs.workload_rg_name
+  location            = data.terraform_remote_state.global.outputs.workload_rg_location
+  sku_name            = "Consumption_0"
+  publisher_name  = var.publisher_name
+  publisher_email = var.publisher_email
+  api_name             = "demo-charsett-api"
+  api_display_name     = "demo-charsett API"
+  api_path             = "demo-charsett"
+  openapi_file         = "api-spec.yml"
 
-#   backend_url          = "https://${module.function_app.default_hostname}/api/"
-#   named_value_name     = "func-functionkey"
-#   named_value_secret   = null
-#   tags = local.tags_common
-# }
+  backend_url          = "https://${module.function_app.default_hostname}/api/"
+  named_value_name     = "func-functionkey"
+  named_value_secret   = null
+  tags = local.tags_common
+}

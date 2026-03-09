@@ -1,9 +1,4 @@
-
-
 data "azurerm_client_config" "current" {}
-
-
-
 resource "azurerm_api_management" "apim" {
   name                = var.name
   resource_group_name = var.resource_group_name
