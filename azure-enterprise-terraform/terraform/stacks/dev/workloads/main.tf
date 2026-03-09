@@ -17,7 +17,8 @@ module "vm" {
   vm_size             = var.vm_size
   admin_username      = var.admin_username
   os_disk_size_gb     = var.os_disk_size_gb
-  subnet_id           = local.subnet_ids["app"]
+  //subnet_id           = local.subnet_ids["app"]
+  subnet_id           = local.subnet_ids
   ssh_public_key      = var.ssh_public_key
   tags                = local.tags_common
 }
@@ -133,6 +134,27 @@ resource "azurerm_key_vault_secret" "hello" {
 
   depends_on = [time_sleep.kv_policy_propagation]
 }
+
+module "storage_account" {
+  source              = "../../../modules/storage"   # <-- match your folder name
+  name                = "st${replace(local.name_prefix, "-", "")}"
+  resource_group_name = local.rg_name
+  location            = local.workload_rg_location
+
+  # Minimal set; add the rest if your module requires them (use your module's variables.tf)
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+  # Optional flags if your module defines them:
+  # allow_blob_public_access      = false
+  # public_network_access_enabled = true
+  # min_tls_version               = "TLS1_2"
+
+  tags = local.tags_common
+
+  # If your module supports containers map, you can pass it; otherwise omit.
+  # containers = {}
+}
+
 
 # APIM
 module "apim" {
