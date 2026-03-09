@@ -76,6 +76,11 @@ variable "api_spec_path" {
 variable "backend_url" {
   type    = string
   default = null
+
+  validation {
+    condition     = var.backend_url == null || startswith(lower(var.backend_url), "https://")
+    error_message = "backend_url must use https."
+  }
 }
 
 variable "named_value_name" {

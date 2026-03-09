@@ -96,7 +96,7 @@ variable "provision_vm_agent" {
 variable "allow_extension_operations" {
   description = "Whether VM extensions can be installed after provisioning."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "enable_automatic_updates" {
@@ -276,13 +276,19 @@ variable "os_disk_caching" {
 variable "data_disks" {
   description = "Managed data disks to attach."
   type = map(object({
-    size_gb              = number
-    lun                  = number
-    storage_account_type = optional(string, "Premium_LRS")
-    caching              = optional(string, "ReadOnly")
-    create_option        = optional(string, "Empty")
+    size_gb                = number
+    lun                    = number
+    storage_account_type   = optional(string, "Premium_LRS")
+    caching                = optional(string, "ReadOnly")
+    create_option          = optional(string, "Empty")
+    disk_encryption_set_id = optional(string)
   }))
   default = {}
+}
+
+variable "disk_encryption_set_id" {
+  description = "Disk Encryption Set resource ID used for managed data disks."
+  type        = string
 }
 
 variable "tags" {

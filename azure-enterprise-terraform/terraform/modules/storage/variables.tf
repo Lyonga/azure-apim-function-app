@@ -1,5 +1,10 @@
 variable "name" {
   type = string
+
+  validation {
+    condition     = can(regex("^[a-z0-9]{3,24}$", var.name))
+    error_message = "Storage account names must be 3-24 characters, lowercase, and alphanumeric."
+  }
 }
 
 variable "resource_group_name" {
@@ -17,7 +22,7 @@ variable "account_tier" {
 
 variable "account_replication_type" {
   type    = string
-  default = "ZRS"
+  default = "GRS"
 }
 
 variable "account_kind" {
@@ -70,9 +75,14 @@ variable "container_delete_retention_days" {
   default = 30
 }
 
+variable "queue_logging_retention_days" {
+  type    = number
+  default = 10
+}
+
 variable "enable_network_rules" {
   type    = bool
-  default = false
+  default = true
 }
 
 variable "network_bypass" {

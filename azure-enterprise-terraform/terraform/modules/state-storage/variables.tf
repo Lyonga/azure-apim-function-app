@@ -17,6 +17,11 @@ variable "location" {
 variable "storage_account_name" {
   type        = string
   description = "Globally unique state storage account name."
+
+  validation {
+    condition     = can(regex("^[a-z0-9]{3,24}$", var.storage_account_name))
+    error_message = "storage_account_name must be 3-24 characters, lowercase, and alphanumeric."
+  }
 }
 
 variable "containers" {
@@ -28,7 +33,7 @@ variable "containers" {
 variable "account_replication_type" {
   type        = string
   description = "Replication type for the backend account."
-  default     = "ZRS"
+  default     = "GRS"
 }
 
 variable "min_tls_version" {
@@ -39,8 +44,8 @@ variable "min_tls_version" {
 
 variable "public_network_access_enabled" {
   type        = bool
-  description = "Allow public network access. GitHub-hosted runners generally require this unless using self-hosted runners."
-  default     = true
+  description = "Allow public network access. Secure baselines should keep this disabled and access state through private connectivity or trusted automation."
+  default     = false
 }
 
 variable "shared_access_key_enabled" {
@@ -52,7 +57,7 @@ variable "shared_access_key_enabled" {
 variable "enable_network_rules" {
   type        = bool
   description = "Enable network rules on the storage account."
-  default     = false
+  default     = true
 }
 
 variable "network_bypass" {
@@ -83,6 +88,12 @@ variable "container_delete_retention_days" {
   type        = number
   description = "Container soft delete retention."
   default     = 30
+}
+
+variable "queue_logging_retention_days" {
+  type        = number
+  description = "Queue logging retention in days."
+  default     = 10
 }
 
 variable "tags" {

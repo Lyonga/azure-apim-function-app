@@ -88,27 +88,52 @@ module "key_vault" {
   resource_group_name                     = module.resource_group.name
   location                                = var.location
   tenant_id                               = data.azurerm_client_config.current.tenant_id
+  sku_name                                = local.shared_services_cmk_enabled ? "premium" : "standard"
   enable_rbac_authorization               = true
   public_network_access_enabled           = false
   network_acls_virtual_network_subnet_ids = [module.spoke_network.subnet_ids["private-endpoints"]]
   tags                                    = module.tags.tags
 }
 
+resource "azurerm_key_vault_key" "shared_services_cmk" {
+  count           = local.shared_services_cmk_enabled ? 1 : 0
+  name            = "cmk-${var.environment}-${var.application}"
+  key_vault_id    = module.key_vault.id
+  key_type        = "RSA-HSM"
+  key_size        = 2048
+  expiration_date = "2035-01-01T00:00:00Z"
+  key_opts        = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
+}
+
+module "encryption_role_assignments" {
+  source      = "../../../../modules/role-assignments"
+  assignments = local.encryption_role_assignments
+}
+
 module "app_configuration" {
-  count               = var.enable_app_configuration ? 1 : 0
-  source              = "../../../../modules/app-configuration"
-  name                = var.app_configuration_name
-  resource_group_name = module.resource_group.name
-  location            = var.location
-  tags                = module.tags.tags
+  count                         = var.enable_app_configuration ? 1 : 0
+  source                        = "../../../../modules/app-configuration"
+  name                          = var.app_configuration_name
+  resource_group_name           = module.resource_group.name
+  location                      = var.location
+  identity_type                 = "UserAssigned"
+  identity_ids                  = [module.app_identity.id]
+  encryption_key_identifier     = var.enable_app_configuration ? azurerm_key_vault_key.shared_services_cmk[0].id : null
+  encryption_identity_client_id = var.enable_app_configuration ? module.app_identity.client_id : null
+  tags                          = module.tags.tags
+  depends_on                    = [module.encryption_role_assignments]
 }
 
 module "service_bus" {
-  count               = var.enable_service_bus ? 1 : 0
-  source              = "../../../../modules/service-bus"
-  name                = var.service_bus_name
-  resource_group_name = module.resource_group.name
-  location            = var.location
+  count                            = var.enable_service_bus ? 1 : 0
+  source                           = "../../../../modules/service-bus"
+  name                             = var.service_bus_name
+  resource_group_name              = module.resource_group.name
+  location                         = var.location
+  identity_type                    = "UserAssigned"
+  identity_ids                     = [module.app_identity.id]
+  customer_managed_key_id          = var.enable_service_bus ? azurerm_key_vault_key.shared_services_cmk[0].id : null
+  customer_managed_key_identity_id = var.enable_service_bus ? module.app_identity.id : null
   queues = {
     commands = {}
     events   = {}
@@ -116,7 +141,8 @@ module "service_bus" {
   topics = {
     notifications = {}
   }
-  tags = module.tags.tags
+  tags       = module.tags.tags
+  depends_on = [module.encryption_role_assignments]
 }
 
 module "sql_database" {
@@ -140,6 +166,7 @@ module "container_registry" {
   resource_group_name           = module.resource_group.name
   location                      = var.location
   public_network_access_enabled = false
+  georeplication_locations      = var.container_registry_replica_locations
   tags                          = module.tags.tags
 }
 

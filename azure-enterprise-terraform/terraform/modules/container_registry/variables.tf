@@ -30,9 +30,19 @@ variable "anonymous_pull_enabled" {
   default = false
 }
 
+variable "data_endpoint_enabled" {
+  type    = bool
+  default = true
+}
+
 variable "network_rule_bypass_option" {
   type    = string
   default = "None"
+}
+
+variable "quarantine_policy_enabled" {
+  type    = bool
+  default = true
 }
 
 variable "zone_redundancy_enabled" {
@@ -43,6 +53,26 @@ variable "zone_redundancy_enabled" {
 variable "export_policy_enabled" {
   type    = bool
   default = false
+}
+
+variable "retention_policy_enabled" {
+  type    = bool
+  default = true
+}
+
+variable "retention_policy_days" {
+  type    = number
+  default = 30
+}
+
+variable "trust_policy_enabled" {
+  type    = bool
+  default = true
+}
+
+variable "georeplication_locations" {
+  type    = list(string)
+  default = []
 }
 
 variable "tags" {

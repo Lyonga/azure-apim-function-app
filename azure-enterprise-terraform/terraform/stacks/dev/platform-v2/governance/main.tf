@@ -22,13 +22,6 @@ module "management_groups" {
 }
 
 locals {
-  tag_existence_checks = [
-    for tag_name in var.required_tags : {
-      field  = "[concat('tags[', '${tag_name}', ']')]"
-      exists = "false"
-    }
-  ]
-
   role_assignments = merge(
     var.platform_deployer_principal_id == "" ? {} : {
       platform_contributor = {
@@ -75,20 +68,20 @@ resource "azurerm_policy_definition" "allowed_locations" {
   description         = "Denies deployments outside approved Azure regions."
 
   policy_rule = jsonencode({
-    if = {
-      allOf = [
+    "if" = {
+      "allOf" = [
         {
-          field = "location"
-          notIn = var.allowed_locations
+          "field" = "location"
+          "notIn" = var.allowed_locations
         },
         {
-          field     = "location"
-          notEquals = "global"
+          "field"     = "location"
+          "notEquals" = "global"
         }
       ]
     }
-    then = {
-      effect = "deny"
+    "then" = {
+      "effect" = "deny"
     }
   })
 }
@@ -102,19 +95,27 @@ resource "azurerm_policy_definition" "required_tags" {
   description         = "Denies resources missing required enterprise tags."
 
   policy_rule = jsonencode({
-    if = {
-      allOf = [
+    "if" = {
+      "allOf" = [
         {
-          field     = "type"
-          notEquals = "Microsoft.Resources/subscriptions/resourceGroups"
+          "field"     = "type"
+          "notEquals" = "Microsoft.Resources/subscriptions/resourceGroups"
         },
         {
-          anyOf = local.tag_existence_checks
+          "count" = {
+            "value" = var.required_tags
+            "name"  = "tagName"
+            "where" = {
+              "field"  = "[concat('tags[', current('tagName'), ']')]"
+              "exists" = "false"
+            }
+          }
+          "greater" = 0
         }
       ]
     }
-    then = {
-      effect = "deny"
+    "then" = {
+      "effect" = "deny"
     }
   })
 }
@@ -128,12 +129,12 @@ resource "azurerm_policy_definition" "deny_public_ip" {
   description         = "Blocks public IP address resources."
 
   policy_rule = jsonencode({
-    if = {
-      field  = "type"
-      equals = "Microsoft.Network/publicIPAddresses"
+    "if" = {
+      "field"  = "type"
+      "equals" = "Microsoft.Network/publicIPAddresses"
     }
-    then = {
-      effect = "deny"
+    "then" = {
+      "effect" = "deny"
     }
   })
 }

@@ -104,6 +104,7 @@ module "keyvault" {
   name                       = lower("kv-${local.env}-${local.project}-${random_string.kv_suffix.result}")
   location                   = data.terraform_remote_state.global.outputs.workload_rg_location
   resource_group_name        = data.terraform_remote_state.global.outputs.workload_rg_name
+  tenant_id                  = data.azurerm_client_config.current.tenant_id
   sku_name                   = "standard"
   enable_rbac_authorization  = var.kv_enable_rbac
   purge_protection_enabled   = true
@@ -127,23 +128,25 @@ resource "time_sleep" "kv_policy_propagation" {
 }
 
 resource "azurerm_key_vault_secret" "hello" {
-  count        = var.kv_enable_rbac ? 0 : 1
-  name         = "hello-secret"
-  value        = "world"
-  key_vault_id = module.keyvault.id
+  count           = var.kv_enable_rbac ? 0 : 1
+  name            = "hello-secret"
+  value           = "world"
+  content_type    = "text/plain"
+  expiration_date = "2035-01-01T00:00:00Z"
+  key_vault_id    = module.keyvault.id
 
   depends_on = [time_sleep.kv_policy_propagation]
 }
 
 module "storage_account" {
   source              = "../../../modules/storage" # <-- match your folder name
-  name                = "st${replace(local.name_prefix, "-", "")}"
+  name                = var.storage_account_name
   resource_group_name = local.rg_name
   location            = local.workload_rg_location
 
   # Minimal set; add the rest if your module requires them (use your module's variables.tf)
   account_tier             = "Standard"
-  account_replication_type = "LRS"
+  account_replication_type = "GRS"
   # Optional flags if your module defines them:
   # allow_blob_public_access      = false
   # public_network_access_enabled = true
@@ -170,7 +173,7 @@ module "apim" {
   api_name                = "demo-charsett-api"
   api_display_name        = "demo-charsett API"
   api_path                = "demo-charsett"
-  openapi_file            = "api-spec.yml"
+  api_spec_path           = "${path.root}/../../../../../api-spec.yml"
 
   backend_url      = "https://${module.function_app.default_hostname}/api/"
   named_value_name = "func-functionkey"

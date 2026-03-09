@@ -55,7 +55,7 @@ module "keyvault" {
   name                = local.kv_name
   resource_group_name = local.project_rg_name
   location            = var.location
-  //tenant_id                   = var.tenant_id
+  tenant_id           = var.tenant_id
 
   enable_rbac_authorization  = true
   soft_delete_retention_days = 30
@@ -82,13 +82,14 @@ module "storage" {
 
 # Container Registry
 module "acr" {
-  source              = "../../../modules/container_registry"
-  name                = local.acr_name
-  resource_group_name = local.rg_name
-  location            = var.location
-  admin_enabled       = var.acr_admin_enabled
-  sku                 = var.acr_sku
-  tags                = local.common_tags
+  source                   = "../../../modules/container_registry"
+  name                     = local.acr_name
+  resource_group_name      = local.rg_name
+  location                 = var.location
+  admin_enabled            = var.acr_admin_enabled
+  sku                      = var.acr_sku
+  georeplication_locations = var.acr_georeplication_locations
+  tags                     = local.common_tags
 }
 
 module "policy_audit_vms" {
@@ -110,4 +111,3 @@ module "policy_audit_vms" {
 #   enable_min_reviewers_policy = var.enable_min_reviewers_policy
 #   min_reviewer_count          = var.min_reviewer_count
 # }
-

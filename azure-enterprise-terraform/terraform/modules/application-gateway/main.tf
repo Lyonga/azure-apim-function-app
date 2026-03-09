@@ -48,6 +48,11 @@ resource "azurerm_application_gateway" "this" {
     subnet_id                     = var.frontend_private_ip_address == null ? null : var.subnet_id
   }
 
+  ssl_policy {
+    policy_type = var.ssl_policy_type
+    policy_name = var.ssl_policy_name
+  }
+
   backend_address_pool {
     name         = local.backend_address_pool_name
     ip_addresses = var.backend_ip_addresses

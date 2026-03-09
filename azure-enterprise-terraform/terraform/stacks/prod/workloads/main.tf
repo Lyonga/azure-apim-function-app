@@ -20,6 +20,7 @@ module "vm" {
   resource_group_name = local.rg_name
   location            = var.location
   subnet_id           = local.subnet_ids["app"]
+  image               = var.vm_image
   ssh_public_key      = var.ssh_public_key
   tags                = local.common_tags
 }

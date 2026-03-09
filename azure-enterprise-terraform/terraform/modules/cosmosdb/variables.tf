@@ -15,6 +15,41 @@ variable "failover_locations" {
   type = list(string)
 }
 
+variable "key_vault_key_id" {
+  type    = string
+  default = null
+}
+
+variable "local_authentication_disabled" {
+  type    = bool
+  default = true
+}
+
+variable "access_key_metadata_writes_enabled" {
+  type    = bool
+  default = false
+}
+
+variable "default_identity_type" {
+  type    = string
+  default = "SystemAssignedIdentity"
+}
+
+variable "minimal_tls_version" {
+  type    = string
+  default = "Tls12"
+}
+
+variable "identity_type" {
+  type    = string
+  default = "SystemAssigned"
+}
+
+variable "identity_ids" {
+  type    = list(string)
+  default = []
+}
+
 variable "public_network_access_enabled" {
   type    = bool
   default = false

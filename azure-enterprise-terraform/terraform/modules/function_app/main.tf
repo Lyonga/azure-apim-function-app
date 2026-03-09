@@ -1,10 +1,12 @@
 resource "azurerm_service_plan" "this" {
-  name                = "${var.name}-plan"
-  resource_group_name = var.resource_group_name
-  location            = var.location
-  os_type             = "Linux"
-  sku_name            = var.app_service_plan_sku
-  tags                = var.tags
+  name                   = "${var.name}-plan"
+  resource_group_name    = var.resource_group_name
+  location               = var.location
+  os_type                = "Linux"
+  sku_name               = var.app_service_plan_sku
+  worker_count           = 2
+  zone_balancing_enabled = true
+  tags                   = var.tags
 }
 
 resource "azurerm_linux_function_app" "this" {
@@ -32,8 +34,8 @@ resource "azurerm_linux_function_app" "this" {
   site_config {
     always_on                              = var.always_on
     ftps_state                             = var.ftps_state
-    minimum_tls_version                    = var.minimum_tls_version
-    scm_minimum_tls_version                = var.scm_minimum_tls_version
+    minimum_tls_version                    = "1.2"
+    scm_minimum_tls_version                = "1.2"
     vnet_route_all_enabled                 = var.vnet_route_all_enabled
     health_check_path                      = var.health_check_path
     application_insights_connection_string = var.application_insights_connection_string

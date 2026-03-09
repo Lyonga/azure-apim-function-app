@@ -1,5 +1,6 @@
 locals {
-  api_spec_path = var.api_spec_path != null ? abspath(var.api_spec_path) : abspath("${path.root}/../../../api-spec.yml")
+  api_spec_path               = var.api_spec_path != null ? abspath(var.api_spec_path) : abspath("${path.root}/../../../api-spec.yml")
+  shared_services_cmk_enabled = var.enable_app_configuration || var.enable_service_bus
 
   app_subnet_nsg_rules = [
     {
@@ -170,4 +171,12 @@ locals {
       }
     } : {},
   )
+
+  encryption_role_assignments = local.shared_services_cmk_enabled ? {
+    app_identity_key_crypto = {
+      scope                = module.key_vault.id
+      role_definition_name = "Key Vault Crypto Service Encryption User"
+      principal_id         = module.app_identity.principal_id
+    }
+  } : {}
 }

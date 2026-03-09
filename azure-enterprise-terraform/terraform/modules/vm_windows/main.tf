@@ -43,7 +43,7 @@ resource "azurerm_windows_virtual_machine" "this" {
   admin_password             = var.admin_password
   network_interface_ids      = [azurerm_network_interface.this.id]
   provision_vm_agent         = var.provision_vm_agent
-  allow_extension_operations = var.allow_extension_operations
+  allow_extension_operations = false
   enable_automatic_updates   = var.enable_automatic_updates
   patch_mode                 = var.patch_mode
   patch_assessment_mode      = var.patch_assessment_mode
@@ -111,14 +111,16 @@ resource "azurerm_windows_virtual_machine" "this" {
 resource "azurerm_managed_disk" "data" {
   for_each = var.data_disks
 
-  name                 = "${var.name}-${each.key}"
-  location             = var.location
-  resource_group_name  = var.resource_group_name
-  storage_account_type = each.value.storage_account_type
-  create_option        = each.value.create_option
-  disk_size_gb         = each.value.size_gb
-  zone                 = var.zone
-  tags                 = var.tags
+  name                          = "${var.name}-${each.key}"
+  location                      = var.location
+  resource_group_name           = var.resource_group_name
+  storage_account_type          = each.value.storage_account_type
+  create_option                 = each.value.create_option
+  disk_size_gb                  = each.value.size_gb
+  disk_encryption_set_id        = coalesce(try(each.value.disk_encryption_set_id, null), var.disk_encryption_set_id)
+  public_network_access_enabled = false
+  zone                          = var.zone
+  tags                          = var.tags
 }
 
 resource "azurerm_virtual_machine_data_disk_attachment" "this" {

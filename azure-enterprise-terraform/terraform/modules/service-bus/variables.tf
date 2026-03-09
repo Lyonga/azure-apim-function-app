@@ -55,6 +55,18 @@ variable "identity_ids" {
   default     = []
 }
 
+variable "customer_managed_key_id" {
+  type        = string
+  description = "Key Vault key id used to encrypt the namespace."
+  default     = null
+}
+
+variable "customer_managed_key_identity_id" {
+  type        = string
+  description = "User-assigned identity id used to access the CMK."
+  default     = null
+}
+
 variable "queues" {
   type        = map(any)
   description = "Queues to create."

@@ -79,6 +79,16 @@ variable "firewall_policy_id" {
   default = null
 }
 
+variable "ssl_policy_type" {
+  type    = string
+  default = "Predefined"
+}
+
+variable "ssl_policy_name" {
+  type    = string
+  default = "AppGwSslPolicy20220101S"
+}
+
 variable "enable_waf_configuration" {
   type    = bool
   default = true

@@ -43,5 +43,6 @@ variable "image" {
     publisher = string
     offer     = string
     sku       = string
+    version   = optional(string, "latest")
   })
 }

@@ -97,7 +97,13 @@ variable "vm_image" {
     publisher = string
     offer     = string
     sku       = string
+    version   = optional(string, "latest")
   })
+}
+
+variable "storage_account_name" {
+  type    = string
+  default = "stdefaultcollection001"
 }
 
 variable "retention_in_days" {

@@ -31,9 +31,10 @@ resource "azurerm_mssql_database" "this" {
   for_each       = var.databases
   name           = each.key
   server_id      = azurerm_mssql_server.this.id
-  sku_name       = try(each.value.sku_name, "S0")
+  sku_name       = try(each.value.sku_name, "GP_S_Gen5_2")
   max_size_gb    = try(each.value.max_size_gb, 32)
-  zone_redundant = try(each.value.zone_redundant, false)
+  zone_redundant = true
+  ledger_enabled = true
   collation      = try(each.value.collation, null)
   read_scale     = try(each.value.read_scale, false)
   tags           = var.tags

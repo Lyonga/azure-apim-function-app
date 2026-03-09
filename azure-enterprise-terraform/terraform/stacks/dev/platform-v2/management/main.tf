@@ -35,7 +35,7 @@ module "diagnostics_archive" {
   name                          = var.diagnostics_storage_account_name
   resource_group_name           = module.resource_group.name
   location                      = var.location
-  public_network_access_enabled = true
+  public_network_access_enabled = false
   shared_access_key_enabled     = false
   enable_network_rules          = true
   network_bypass                = ["AzureServices"]

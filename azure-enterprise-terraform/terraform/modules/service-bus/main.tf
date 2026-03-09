@@ -6,6 +6,7 @@ resource "azurerm_servicebus_namespace" "this" {
   capacity                      = var.sku == "Premium" ? var.capacity : 0
   premium_messaging_partitions  = var.sku == "Premium" ? var.premium_messaging_partitions : 0
   local_auth_enabled            = var.local_auth_enabled
+  minimum_tls_version           = "1.2"
   public_network_access_enabled = var.public_network_access_enabled
   tags                          = var.tags
 
@@ -14,6 +15,15 @@ resource "azurerm_servicebus_namespace" "this" {
     content {
       type         = var.identity_type
       identity_ids = var.identity_ids
+    }
+  }
+
+  dynamic "customer_managed_key" {
+    for_each = var.customer_managed_key_id == null || var.customer_managed_key_identity_id == null ? [] : [1]
+    content {
+      key_vault_key_id                  = var.customer_managed_key_id
+      identity_id                       = var.customer_managed_key_identity_id
+      infrastructure_encryption_enabled = true
     }
   }
 }

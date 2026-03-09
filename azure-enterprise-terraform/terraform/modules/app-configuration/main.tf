@@ -16,4 +16,12 @@ resource "azurerm_app_configuration" "this" {
       identity_ids = var.identity_ids
     }
   }
+
+  dynamic "encryption" {
+    for_each = var.encryption_key_identifier == null ? [] : [1]
+    content {
+      key_vault_key_identifier = var.encryption_key_identifier
+      identity_client_id       = var.encryption_identity_client_id
+    }
+  }
 }

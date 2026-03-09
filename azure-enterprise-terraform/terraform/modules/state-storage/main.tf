@@ -36,14 +36,21 @@ resource "azurerm_storage_account" "this" {
     }
   }
 
-  dynamic "network_rules" {
-    for_each = var.enable_network_rules ? [1] : []
-    content {
-      default_action             = var.public_network_access_enabled ? "Allow" : "Deny"
-      bypass                     = var.network_bypass
-      ip_rules                   = var.ip_rules
-      virtual_network_subnet_ids = var.virtual_network_subnet_ids
+  queue_properties {
+    logging {
+      delete                = true
+      read                  = true
+      write                 = true
+      version               = "1.0"
+      retention_policy_days = var.queue_logging_retention_days
     }
+  }
+
+  network_rules {
+    default_action             = "Deny"
+    bypass                     = var.network_bypass
+    ip_rules                   = var.ip_rules
+    virtual_network_subnet_ids = var.virtual_network_subnet_ids
   }
 }
 

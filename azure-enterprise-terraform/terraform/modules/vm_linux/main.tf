@@ -12,13 +12,14 @@ resource "azurerm_network_interface" "this" {
 }
 
 resource "azurerm_linux_virtual_machine" "this" {
-  name                  = var.name
-  resource_group_name   = var.resource_group_name
-  location              = var.location
-  size                  = var.vm_size
-  admin_username        = var.admin_username
-  network_interface_ids = [azurerm_network_interface.this.id]
-  tags                  = var.tags
+  name                       = var.name
+  resource_group_name        = var.resource_group_name
+  location                   = var.location
+  size                       = var.vm_size
+  admin_username             = var.admin_username
+  network_interface_ids      = [azurerm_network_interface.this.id]
+  allow_extension_operations = false
+  tags                       = var.tags
 
   admin_ssh_key {
     username   = var.admin_username

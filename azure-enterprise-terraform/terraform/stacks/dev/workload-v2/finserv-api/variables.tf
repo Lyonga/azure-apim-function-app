@@ -193,6 +193,12 @@ variable "container_registry_name" {
   default     = null
 }
 
+variable "container_registry_replica_locations" {
+  type        = list(string)
+  description = "Secondary Azure regions for ACR geo-replication."
+  default     = ["centralus"]
+}
+
 variable "service_plan_sku" {
   type        = string
   description = "Function App service plan SKU."

@@ -45,13 +45,13 @@ variable "create_resource_group" {
 variable "account_replication_type" {
   type        = string
   description = "Replication model for the backend account."
-  default     = "ZRS"
+  default     = "GRS"
 }
 
 variable "public_network_access_enabled" {
   type        = bool
-  description = "Allow public network access for GitHub-hosted runners."
-  default     = true
+  description = "Allow public network access for the backend account."
+  default     = false
 }
 
 variable "shared_access_key_enabled" {
@@ -63,7 +63,7 @@ variable "shared_access_key_enabled" {
 variable "enable_network_rules" {
   type        = bool
   description = "Enable storage network rules."
-  default     = false
+  default     = true
 }
 
 variable "ip_rules" {

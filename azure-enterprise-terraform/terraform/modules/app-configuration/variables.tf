@@ -55,6 +55,18 @@ variable "identity_ids" {
   default     = []
 }
 
+variable "encryption_key_identifier" {
+  type        = string
+  description = "Key Vault key identifier for CMK encryption."
+  default     = null
+}
+
+variable "encryption_identity_client_id" {
+  type        = string
+  description = "Client id of the user-assigned identity used for CMK encryption."
+  default     = null
+}
+
 variable "tags" {
   type        = map(string)
   description = "Tags."

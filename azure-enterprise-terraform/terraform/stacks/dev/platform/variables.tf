@@ -185,7 +185,13 @@ variable "min_reviewer_count" {
 variable "acr_sku" {
   description = "The SKU for the Azure Container Registry. for example: Basic, Standard, Premium."
   type        = string
-  default     = "Standard"
+  default     = "Premium"
+}
+
+variable "acr_georeplication_locations" {
+  description = "Secondary Azure regions for ACR geo-replication."
+  type        = list(string)
+  default     = ["centralus"]
 }
 
 variable "kv_sku" {
@@ -206,7 +212,7 @@ variable "retention_in_days" {
 
 variable "storage_account_replication_type" {
   type    = string
-  default = "LRS"
+  default = "GRS"
 }
 
 variable "storage_account_min_tls_version" {

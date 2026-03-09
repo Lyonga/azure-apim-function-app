@@ -57,3 +57,18 @@ variable "ssh_public_key" {
   type    = string
   default = "ssh-rsa REPLACE_ME"
 }
+
+variable "vm_image" {
+  type = object({
+    publisher = string
+    offer     = string
+    sku       = string
+    version   = optional(string, "latest")
+  })
+  default = {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts"
+    version   = "latest"
+  }
+}
