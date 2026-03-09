@@ -69,13 +69,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run Checkov
-        uses: bridgecrewio/checkov-action@master
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          directory: ./azure-enterprise-terraform/terraform
-          framework: terraform
-          output_format: sarif
-          output_file_path: results.sarif
+          python-version: "3.12"
+
+      - name: Print Revision
+        run: |
+          echo "Git revision: $(git rev-parse HEAD)"
+
+      - name: Install Checkov
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "checkov==3.2.500"
+          checkov --version
+
+      - name: Run Checkov
+        run: |
+          checkov \
+            -d ./azure-enterprise-terraform/terraform \
+            --framework terraform \
+            --compact \
+            -o sarif \
+            --output-file-path results.sarif
 
       - name: Upload SARIF file
         if: success() || failure()

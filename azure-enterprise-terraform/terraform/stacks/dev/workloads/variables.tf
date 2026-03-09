@@ -131,5 +131,5 @@ variable "kv_enable_rbac" {
   default = false
 }
 
-variable "publisher_name" { default = "someone-demo-apim" }
+variable "publisher_name" { default = "project-demo-apim" }
 variable "publisher_email" { default = "c.lyonga03@yahoo.com.com" }
