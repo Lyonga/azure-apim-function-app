@@ -136,9 +136,11 @@ resource "azurerm_key_vault_secret" "hello" {
 
 # APIM
 module "apim" {
-  source = "../../modules/apim" 
+  source = "../../../modules/apim" 
   name                = "apim-test-${local.name_prefix}"
   resource_group_name = data.terraform_remote_state.global.outputs.workload_rg_name
+  function_resource_group = data.terraform_remote_state.global.outputs.workload_rg_name
+  function_app_name = module.function_app.name
   location            = data.terraform_remote_state.global.outputs.workload_rg_location
   sku_name            = "Consumption_0"
   publisher_name  = var.publisher_name
@@ -150,6 +152,6 @@ module "apim" {
 
   backend_url          = "https://${module.function_app.default_hostname}/api/"
   named_value_name     = "func-functionkey"
-  named_value_secret   = null
+  //named_value_secret   = null
   tags = local.tags_common
 }

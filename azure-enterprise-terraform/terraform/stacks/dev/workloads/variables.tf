@@ -124,3 +124,6 @@ variable "kv_enable_rbac"  {
   type = bool 
   default = false 
   }
+
+variable "publisher_name" { default = "someone-demo-apim" }
+variable "publisher_email" { default = "c.lyonga03@yahoo.com.com" }
