@@ -5,8 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "azure-enterprise-terraform/stacks/dev/platform**"
-      - "azure-enterprise-terraform/stacks/dev/workloads/**"
+      - "azure-enterprise-terraform/**"
   workflow_dispatch:
     inputs:
       stack_path:
@@ -46,45 +45,6 @@ jobs:
             -p "${{ secrets.ARM_CLIENT_SECRET }}" \
             --tenant "${{ secrets.ARM_TENANT_ID }}"
           az account set --subscription "${{ secrets.ARM_SUBSCRIPTION_ID }}"
-
-      # - name: Terraform Init
-      #   working-directory: ${{ inputs.stack_path }}
-      #   run: terraform init -upgrade
-
-      # - name: Force unlock (manual use)
-      #   if: ${{ inputs.force_unlock == true && inputs.lock_id != '' }}
-      #   working-directory: ${{ inputs.stack_path }}
-      #   run: terraform force-unlock -force "${{ inputs.lock_id }}"
-
-      # - name: Terraform Plan
-      #   working-directory: ${{ inputs.stack_path }}
-      #   run: terraform plan -lock-timeout=5m
-      # - name: Terraform Destroy
-      #   working-directory: ${{ inputs.stack_path }}
-      #   run: terraform destroy -lock-timeout=5m -auto-approve
-
-      # - name: Remove Key Vault objects from state (unblock refresh)
-      #   shell: bash
-      #   working-directory: ${{ inputs.stack_path }}
-      #   run: |
-      #       set -euo pipefail
-      #       terraform init -reconfigure
-
-      #       echo "State objects containing keyvault:"
-      #       terraform state list | grep -i keyvault || true
-
-      #       # Remove ALL keyvault-related objects from state (safe: does NOT delete Azure resources)
-      #       for addr in $(terraform state list | grep -i keyvault || true); do
-      #       echo "Removing from state: $addr"
-      #       terraform state rm "$addr" || true
-      #       done
-
-      # - name: Reset terraform local dir (safe)
-      #   shell: bash
-      #   working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
-      #   run: |
-      #       rm -rf .terraform .terraform.lock.hcl
-      #       terraform init -reconfigure
 
       - name: Terraform Init Modules
         working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
