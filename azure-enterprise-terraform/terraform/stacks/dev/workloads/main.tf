@@ -1,9 +1,9 @@
-locals {
-  //rg_name   = data.terraform_remote_state.platform.outputs.resource_group_name
-  rg_name  = data.terraform_remote_state.global.outputs.workload_rg_name
-  subnet_ids = data.terraform_remote_state.platform.outputs.subnet_ids
-  workload_rg_location = data.terraform_remote_state.global.outputs.workload_rg_location
-}
+# locals {
+#   //rg_name   = data.terraform_remote_state.platform.outputs.resource_group_name
+#   rg_name  = data.terraform_remote_state.global.outputs.workload_rg_name
+#   subnet_ids = data.terraform_remote_state.platform.outputs.subnet_ids
+#   workload_rg_location = data.terraform_remote_state.global.outputs.workload_rg_location
+# }
 
 # Demo VM (in app subnet)
 module "vm" {
