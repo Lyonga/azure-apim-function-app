@@ -9,8 +9,8 @@ resource "azapi_resource" "subscription_alias" {
 
   body = jsonencode({
     properties = {
-      displayName = var.subscription_display_name
-      workload    = var.workload
+      displayName  = var.subscription_display_name
+      workload     = var.workload
       billingScope = var.billing_scope_id
     }
   })

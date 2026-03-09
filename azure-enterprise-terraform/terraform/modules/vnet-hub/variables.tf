@@ -1,13 +1,90 @@
-variable "name" { type = string }
-variable "resource_group_name" { type = string }
-variable "location" { type = string }
-variable "address_space" { type = list(string) }
-variable "tags" { type = map(string) }
+variable "name" {
+  type = string
+}
 
-variable "enable_firewall" { type = bool, default = false }
+variable "resource_group_name" {
+  type = string
+}
+
+variable "location" {
+  type = string
+}
+
+variable "address_space" {
+  type = list(string)
+}
+
+variable "dns_servers" {
+  type    = list(string)
+  default = null
+}
+
+variable "ddos_protection_plan_id" {
+  type    = string
+  default = null
+}
+
+variable "enable_firewall" {
+  type    = bool
+  default = false
+}
+
+variable "firewall_sku_tier" {
+  type    = string
+  default = "Standard"
+}
 
 variable "firewall_subnet_cidr" {
-  type        = string
-  default     = "10.0.255.0/26"
-  description = "CIDR for AzureFirewallSubnet (must be /26 or larger)."
+  type    = string
+  default = "10.0.0.0/26"
+}
+
+variable "bastion_subnet_cidr" {
+  type    = string
+  default = "10.0.0.64/26"
+}
+
+variable "shared_services_subnet_cidr" {
+  type    = string
+  default = "10.0.1.0/24"
+}
+
+variable "private_endpoints_subnet_cidr" {
+  type    = string
+  default = "10.0.2.0/24"
+}
+
+variable "dns_inbound_subnet_cidr" {
+  type    = string
+  default = "10.0.3.0/24"
+}
+
+variable "dns_outbound_subnet_cidr" {
+  type    = string
+  default = "10.0.4.0/24"
+}
+
+variable "shared_services_nsg_rules" {
+  type = list(object({
+    name                       = string
+    priority                   = number
+    direction                  = string
+    access                     = string
+    protocol                   = string
+    source_port_range          = optional(string, "*")
+    destination_port_range     = optional(string, "*")
+    source_address_prefix      = optional(string, "*")
+    destination_address_prefix = optional(string, "*")
+  }))
+  default = []
+}
+
+variable "subnets" {
+  type    = any
+  default = null
+}
+
+variable "tags" {
+  type    = map(string)
+  default = {}
 }

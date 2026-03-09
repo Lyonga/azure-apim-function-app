@@ -12,21 +12,82 @@ variable "location" {
 
 variable "account_tier" {
   type    = string
-  default = "Standard"  
+  default = "Standard"
 }
 
 variable "account_replication_type" {
   type    = string
-  default = "LRS"
+  default = "ZRS"
 }
 
-variable "public_network_access_enabled" { 
-  type = bool
-  default = false 
-  }
-variable "tags" {
-  type    = map(string)
-  default = {}
+variable "account_kind" {
+  type    = string
+  default = "StorageV2"
+}
+
+variable "min_tls_version" {
+  type    = string
+  default = "TLS1_2"
+}
+
+variable "allow_blob_public_access" {
+  type    = bool
+  default = false
+}
+
+variable "public_network_access_enabled" {
+  type    = bool
+  default = false
+}
+
+variable "shared_access_key_enabled" {
+  type    = bool
+  default = true
+}
+
+variable "infrastructure_encryption_enabled" {
+  type    = bool
+  default = true
+}
+
+variable "versioning_enabled" {
+  type    = bool
+  default = true
+}
+
+variable "change_feed_enabled" {
+  type    = bool
+  default = true
+}
+
+variable "blob_delete_retention_days" {
+  type    = number
+  default = 30
+}
+
+variable "container_delete_retention_days" {
+  type    = number
+  default = 30
+}
+
+variable "enable_network_rules" {
+  type    = bool
+  default = false
+}
+
+variable "network_bypass" {
+  type    = list(string)
+  default = ["AzureServices"]
+}
+
+variable "ip_rules" {
+  type    = list(string)
+  default = []
+}
+
+variable "virtual_network_subnet_ids" {
+  type    = list(string)
+  default = []
 }
 
 variable "containers" {
@@ -35,15 +96,8 @@ variable "containers" {
   }))
   default = {}
 }
-variable "account_kind" { 
-  type = string 
-default = "StorageV2" 
+
+variable "tags" {
+  type    = map(string)
+  default = {}
 }
-variable "min_tls_version" { 
-  type = string 
-  default = "TLS1_2" 
-  }
-variable "allow_blob_public_access" { 
-  type = bool 
-  default = false 
-  }

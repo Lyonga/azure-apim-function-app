@@ -12,7 +12,7 @@ variable "location" {
 
 variable "sku" {
   type    = string
-  default = "PerGB2018"  # ✅ recommended common value
+  default = "PerGB2018" # ✅ recommended common value
 }
 
 variable "retention_in_days" {
@@ -26,6 +26,6 @@ variable "tags" {
 }
 
 variable "insights_name" {
-  type        = string
-  default     = "demolo-analytics-insights"
+  type    = string
+  default = "demolo-analytics-insights"
 }

@@ -1,0 +1,88 @@
+name: Terraform Plan and Apply
+
+on:
+  workflow_dispatch:
+    inputs:
+      stack_path:
+        description: "Terraform stack path relative to repo root"
+        required: true
+        default: "azure-enterprise-terraform/terraform/stacks/dev/workload-v2/finserv-api"
+      backend_config_path:
+        description: "Backend config file relative to repo root"
+        required: true
+        default: "azure-enterprise-terraform/terraform/stacks/dev/workload-v2/finserv-api/backend.hcl"
+      var_file:
+        description: "Optional tfvars file relative to the stack path"
+        required: false
+        default: ""
+      apply:
+        description: "Apply the reviewed plan"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  ARM_USE_OIDC: true
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: terraform-${{ inputs.stack_path }}
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Terraform Init
+        working-directory: ${{ inputs.stack_path }}
+        run: terraform init -backend-config="${{ github.workspace }}/${{ inputs.backend_config_path }}"
+
+      - name: Terraform Format
+        working-directory: ${{ inputs.stack_path }}
+        run: terraform fmt -check
+
+      - name: Terraform Validate
+        working-directory: ${{ inputs.stack_path }}
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: ${{ inputs.stack_path }}
+        run: |
+          set -euo pipefail
+          if [ -n "${{ inputs.var_file }}" ]; then
+            terraform plan -out=tfplan -var-file="${{ inputs.var_file }}"
+          else
+            terraform plan -out=tfplan
+          fi
+
+      - name: Upload Plan Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ github.run_id }}
+          path: ${{ inputs.stack_path }}/tfplan
+
+      # - name: Terraform Apply
+      #   if: ${{ inputs.apply == true }}
+      #   working-directory: ${{ inputs.stack_path }}
+      #   run: terraform apply -auto-approve tfplan

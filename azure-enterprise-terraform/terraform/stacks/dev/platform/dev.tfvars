@@ -1,10 +1,10 @@
-environment          = "dev"
-location             = "eastus"
+environment           = "dev"
+location              = "eastus"
 create_resource_group = true
-resource_group_name  = "demo-labs-platform"
-project     = "demolabs"
-name_suffix = "0012"
-analytics_sku = "PerGB2018" 
+resource_group_name   = "demo-labs-platform"
+project               = "demolabs"
+name_suffix           = "0012"
+analytics_sku         = "PerGB2018"
 
 project_name = "azure-enterprise-lab"
 owner        = "charles"

@@ -1,0 +1,85 @@
+name: Terraform CI
+
+on:
+  pull_request:
+    paths:
+      - "azure-enterprise-terraform/**"
+      - ".github/workflows/terraform-*.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "azure-enterprise-terraform/**"
+      - ".github/workflows/terraform-*.yml"
+
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
+jobs:
+  fmt:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform Format
+        run: terraform fmt -check -recursive azure-enterprise-terraform/terraform
+
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        stack:
+          - azure-enterprise-terraform/terraform/stacks/dev/platform-v2/bootstrap
+          - azure-enterprise-terraform/terraform/stacks/dev/platform-v2/governance
+          - azure-enterprise-terraform/terraform/stacks/dev/platform-v2/connectivity
+          - azure-enterprise-terraform/terraform/stacks/dev/platform-v2/management
+          - azure-enterprise-terraform/terraform/stacks/dev/workload-v2/finserv-api
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        working-directory: ${{ matrix.stack }}
+        run: terraform init -backend=false
+
+      - name: Terraform Validate
+        working-directory: ${{ matrix.stack }}
+        run: terraform validate
+
+  checkov:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: ./azure-enterprise-terraform/terraform
+          framework: terraform
+          output_format: sarif
+          output_file_path: results.sarif
+
+      - name: Upload SARIF file
+        if: success() || failure()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
+          category: checkov

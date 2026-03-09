@@ -51,33 +51,33 @@ module "network" {
 
 # Key Vault
 module "keyvault" {
-  source                      = "../../../modules/keyvault"
-  name                        = local.kv_name
-  resource_group_name         = local.project_rg_name
-  location                    = var.location
+  source              = "../../../modules/keyvault"
+  name                = local.kv_name
+  resource_group_name = local.project_rg_name
+  location            = var.location
   //tenant_id                   = var.tenant_id
 
-  enable_rbac_authorization   = true
-  soft_delete_retention_days  = 30
-  sku_name                    = var.kv_sku
-  purge_protection_enabled    = true
-  tags                = local.common_tags
+  enable_rbac_authorization  = true
+  soft_delete_retention_days = 30
+  sku_name                   = var.kv_sku
+  purge_protection_enabled   = true
+  tags                       = local.common_tags
 }
 
 # Storage Account + containers to test
 module "storage" {
-  source                      = "../../../modules/storage"
-  name                        = local.sa_name
-  resource_group_name         = local.project_rg_name
-  location                    = var.location
-  allow_blob_public_access    = var.allow_blob_public_access
+  source                   = "../../../modules/storage"
+  name                     = local.sa_name
+  resource_group_name      = local.project_rg_name
+  location                 = var.location
+  allow_blob_public_access = var.allow_blob_public_access
 
-  account_kind                = var.storage_account_kind
-  account_replication_type    = var.storage_account_replication_type
-  min_tls_version             = var.storage_account_min_tls_version
-  account_tier                = var.storage_account_tier
-  containers                  = var.storage_account_containers
-  tags                        = local.common_tags
+  account_kind             = var.storage_account_kind
+  account_replication_type = var.storage_account_replication_type
+  min_tls_version          = var.storage_account_min_tls_version
+  account_tier             = var.storage_account_tier
+  containers               = var.storage_account_containers
+  tags                     = local.common_tags
 }
 
 # Container Registry
@@ -97,7 +97,7 @@ module "policy_audit_vms" {
   display_name         = "Audit VMs without managed disks"
   parameters           = var.policy_parameters
   policy_definition_id = var.policy_definition_id
-  scope               = module.rg[0].id
+  scope                = module.rg[0].id
   tags                 = local.common_tags
 }
 

@@ -32,26 +32,26 @@ module "network" {
 }
 
 module "keyvault" {
-  source                      = "../../../modules/keyvault"
-  name                        = var.keyvault_name
-  resource_group_name         = local.rg_name
-  location                    = var.location
-  tenant_id                   = data.azurerm_client_config.current.tenant_id
-  enable_rbac_authorization   = true  # Added missing attribute
-  purge_protection_enabled    = true  # Added missing attribute
-  soft_delete_retention_days  = 30    # Added missing attribute
-  tags                        = local.common_tags
+  source                     = "../../../modules/keyvault"
+  name                       = var.keyvault_name
+  resource_group_name        = local.rg_name
+  location                   = var.location
+  tenant_id                  = data.azurerm_client_config.current.tenant_id
+  enable_rbac_authorization  = true # Added missing attribute
+  purge_protection_enabled   = true # Added missing attribute
+  soft_delete_retention_days = 30   # Added missing attribute
+  tags                       = local.common_tags
 }
 
 module "storage" {
-  source                      = "../../../modules/storage"
-  name                        = var.storage_account_name
-  resource_group_name         = local.rg_name
-  location                    = var.location
-  allow_blob_public_access    = false  # Added missing attribute
-  account_kind                = "StorageV2"  # Added missing attribute
-  account_replication_type    = "LRS"  # Added missing attribute
-  min_tls_version             = "1.2"  # Added missing attribute
+  source                   = "../../../modules/storage"
+  name                     = var.storage_account_name
+  resource_group_name      = local.rg_name
+  location                 = var.location
+  allow_blob_public_access = false       # Added missing attribute
+  account_kind             = "StorageV2" # Added missing attribute
+  account_replication_type = "LRS"       # Added missing attribute
+  min_tls_version          = "1.2"       # Added missing attribute
   containers = {
     appdata = { access_type = "private" }
     logs    = { access_type = "private" }

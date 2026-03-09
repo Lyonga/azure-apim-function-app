@@ -3,27 +3,35 @@ variable "enable" {
   default = false
 }
 
-variable "project_name" {
-  type    = string
-  default = null
-}
-
-variable "repository_name" {
-  type    = string
-  default = null
-}
-
-variable "branch_name" {
-  type    = string
-  default = "main"
-}
-
-# Optional basic policy (build validation requires pipeline id; left as placeholder)
-variable "enable_min_reviewers_policy" {
+variable "create_project" {
   type    = bool
   default = false
 }
+
+variable "project_name" {
+  type = string
+}
+
+variable "project_visibility" {
+  type    = string
+  default = "private"
+}
+
+variable "repository_name" {
+  type = string
+}
+
+variable "default_branch" {
+  type    = string
+  default = "refs/heads/main"
+}
+
+variable "enable_min_reviewers_policy" {
+  type    = bool
+  default = true
+}
+
 variable "min_reviewer_count" {
   type    = number
-  default = 1
+  default = 2
 }

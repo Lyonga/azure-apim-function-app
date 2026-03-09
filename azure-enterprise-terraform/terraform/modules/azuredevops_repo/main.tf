@@ -1,14 +1,34 @@
-# This module is OFF by default to keep the project deployable even if you don't use Azure DevOps.
-# If enabled, configure the azuredevops provider in the stack's provider.tf.
+terraform {
+  required_providers {
+    azuredevops = {
+      source = "microsoft/azuredevops"
+    }
+  }
+}
 
-data "azuredevops_project" "this" {
-  count = var.enable ? 1 : 0
+resource "azuredevops_project" "this" {
+  count              = var.enable && var.create_project ? 1 : 0
+  name               = var.project_name
+  visibility         = var.project_visibility
+  version_control    = "Git"
+  work_item_template = "Agile"
+}
+
+data "azuredevops_project" "existing" {
+  count = var.enable && !var.create_project ? 1 : 0
   name  = var.project_name
+}
+
+locals {
+  project_id = var.enable ? coalesce(
+    try(azuredevops_project.this[0].id, null),
+    try(data.azuredevops_project.existing[0].id, null),
+  ) : null
 }
 
 resource "azuredevops_git_repository" "this" {
   count      = var.enable ? 1 : 0
-  project_id = data.azuredevops_project.this[0].id
+  project_id = local.project_id
   name       = var.repository_name
 
   initialization {
@@ -16,16 +36,9 @@ resource "azuredevops_git_repository" "this" {
   }
 }
 
-resource "azuredevops_git_repository_default_branch" "this" {
-  count         = var.enable ? 1 : 0
-  repository_id = azuredevops_git_repository.this[0].id
-  branch_name   = var.default_branch
-}
-
-# Example policy: minimum reviewers (simple and common).
 resource "azuredevops_branch_policy_min_reviewers" "min_reviewers" {
   count      = var.enable && var.enable_min_reviewers_policy ? 1 : 0
-  project_id = data.azuredevops_project.this[0].id
+  project_id = local.project_id
   enabled    = true
   blocking   = true
 
@@ -34,7 +47,7 @@ resource "azuredevops_branch_policy_min_reviewers" "min_reviewers" {
 
     scope {
       repository_id  = azuredevops_git_repository.this[0].id
-      repository_ref = var.branch_name
+      repository_ref = var.default_branch
       match_type     = "Exact"
     }
   }

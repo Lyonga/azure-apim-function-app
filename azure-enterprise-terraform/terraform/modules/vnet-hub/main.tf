@@ -1,39 +1,48 @@
-resource "azurerm_virtual_network" "hub" {
-  name                = var.name
-  resource_group_name = var.resource_group_name
-  location            = var.location
-  address_space       = var.address_space
-  tags                = var.tags
+locals {
+  default_subnets = {
+    AzureFirewallSubnet = {
+      address_prefixes = [var.firewall_subnet_cidr]
+      nsg_rules        = []
+    }
+    AzureBastionSubnet = {
+      address_prefixes = [var.bastion_subnet_cidr]
+      nsg_rules        = []
+    }
+    shared-services = {
+      address_prefixes = [var.shared_services_subnet_cidr]
+      nsg_rules        = var.shared_services_nsg_rules
+    }
+    private-endpoints = {
+      address_prefixes                          = [var.private_endpoints_subnet_cidr]
+      private_endpoint_network_policies_enabled = false
+      nsg_rules                                 = []
+    }
+    dns-inbound = {
+      address_prefixes = [var.dns_inbound_subnet_cidr]
+      nsg_rules        = []
+    }
+    dns-outbound = {
+      address_prefixes = [var.dns_outbound_subnet_cidr]
+      nsg_rules        = []
+    }
+  }
 }
 
-# Recommended hub subnets
-resource "azurerm_subnet" "shared" {
-  name                 = "snet-shared"
-  resource_group_name  = var.resource_group_name
-  virtual_network_name = azurerm_virtual_network.hub.name
-  address_prefixes     = ["10.0.10.0/24"]
+module "network" {
+  source                  = "../network"
+  name                    = var.name
+  resource_group_name     = var.resource_group_name
+  location                = var.location
+  address_space           = var.address_space
+  dns_servers             = var.dns_servers
+  ddos_protection_plan_id = var.ddos_protection_plan_id
+  subnets                 = var.subnets == null ? local.default_subnets : var.subnets
+  tags                    = var.tags
 }
 
-resource "azurerm_subnet" "private_endpoints" {
-  name                 = "snet-private-endpoints"
-  resource_group_name  = var.resource_group_name
-  virtual_network_name = azurerm_virtual_network.hub.name
-  address_prefixes     = ["10.0.20.0/24"]
-  private_endpoint_network_policies_enabled = false
-}
-
-# Optional Azure Firewall
-resource "azurerm_subnet" "firewall" {
-  count                = var.enable_firewall ? 1 : 0
-  name                 = "AzureFirewallSubnet"
-  resource_group_name  = var.resource_group_name
-  virtual_network_name = azurerm_virtual_network.hub.name
-  address_prefixes     = [var.firewall_subnet_cidr]
-}
-
-resource "azurerm_public_ip" "fw_pip" {
+resource "azurerm_public_ip" "firewall" {
   count               = var.enable_firewall ? 1 : 0
-  name                = "pip-fw"
+  name                = "${var.name}-fw-pip"
   resource_group_name = var.resource_group_name
   location            = var.location
   allocation_method   = "Static"
@@ -41,27 +50,34 @@ resource "azurerm_public_ip" "fw_pip" {
   tags                = var.tags
 }
 
-resource "azurerm_firewall" "fw" {
+resource "azurerm_firewall" "this" {
   count               = var.enable_firewall ? 1 : 0
-  name                = "fw-hub"
+  name                = "${var.name}-fw"
   resource_group_name = var.resource_group_name
   location            = var.location
   sku_name            = "AZFW_VNet"
-  sku_tier            = "Standard"
+  sku_tier            = var.firewall_sku_tier
   tags                = var.tags
 
   ip_configuration {
     name                 = "configuration"
-    subnet_id            = azurerm_subnet.firewall[0].id
-    public_ip_address_id = azurerm_public_ip.fw_pip[0].id
+    subnet_id            = module.network.subnet_ids["AzureFirewallSubnet"]
+    public_ip_address_id = azurerm_public_ip.firewall[0].id
   }
 }
 
-output "vnet_id" { value = azurerm_virtual_network.hub.id }
-output "vnet_name" { value = azurerm_virtual_network.hub.name }
-output "shared_subnet_id" { value = azurerm_subnet.shared.id }
-output "private_endpoints_subnet_id" { value = azurerm_subnet.private_endpoints.id }
+output "vnet_id" {
+  value = module.network.vnet_id
+}
+
+output "vnet_name" {
+  value = module.network.vnet_name
+}
+
+output "subnet_ids" {
+  value = module.network.subnet_ids
+}
+
 output "firewall_private_ip" {
-  value       = var.enable_firewall ? azurerm_firewall.fw[0].ip_configuration[0].private_ip_address : null
-  description = "Firewall private IP for route tables if enabled."
+  value = var.enable_firewall ? azurerm_firewall.this[0].ip_configuration[0].private_ip_address : null
 }

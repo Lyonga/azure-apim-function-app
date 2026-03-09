@@ -10,14 +10,39 @@ variable "location" {
   type = string
 }
 
+variable "sku" {
+  type    = string
+  default = "Premium"
+}
+
 variable "admin_enabled" {
   type    = bool
   default = false
 }
 
-variable "sku" {
+variable "public_network_access_enabled" {
+  type    = bool
+  default = false
+}
+
+variable "anonymous_pull_enabled" {
+  type    = bool
+  default = false
+}
+
+variable "network_rule_bypass_option" {
   type    = string
-  default = "Standard" 
+  default = "None"
+}
+
+variable "zone_redundancy_enabled" {
+  type    = bool
+  default = true
+}
+
+variable "export_policy_enabled" {
+  type    = bool
+  default = false
 }
 
 variable "tags" {

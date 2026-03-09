@@ -59,11 +59,11 @@ variable "subnets" {
   default = {
     aks = {
       address_prefixes = ["10.10.1.0/24"]
-      nsg_rules = []
+      nsg_rules        = []
     }
     app = {
       address_prefixes = ["10.10.2.0/24"]
-      nsg_rules = []
+      nsg_rules        = []
     }
   }
 }

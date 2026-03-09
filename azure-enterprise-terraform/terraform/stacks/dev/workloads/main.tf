@@ -13,14 +13,14 @@ module "vm" {
   resource_group_name = local.rg_name
   image               = var.vm_image
   //source_image       = var.source_image
-  location            = data.terraform_remote_state.global.outputs.workload_rg_location
-  vm_size             = var.vm_size
-  admin_username      = var.admin_username
-  os_disk_size_gb     = var.os_disk_size_gb
+  location        = data.terraform_remote_state.global.outputs.workload_rg_location
+  vm_size         = var.vm_size
+  admin_username  = var.admin_username
+  os_disk_size_gb = var.os_disk_size_gb
   //subnet_id           = local.subnet_ids["app"]
-  subnet_id           = local.subnet_ids
-  ssh_public_key      = var.ssh_public_key
-  tags                = local.tags_common
+  subnet_id      = local.subnet_ids
+  ssh_public_key = var.ssh_public_key
+  tags           = local.tags_common
 }
 
 module "pip" {
@@ -58,7 +58,7 @@ resource "random_string" "kv_suffix" {
 # Observability: LAW + App Insights
 module "observability" {
   source              = "../../../modules/observability"
-  name =               "law-${var.environment}-${var.project_name}"
+  name                = "law-${var.environment}-${var.project_name}"
   resource_group_name = local.rg_name
   location            = local.workload_rg_location
   insights_name       = "appi-${var.environment}-${var.project_name}"
@@ -72,11 +72,11 @@ module "observability" {
 module "function_app" {
   source = "../../../modules/function_app"
 
-  name                       = "fa-${local.name_prefix}-func"
-  resource_group_name        = data.terraform_remote_state.global.outputs.workload_rg_name
-  location                   = data.terraform_remote_state.global.outputs.workload_rg_location
-  runtime               = "python"
-  runtime_version       = "3.11"
+  name                = "fa-${local.name_prefix}-func"
+  resource_group_name = data.terraform_remote_state.global.outputs.workload_rg_name
+  location            = data.terraform_remote_state.global.outputs.workload_rg_location
+  runtime             = "python"
+  runtime_version     = "3.11"
   #service_plan_sku      = "Y1"
 
   storage_account_name       = module.storage_account.name
@@ -101,14 +101,14 @@ module "function_app" {
 module "keyvault" {
   source = "../../../modules/keyvault"
 
-  name                        = lower("kv-${local.env}-${local.project}-${random_string.kv_suffix.result}")
-  location                    = data.terraform_remote_state.global.outputs.workload_rg_location
-  resource_group_name         = data.terraform_remote_state.global.outputs.workload_rg_name
-  sku_name                    = "standard"
-  enable_rbac_authorization   = var.kv_enable_rbac
-  purge_protection_enabled    = true
-  soft_delete_retention_days  = 30
-  tags                        = local.tags_common
+  name                       = lower("kv-${local.env}-${local.project}-${random_string.kv_suffix.result}")
+  location                   = data.terraform_remote_state.global.outputs.workload_rg_location
+  resource_group_name        = data.terraform_remote_state.global.outputs.workload_rg_name
+  sku_name                   = "standard"
+  enable_rbac_authorization  = var.kv_enable_rbac
+  purge_protection_enabled   = true
+  soft_delete_retention_days = 30
+  tags                       = local.tags_common
 }
 
 # If not using RBAC, grant deployer access so we can set secrets
@@ -136,7 +136,7 @@ resource "azurerm_key_vault_secret" "hello" {
 }
 
 module "storage_account" {
-  source              = "../../../modules/storage"   # <-- match your folder name
+  source              = "../../../modules/storage" # <-- match your folder name
   name                = "st${replace(local.name_prefix, "-", "")}"
   resource_group_name = local.rg_name
   location            = local.workload_rg_location
@@ -158,22 +158,22 @@ module "storage_account" {
 
 # APIM
 module "apim" {
-  source = "../../../modules/apim" 
-  name                = "apim-test-${local.name_prefix}"
-  resource_group_name = data.terraform_remote_state.global.outputs.workload_rg_name
+  source                  = "../../../modules/apim"
+  name                    = "apim-test-${local.name_prefix}"
+  resource_group_name     = data.terraform_remote_state.global.outputs.workload_rg_name
   function_resource_group = data.terraform_remote_state.global.outputs.workload_rg_name
-  function_app_name = module.function_app.name
-  location            = data.terraform_remote_state.global.outputs.workload_rg_location
-  sku_name            = "Consumption_0"
-  publisher_name  = var.publisher_name
-  publisher_email = var.publisher_email
-  api_name             = "demo-charsett-api"
-  api_display_name     = "demo-charsett API"
-  api_path             = "demo-charsett"
-  openapi_file         = "api-spec.yml"
+  function_app_name       = module.function_app.name
+  location                = data.terraform_remote_state.global.outputs.workload_rg_location
+  sku_name                = "Consumption_0"
+  publisher_name          = var.publisher_name
+  publisher_email         = var.publisher_email
+  api_name                = "demo-charsett-api"
+  api_display_name        = "demo-charsett API"
+  api_path                = "demo-charsett"
+  openapi_file            = "api-spec.yml"
 
-  backend_url          = "https://${module.function_app.default_hostname}/api/"
-  named_value_name     = "func-functionkey"
+  backend_url      = "https://${module.function_app.default_hostname}/api/"
+  named_value_name = "func-functionkey"
   //named_value_secret   = null
   tags = local.tags_common
 }

@@ -1,14 +1,42 @@
-variable "environment" { type = string default = "prod" }
-variable "location" { type = string default = "eastus2" }
+variable "environment" {
+  type    = string
+  default = "prod"
+}
 
-variable "create_resource_group" { type = bool default = true }
-variable "resource_group_name" { type = string default = "rg-prod-platform" }
+variable "location" {
+  type    = string
+  default = "eastus2"
+}
 
-variable "project_name" { type = string default = "azure-enterprise-lab" }
-variable "owner" { type = string default = "platform-team" }
-variable "cost_center" { type = string default = "cc-0001" }
+variable "create_resource_group" {
+  type    = bool
+  default = true
+}
 
-variable "vnet_address_space" { type = list(string) default = ["10.20.0.0/16"] }
+variable "resource_group_name" {
+  type    = string
+  default = "rg-prod-platform"
+}
+
+variable "project_name" {
+  type    = string
+  default = "azure-enterprise-lab"
+}
+
+variable "owner" {
+  type    = string
+  default = "platform-team"
+}
+
+variable "cost_center" {
+  type    = string
+  default = "cc-0001"
+}
+
+variable "vnet_address_space" {
+  type    = list(string)
+  default = ["10.20.0.0/16"]
+}
 variable "subnets" {
   type = map(any)
   default = {
@@ -30,9 +58,20 @@ variable "aks_node_pool" {
   }
 }
 
-variable "storage_account_name" { type = string default = "stprodlab001" }
-variable "acr_name" { type = string default = "acrprodlab001" }
-variable "keyvault_name" { type = string default = "kv-prod-lab-001" }
+variable "storage_account_name" {
+  type    = string
+  default = "stprodlab001"
+}
+
+variable "acr_name" {
+  type    = string
+  default = "acrprodlab001"
+}
+
+variable "keyvault_name" {
+  type    = string
+  default = "kv-prod-lab-001"
+}
 
 variable "use_existing_subscription" {
   type    = bool

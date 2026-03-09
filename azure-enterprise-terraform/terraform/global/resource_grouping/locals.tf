@@ -1,6 +1,6 @@
 locals {
 
-  rg_name  = "rg-${var.environment}-${var.project_name}-wkl"
+  rg_name = "rg-${var.environment}-${var.project_name}-wkl"
   common_tags = {
     environment = var.environment
     project     = var.project_name

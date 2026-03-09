@@ -1,7 +1,7 @@
-environment          = "prod"
-location             = "eastus2"
+environment           = "prod"
+location              = "eastus2"
 create_resource_group = true
-resource_group_name  = "rg-prod-platform"
+resource_group_name   = "rg-prod-platform"
 
 project_name = "azure-enterprise-lab"
 owner        = "charles"
