@@ -8,13 +8,13 @@ on:
         required: false
         default: "azure-enterprise-terraform/terraform/stacks/dev/workload-v2/finserv-api"
       backend_config_path:
-        description: "Backend config file relative to repo root"
-        required: false
-        default: "azure-enterprise-terraform/terraform/stacks/dev/workload-v2/finserv-api/backend.hcl"
-      var_file:
-        description: "Optional tfvars file relative to the stack path"
+        description: "Optional backend config file relative to repo root. Leave blank to auto-use <stack_path>/backend.hcl"
         required: false
         default: ""
+      var_file:
+        description: "Optional tfvars filename/path inside the stack dir. Use dev.tfvars, not var_file=dev.tfvars"
+        required: false
+        default: "dev.tfvars"
       environment_name:
         description: "GitHub Environment holding OIDC Azure configuration"
         required: false
@@ -39,8 +39,8 @@ jobs:
       ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID != '' && vars.AZURE_TENANT_ID || secrets.AZURE_TENANT_ID != '' && secrets.AZURE_TENANT_ID || secrets.ARM_TENANT_ID }}
       ARM_SKIP_PROVIDER_REGISTRATION: true
       STACK_PATH: ${{ inputs.stack_path || 'azure-enterprise-terraform/terraform/stacks/dev/workload-v2/finserv-api' }}
-      BACKEND_CONFIG_PATH: ${{ inputs.backend_config_path || 'azure-enterprise-terraform/terraform/stacks/dev/workload-v2/finserv-api/backend.hcl' }}
-      VAR_FILE: ${{ inputs.var_file || '' }}
+      BACKEND_CONFIG_PATH: ${{ inputs.backend_config_path || '' }}
+      VAR_FILE: ${{ inputs.var_file || 'dev.tfvars' }}
     outputs:
       tfplanExitCode: ${{ steps.tf-plan.outputs.exitcode }}
 
@@ -76,7 +76,14 @@ jobs:
           set -euo pipefail
 
           stack_dir="${GITHUB_WORKSPACE}/${STACK_PATH}"
-          backend_path="${GITHUB_WORKSPACE}/${BACKEND_CONFIG_PATH}"
+          backend_input="${BACKEND_CONFIG_PATH#backend_config_path=}"
+          var_file_input="${VAR_FILE#var_file=}"
+
+          if [ -n "${backend_input}" ]; then
+            backend_path="${GITHUB_WORKSPACE}/${backend_input}"
+          else
+            backend_path="${stack_dir}/backend.hcl"
+          fi
 
           if [ -f "${backend_path}" ]; then
             resolved_backend="${backend_path}"
@@ -87,8 +94,8 @@ jobs:
             exit 1
           fi
 
-          if [ -n "${VAR_FILE}" ]; then
-            candidate_var_file="${VAR_FILE}"
+          if [ -n "${var_file_input}" ]; then
+            candidate_var_file="${var_file_input}"
           elif [ -f "${stack_dir}/dev.tfvars" ]; then
             candidate_var_file="dev.tfvars"
           elif [ -f "${stack_dir}/dev.tfvars.example" ]; then
@@ -97,13 +104,21 @@ jobs:
             candidate_var_file=""
           fi
 
-          if [ -n "${candidate_var_file}" ] && [ ! -f "${stack_dir}/${candidate_var_file}" ]; then
-            echo "::error::Var file not found: ${stack_dir}/${candidate_var_file}"
-            exit 1
+          if [ -n "${candidate_var_file}" ]; then
+            if [ -f "${stack_dir}/${candidate_var_file}" ]; then
+              resolved_var_file="${candidate_var_file}"
+            elif [ -f "${GITHUB_WORKSPACE}/${candidate_var_file}" ]; then
+              resolved_var_file="${GITHUB_WORKSPACE}/${candidate_var_file}"
+            else
+              echo "::error::Var file not found: ${candidate_var_file}"
+              exit 1
+            fi
+          else
+            resolved_var_file=""
           fi
 
           echo "backend_config=${resolved_backend}" >> "${GITHUB_OUTPUT}"
-          echo "var_file=${candidate_var_file}" >> "${GITHUB_OUTPUT}"
+          echo "var_file=${resolved_var_file}" >> "${GITHUB_OUTPUT}"
 
       - name: Terraform Init
         working-directory: ${{ env.STACK_PATH }}
