@@ -15,6 +15,10 @@ on:
         description: "Optional tfvars file relative to the stack path"
         required: false
         default: ""
+      environment_name:
+        description: "GitHub Environment holding OIDC Azure configuration"
+        required: false
+        default: "dev"
   schedule:
     - cron: "41 3 * * *"
 
@@ -25,9 +29,9 @@ permissions:
 
 env:
   ARM_USE_OIDC: true
-  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID != '' && vars.AZURE_CLIENT_ID || secrets.AZURE_CLIENT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID != '' && vars.AZURE_SUBSCRIPTION_ID || secrets.AZURE_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID != '' && vars.AZURE_TENANT_ID || secrets.AZURE_TENANT_ID }}
   ARM_SKIP_PROVIDER_REGISTRATION: true
   STACK_PATH: ${{ inputs.stack_path || 'azure-enterprise-terraform/terraform/stacks/dev/workload-v2/finserv-api' }}
   BACKEND_CONFIG_PATH: ${{ inputs.backend_config_path || 'azure-enterprise-terraform/terraform/stacks/dev/workload-v2/finserv-api/backend.hcl' }}
@@ -37,6 +41,7 @@ jobs:
   terraform-plan:
     name: Terraform Drift Plan
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment_name || 'dev' }}
     outputs:
       tfplanExitCode: ${{ steps.tf-plan.outputs.exitcode }}
 
@@ -49,12 +54,21 @@ jobs:
         with:
           terraform_wrapper: false
 
+      - name: Validate OIDC Configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${ARM_CLIENT_ID}" || { echo "::error::Missing AZURE_CLIENT_ID. Configure it as a repository variable or secret."; exit 1; }
+          test -n "${ARM_TENANT_ID}" || { echo "::error::Missing AZURE_TENANT_ID. Configure it as a repository variable or secret."; exit 1; }
+          test -n "${ARM_SUBSCRIPTION_ID}" || { echo "::error::Missing AZURE_SUBSCRIPTION_ID. Configure it as a repository variable or secret."; exit 1; }
+
       - name: Azure Login
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ env.ARM_CLIENT_ID }}
+          tenant-id: ${{ env.ARM_TENANT_ID }}
+          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+          audience: api://AzureADTokenExchange
 
       - name: Terraform Init
         working-directory: ${{ env.STACK_PATH }}
