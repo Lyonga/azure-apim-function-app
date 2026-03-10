@@ -14,3 +14,5 @@ The application assets remain in this repo:
 - `func/` for the sample Python Azure Function payload
 
 Start with [`azure-enterprise-terraform/README.md`](./azure-enterprise-terraform/README.md).
+
+For the landing-zone assessment, remediation-vs-rebuild guidance, and a review of how this repo aligns with Azure Landing Zone, RBAC, policy, state, and OIDC best practices, see [`azure-enterprise-terraform/RECOMMENDATIONS.md`](./azure-enterprise-terraform/RECOMMENDATIONS.md).

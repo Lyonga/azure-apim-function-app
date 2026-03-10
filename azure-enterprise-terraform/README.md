@@ -2,6 +2,8 @@
 
 This directory is the authoritative infrastructure entry point for the repo. It replaces the old single-root demo with a security-first, landing-zone-oriented Terraform layout intended for financial-services workloads.
 
+For the assessment framework, remediation-vs-rebuild guidance, official Azure and Terraform references, and a review of how this repo currently aligns with those patterns, see [`RECOMMENDATIONS.md`](./RECOMMENDATIONS.md).
+
 ## Goals
 
 - Split infrastructure by blast radius and operating model, not by convenience.
