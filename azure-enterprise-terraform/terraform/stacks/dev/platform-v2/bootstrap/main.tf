@@ -14,6 +14,9 @@ module "tags" {
   additional_tags     = var.additional_tags
 }
 
+#checkov:skip=CKV2_AZURE_33: Bootstrap state storage cannot depend on private endpoints before connectivity is provisioned.
+#checkov:skip=CKV2_AZURE_1: Bootstrap state storage intentionally avoids a CMK dependency cycle during first deployment.
+#checkov:skip=CKV2_AZURE_21: Blob insights for Terraform state are managed outside the bootstrap stack.
 module "state_storage" {
   source                        = "../../../../modules/state-storage"
   create_resource_group         = var.create_resource_group

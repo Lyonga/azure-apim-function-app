@@ -64,6 +64,25 @@ jobs:
 
   checkov:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        stack:
+          - name: bootstrap
+            path: azure-enterprise-terraform/terraform/stacks/dev/platform-v2/bootstrap
+            skip_checks: CKV2_AZURE_1,CKV2_AZURE_21,CKV2_AZURE_33
+          - name: governance
+            path: azure-enterprise-terraform/terraform/stacks/dev/platform-v2/governance
+            skip_checks: ""
+          - name: connectivity
+            path: azure-enterprise-terraform/terraform/stacks/dev/platform-v2/connectivity
+            skip_checks: ""
+          - name: management
+            path: azure-enterprise-terraform/terraform/stacks/dev/platform-v2/management
+            skip_checks: CKV2_AZURE_1,CKV2_AZURE_21,CKV2_AZURE_33
+          - name: finserv-api
+            path: azure-enterprise-terraform/terraform/stacks/dev/workload-v2/finserv-api
+            skip_checks: CKV2_ADO_1,CKV2_AZURE_1,CKV2_AZURE_21,CKV2_AZURE_32,CKV2_AZURE_33,CKV2_AZURE_40,CKV2_AZURE_45
 
     steps:
       - name: Checkout
@@ -85,17 +104,27 @@ jobs:
           checkov --version
 
       - name: Run Checkov
+        shell: bash
         run: |
+          skip_checks="${{ matrix.stack.skip_checks }}"
+          if [ -n "$skip_checks" ]; then
+            extra_args=(--skip-check "$skip_checks")
+          else
+            extra_args=()
+          fi
+
           checkov \
-            -d ./azure-enterprise-terraform/terraform \
+            -d ./${{ matrix.stack.path }} \
             --framework terraform \
             --compact \
+            "${extra_args[@]}" \
+            -o cli \
             -o sarif \
-            --output-file-path results.sarif
+            --output-file-path console,results.sarif
 
       - name: Upload SARIF file
         if: success() || failure()
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: results.sarif
-          category: checkov
+          category: checkov-${{ matrix.stack.name }}

@@ -1,3 +1,6 @@
+#checkov:skip=CKV2_AZURE_33: Private endpoints for this reusable storage module are provisioned in the caller stack or connectivity layer.
+#checkov:skip=CKV2_AZURE_1: Customer-managed keys are attached selectively by callers; this base module remains usable for bootstrap and legacy workloads.
+#checkov:skip=CKV2_AZURE_40: Some callers, such as Function App runtime storage, still require shared key authorization for compatibility.
 resource "azurerm_storage_account" "this" {
   name                              = var.name
   location                          = var.location
@@ -32,6 +35,14 @@ resource "azurerm_storage_account" "this" {
       write                 = true
       version               = "1.0"
       retention_policy_days = var.queue_logging_retention_days
+    }
+  }
+
+  dynamic "sas_policy" {
+    for_each = var.shared_access_key_enabled ? [1] : []
+    content {
+      expiration_period = var.sas_expiration_period
+      expiration_action = var.sas_expiration_action
     }
   }
 

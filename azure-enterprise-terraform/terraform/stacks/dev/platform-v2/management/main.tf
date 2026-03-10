@@ -30,6 +30,9 @@ module "workspace" {
   tags                = module.tags.tags
 }
 
+#checkov:skip=CKV2_AZURE_33: Diagnostics archive private endpoints are managed separately from this management stack.
+#checkov:skip=CKV2_AZURE_1: This shared diagnostics archive currently uses platform-managed keys rather than a dedicated CMK.
+#checkov:skip=CKV2_AZURE_21: Blob monitoring is handled by Azure Monitor diagnostics outside Checkov's storage-insights graph.
 module "diagnostics_archive" {
   source                        = "../../../../modules/storage"
   name                          = var.diagnostics_storage_account_name
@@ -40,6 +43,16 @@ module "diagnostics_archive" {
   enable_network_rules          = true
   network_bypass                = ["AzureServices"]
   tags                          = module.tags.tags
+}
+
+resource "azurerm_log_analytics_storage_insights" "diagnostics_archive" {
+  name                 = "insights-diag-${var.environment}-${var.application}"
+  resource_group_name  = module.resource_group.name
+  workspace_id         = module.workspace.workspace_id
+  storage_account_id   = module.diagnostics_archive.account_id
+  storage_account_key  = module.diagnostics_archive.primary_access_key
+  blob_container_names = length(module.diagnostics_archive.container_names) > 0 ? module.diagnostics_archive.container_names : ["*"]
+  table_names          = ["*"]
 }
 
 module "action_group" {

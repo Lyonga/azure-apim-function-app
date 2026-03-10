@@ -11,20 +11,18 @@ locals {
     managed_by  = "terraform"
   })
   # Names
-  law_name  = "law-${local.env}-${local.project}"
-  appi_name = "aai-${local.name_prefix}"
-  sa_name   = substr("st${replace(local.name_prefix, "-", "")}", 0, 24)
-  # From global remote state
-  # rg_name = try(data.terraform_remote_state.global.outputs.workload_rg_name, null)
-  # workload_rg_location = try(data.terraform_remote_state.global.outputs.workload_rg_location, null)
-  rg_name              = data.terraform_remote_state.global.outputs.workload_rg_name
-  subnet_ids           = data.terraform_remote_state.platform.outputs.subnet_ids
-  workload_rg_location = data.terraform_remote_state.global.outputs.workload_rg_location
+  law_name             = "law-${local.env}-${local.project}"
+  appi_name            = "aai-${local.name_prefix}"
+  sa_name              = substr("st${replace(local.name_prefix, "-", "")}", 0, 24)
+  global_outputs       = var.use_global_remote_state ? try(data.terraform_remote_state.global[0].outputs, {}) : {}
+  platform_outputs     = var.use_platform_remote_state ? try(data.terraform_remote_state.platform[0].outputs, {}) : {}
+  rg_name              = try(local.global_outputs.workload_rg_name, var.resource_group, null)
+  workload_rg_location = try(local.global_outputs.workload_rg_location, var.location)
+  subnet_ids           = try(local.platform_outputs.subnet_ids, {})
+  app_subnet_id        = try(local.subnet_ids["app"], var.app_subnet_id, null)
 
-  # Fail fast with clear messages if any required outputs are missing
   _validate = [
-    local.rg_name != null ? null : (throw("global.outputs.workload_rg_name is null; apply global/resource_grouping first.")),
-    local.workload_rg_location != null ? null : (throw("global.outputs.workload_rg_location is null; export it or set var.location.")),
-    local.subnet_ids != null ? null : (throw("platform.outputs.subnet_ids is null; apply platform stack and export subnet_ids.")),
+    local.rg_name != null ? null : throw("Set var.resource_group or enable global remote state before planning the legacy dev/workloads stack."),
+    !var.create_demo_vm || local.app_subnet_id != null ? null : throw("Set var.app_subnet_id or enable platform remote state before creating the legacy demo VM."),
   ]
 }

@@ -12,15 +12,13 @@ module "vm" {
   name                = var.vm_name
   resource_group_name = local.rg_name
   image               = var.vm_image
-  //source_image       = var.source_image
-  location        = data.terraform_remote_state.global.outputs.workload_rg_location
-  vm_size         = var.vm_size
-  admin_username  = var.admin_username
-  os_disk_size_gb = var.os_disk_size_gb
-  //subnet_id           = local.subnet_ids["app"]
-  subnet_id      = local.subnet_ids
-  ssh_public_key = var.ssh_public_key
-  tags           = local.tags_common
+  location            = local.workload_rg_location
+  vm_size             = var.vm_size
+  admin_username      = var.admin_username
+  os_disk_size_gb     = var.os_disk_size_gb
+  subnet_id           = local.app_subnet_id
+  ssh_public_key      = var.ssh_public_key
+  tags                = local.tags_common
 }
 
 module "pip" {
@@ -30,7 +28,7 @@ module "pip" {
   resource_group_name = local.rg_name
   allocation_method   = var.allocation_method
   sku                 = var.sku
-  location            = data.terraform_remote_state.global.outputs.workload_rg_location
+  location            = local.workload_rg_location
   tags                = local.tags_common
 }
 
@@ -39,7 +37,7 @@ module "lb" {
   source              = "../../../modules/load_balancer"
   name                = "lb-${var.environment}-${var.project_name}"
   resource_group_name = local.rg_name
-  location            = data.terraform_remote_state.global.outputs.workload_rg_location
+  location            = local.workload_rg_location
   backend_pool_name   = var.backend_pool_name
   frontend_name       = var.frontend_name
   public_ip_id        = module.pip[0].id
@@ -73,20 +71,19 @@ module "function_app" {
   source = "../../../modules/function_app"
 
   name                = "fa-${local.name_prefix}-func"
-  resource_group_name = data.terraform_remote_state.global.outputs.workload_rg_name
-  location            = data.terraform_remote_state.global.outputs.workload_rg_location
-  runtime             = "python"
-  runtime_version     = "3.11"
-  #service_plan_sku      = "Y1"
+  resource_group_name = local.rg_name
+  location            = local.workload_rg_location
+  runtime             = var.runtime
+  runtime_version     = var.runtime_version
 
   storage_account_name       = module.storage_account.name
   storage_account_access_key = module.storage_account.primary_access_key
 
-  app_settings = {
+  app_settings = merge({
     FUNCTIONS_WORKER_RUNTIME       = "python"
     WEBSITE_RUN_FROM_PACKAGE       = "1"
     APPINSIGHTS_INSTRUMENTATIONKEY = module.observability.appi_instrumentation_key
-  }
+  }, var.app_settings)
 
   tags = local.tags_common
 }
@@ -102,8 +99,8 @@ module "keyvault" {
   source = "../../../modules/keyvault"
 
   name                       = lower("kv-${local.env}-${local.project}-${random_string.kv_suffix.result}")
-  location                   = data.terraform_remote_state.global.outputs.workload_rg_location
-  resource_group_name        = data.terraform_remote_state.global.outputs.workload_rg_name
+  location                   = local.workload_rg_location
+  resource_group_name        = local.rg_name
   tenant_id                  = data.azurerm_client_config.current.tenant_id
   sku_name                   = "standard"
   enable_rbac_authorization  = var.kv_enable_rbac
@@ -163,10 +160,10 @@ module "storage_account" {
 module "apim" {
   source                  = "../../../modules/apim"
   name                    = "apim-test-${local.name_prefix}"
-  resource_group_name     = data.terraform_remote_state.global.outputs.workload_rg_name
-  function_resource_group = data.terraform_remote_state.global.outputs.workload_rg_name
+  resource_group_name     = local.rg_name
+  function_resource_group = local.rg_name
   function_app_name       = module.function_app.name
-  location                = data.terraform_remote_state.global.outputs.workload_rg_location
+  location                = local.workload_rg_location
   sku_name                = "Consumption_0"
   publisher_name          = var.publisher_name
   publisher_email         = var.publisher_email

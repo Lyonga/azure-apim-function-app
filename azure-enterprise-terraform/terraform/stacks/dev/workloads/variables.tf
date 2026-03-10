@@ -22,25 +22,57 @@ variable "cost_center" {
 # Reference platform remote state
 variable "platform_state_rg" {
   type    = string
-  default = "rg-tfstate-dev"
+  default = "demo-test"
 }
 variable "platform_state_sa" {
   type    = string
-  default = "sttfstatedev001"
+  default = "demotest822e"
 }
 variable "platform_state_container" {
   type    = string
-  default = "tfstate"
+  default = "deploy-container"
 }
 variable "platform_state_key" {
   type    = string
-  default = "dev.platform.tfstate"
+  default = "platform.tfstate"
+}
+
+variable "use_platform_remote_state" {
+  description = "Read legacy platform outputs from remote state."
+  type        = bool
+  default     = false
+}
+
+variable "global_state_rg" {
+  type    = string
+  default = "demo-test"
+}
+
+variable "global_state_sa" {
+  type    = string
+  default = "demotest822e"
+}
+
+variable "global_state_container" {
+  type    = string
+  default = "deploy-container"
+}
+
+variable "global_state_key" {
+  type    = string
+  default = "rg-gov.tfstate"
+}
+
+variable "use_global_remote_state" {
+  description = "Read legacy global workload resource group outputs from remote state."
+  type        = bool
+  default     = false
 }
 
 # Workload VM
 variable "create_demo_vm" {
   type    = bool
-  default = true
+  default = false
 }
 variable "vm_name" {
   type    = string
@@ -69,7 +101,7 @@ variable "os_disk_size_gb" {
 # Public LB demo
 variable "create_demo_lb" {
   type    = bool
-  default = true
+  default = false
 }
 variable "allocation_method" {
   description = "The allocation method for the public IP."
@@ -106,6 +138,18 @@ variable "storage_account_name" {
   default = "stdefaultcollection001"
 }
 
+variable "resource_group" {
+  description = "Optional workload resource group name when remote state is disabled."
+  type        = string
+  default     = null
+}
+
+variable "app_subnet_id" {
+  description = "Optional app subnet id for the demo VM when platform remote state is disabled."
+  type        = string
+  default     = null
+}
+
 variable "retention_in_days" {
   description = "The retention period for the Log Analytics workspace in days."
   type        = number
@@ -126,6 +170,20 @@ variable "tags" {
   type    = map(string)
   default = {}
 }
+
+variable "app_settings" {
+  description = "Additional Function App settings."
+  type        = map(string)
+  default     = {}
+}
+
+variable "storage_account_key" {
+  description = "Deprecated legacy input kept only to avoid tfvars warnings."
+  type        = string
+  default     = null
+  sensitive   = true
+}
+
 variable "kv_enable_rbac" {
   type    = bool
   default = false

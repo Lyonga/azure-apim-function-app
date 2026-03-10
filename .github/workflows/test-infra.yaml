@@ -1,34 +1,46 @@
-name: Deploy Terraform modules
+name: Legacy Terraform Test
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "azure-enterprise-terraform/**"
   workflow_dispatch:
     inputs:
-      stack_path:
-        description: "Terraform working dir (e.g. terraform/stacks/dev/platform)"
+      target:
+        description: "Legacy root stack to run"
+        type: choice
         required: true
-        default: "terraform/stacks/dev/platform"
-      force_unlock:
-        description: "Force unlock state (ONLY if you know it's stale)"
-        type: boolean
+        default: platform
+        options:
+          - platform
+          - workloads
+          - resource_grouping
+          - all
+      action:
+        description: "Terraform action to run"
+        type: choice
+        required: true
+        default: plan
+        options:
+          - plan
+          - apply
+      lock_timeout:
+        description: "Terraform lock timeout"
         required: false
-        default: false
-      lock_id:
-        description: "Lock ID from the error output (GUID)"
-        required: false
-        default: ""
+        default: "5m"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  ARM_USE_OIDC: true
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
 jobs:
-  terraform:
+  legacy-terraform:
     runs-on: ubuntu-latest
-
-    # Prevent concurrent runs from fighting over the same state
     concurrency:
-      group: tf-${{ github.ref }}-${{ inputs.stack_path }}
+      group: legacy-terraform-${{ inputs.target }}
       cancel-in-progress: false
 
     steps:
@@ -37,63 +49,88 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
 
       - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Run Legacy Terraform
+        shell: bash
         run: |
-          az login --service-principal \
-            -u "${{ secrets.ARM_CLIENT_ID }}" \
-            -p "${{ secrets.ARM_CLIENT_SECRET }}" \
-            --tenant "${{ secrets.ARM_TENANT_ID }}"
-          az account set --subscription "${{ secrets.ARM_SUBSCRIPTION_ID }}"
+          set -euo pipefail
 
-      - name: Terraform Init Modules
-        working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
-        run: |
-            terraform init -upgrade
-            ###terraform state rm module.keyvault.azurerm_key_vault.this
+          run_stack() {
+            local name="$1"
+            local stack_path="$2"
+            local var_file="$3"
 
-      - name: Terraform Plan Modules
-        working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
-        run: terraform plan -lock-timeout=5m -var-file=dev.tfvars
+            echo "Running ${name} in ${stack_path}"
 
-    #   - name: Terraform Apply Modules
-    #     working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
-    #     run: terraform apply -lock-timeout=5m -auto-approve -var-file=dev.tfvars
+            terraform -chdir="${stack_path}" init -upgrade
+            terraform -chdir="${stack_path}" validate
+            terraform -chdir="${stack_path}" plan \
+              -lock-timeout="${{ inputs.lock_timeout }}" \
+              -out=tfplan \
+              -var-file="${var_file}"
 
-    #   - name: Terraform Destroy Modules
-    #     working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
-    #     run: terraform destroy -lock-timeout=5m -auto-approve -var-file=dev.tfvars
+            if [ "${{ inputs.action }}" = "apply" ]; then
+              terraform -chdir="${stack_path}" apply \
+                -lock-timeout="${{ inputs.lock_timeout }}" \
+                -auto-approve tfplan
+            fi
+          }
 
-      - name: Terraform Init RGs
-        working-directory: ./azure-enterprise-terraform/terraform/global/resource_grouping
-        run: |
-            terraform init -upgrade
+          case "${{ inputs.target }}" in
+            platform)
+              run_stack \
+                "legacy-platform" \
+                "azure-enterprise-terraform/terraform/stacks/dev/platform" \
+                "dev.tfvars"
+              ;;
+            workloads)
+              run_stack \
+                "legacy-workloads" \
+                "azure-enterprise-terraform/terraform/stacks/dev/workloads" \
+                "dev.tfvars"
+              ;;
+            resource_grouping)
+              run_stack \
+                "legacy-resource-grouping" \
+                "azure-enterprise-terraform/terraform/global/resource_grouping" \
+                "dev.auto.tfvars"
+              ;;
+            all)
+              run_stack \
+                "legacy-platform" \
+                "azure-enterprise-terraform/terraform/stacks/dev/platform" \
+                "dev.tfvars"
+              run_stack \
+                "legacy-resource-grouping" \
+                "azure-enterprise-terraform/terraform/global/resource_grouping" \
+                "dev.auto.tfvars"
+              run_stack \
+                "legacy-workloads" \
+                "azure-enterprise-terraform/terraform/stacks/dev/workloads" \
+                "dev.tfvars"
+              ;;
+            *)
+              echo "Unsupported target: ${{ inputs.target }}" >&2
+              exit 1
+              ;;
+          esac
 
-      - name: Terraform Plan RGs
-        working-directory: ./azure-enterprise-terraform/terraform/global/resource_grouping
-        run: terraform plan -lock-timeout=5m -var-file=dev.auto.tfvars
-
-      - name: Terraform Apply RGs
-        working-directory: ./azure-enterprise-terraform/terraform/global/resource_grouping
-        run: terraform apply -lock-timeout=5m -auto-approve -var-file=dev.auto.tfvars
-
-      - name: Terraform Init workkloads
-        working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/workloads
-        run: |
-            terraform init -upgrade
-
-      # - name: Force unlock (auto)
-      #   working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/workloads
-      #   run: terraform force-unlock -force "b8738b6e-907c-720c-b07e-52e1a0054a20"
-
-      - name: Terraform Plan workloads
-        working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/workloads
-        run: terraform plan -lock-timeout=5m -var-file=dev.tfvars
-
-    #   - name: Terraform Apply Modules
-    #     working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/platform
-    #     run: terraform apply -lock-timeout=5m -auto-approve -var-file=dev.tfvars
-
-    #   - name: Terraform Destroy workloads
-    #     working-directory: ./azure-enterprise-terraform/terraform/stacks/dev/workloads
-    #     run: terraform destroy -lock-timeout=5m -auto-approve -var-file=dev.tfvars
+      - name: Upload Plan Artifacts
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: legacy-tfplan-${{ github.run_id }}
+          path: |
+            azure-enterprise-terraform/terraform/stacks/dev/platform/tfplan
+            azure-enterprise-terraform/terraform/stacks/dev/workloads/tfplan
+            azure-enterprise-terraform/terraform/global/resource_grouping/tfplan
+          if-no-files-found: ignore

@@ -50,6 +50,18 @@ variable "shared_access_key_enabled" {
   default = true
 }
 
+variable "sas_expiration_period" {
+  description = "Default SAS expiration window when shared key authorization is enabled."
+  type        = string
+  default     = "1.00:00:00"
+}
+
+variable "sas_expiration_action" {
+  description = "Action taken when a SAS exceeds the configured expiration policy."
+  type        = string
+  default     = "Log"
+}
+
 variable "infrastructure_encryption_enabled" {
   type    = bool
   default = true

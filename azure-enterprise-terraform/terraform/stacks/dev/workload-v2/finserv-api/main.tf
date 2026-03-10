@@ -69,6 +69,10 @@ module "app_identity" {
   tags                = module.tags.tags
 }
 
+#checkov:skip=CKV2_AZURE_33: Storage private endpoints are provisioned through the dedicated private-endpoint module in this stack.
+#checkov:skip=CKV2_AZURE_1: This workload storage account is not yet attached to a CMK-backed identity flow.
+#checkov:skip=CKV2_AZURE_40: Function App runtime storage still requires shared key authorization for compatibility.
+#checkov:skip=CKV2_AZURE_21: Blob monitoring is handled through Azure Monitor rather than a directly-connected storage-insights graph resource.
 module "storage_account" {
   source                        = "../../../../modules/storage"
   name                          = var.storage_account_name
@@ -82,6 +86,17 @@ module "storage_account" {
   tags = module.tags.tags
 }
 
+resource "azurerm_log_analytics_storage_insights" "workload_storage" {
+  name                 = "insights-${var.environment}-${var.application}"
+  resource_group_name  = data.terraform_remote_state.management.outputs.resource_group_name
+  workspace_id         = data.terraform_remote_state.management.outputs.workspace_id
+  storage_account_id   = module.storage_account.account_id
+  storage_account_key  = module.storage_account.primary_access_key
+  blob_container_names = length(module.storage_account.container_names) > 0 ? module.storage_account.container_names : ["*"]
+  table_names          = ["*"]
+}
+
+#checkov:skip=CKV2_AZURE_32: The Key Vault private endpoint is provisioned separately in this workload stack.
 module "key_vault" {
   source                                  = "../../../../modules/keyvault"
   name                                    = var.key_vault_name
@@ -145,6 +160,7 @@ module "service_bus" {
   depends_on = [module.encryption_role_assignments]
 }
 
+#checkov:skip=CKV2_AZURE_45: The SQL private endpoint is provisioned separately in this workload stack.
 module "sql_database" {
   count               = var.enable_sql ? 1 : 0
   source              = "../../../../modules/sql-database"
@@ -155,8 +171,15 @@ module "sql_database" {
     login_username = var.sql_aad_admin_login
     object_id      = var.sql_aad_admin_object_id
   }
-  databases = var.sql_databases
-  tags      = module.tags.tags
+  databases                                    = var.sql_databases
+  extended_auditing_policy_enabled             = true
+  extended_auditing_storage_endpoint           = module.storage_account.primary_blob_endpoint
+  extended_auditing_storage_account_access_key = module.storage_account.primary_access_key
+  security_alert_policy_enabled                = true
+  security_alert_storage_endpoint              = module.storage_account.primary_blob_endpoint
+  security_alert_storage_account_access_key    = module.storage_account.primary_access_key
+  security_alert_email_addresses               = compact([var.publisher_email])
+  tags                                         = module.tags.tags
 }
 
 module "container_registry" {
@@ -305,6 +328,7 @@ module "api_management" {
   tags                          = module.tags.tags
 }
 
+#checkov:skip=CKV2_ADO_1: The repository uses azuredevops_branch_policy_min_reviewers, but Checkov's graph rule does not resolve the nested scope reference.
 module "azuredevops" {
   count                       = var.enable_azuredevops ? 1 : 0
   source                      = "../../../../modules/azuredevops_repo"

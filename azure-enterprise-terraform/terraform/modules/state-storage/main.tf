@@ -9,6 +9,8 @@ locals {
   resource_group_name = var.create_resource_group ? azurerm_resource_group.this[0].name : var.resource_group_name
 }
 
+#checkov:skip=CKV2_AZURE_33: The bootstrap backend cannot depend on private endpoints before the connectivity layer exists.
+#checkov:skip=CKV2_AZURE_1: The bootstrap backend intentionally avoids a CMK dependency cycle during first-time state provisioning.
 resource "azurerm_storage_account" "this" {
   name                              = var.storage_account_name
   resource_group_name               = local.resource_group_name
@@ -54,6 +56,7 @@ resource "azurerm_storage_account" "this" {
   }
 }
 
+#checkov:skip=CKV2_AZURE_21: Blob insights for the bootstrap state container are handled outside of the backend bootstrap path.
 resource "azurerm_storage_container" "this" {
   for_each             = toset(var.containers)
   name                 = each.value

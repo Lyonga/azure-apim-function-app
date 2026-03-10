@@ -1,3 +1,4 @@
+#checkov:skip=CKV2_AZURE_32: Private endpoints for Key Vault are created in workload-specific stacks that consume this module.
 resource "azurerm_key_vault" "this" {
   name                          = var.name
   location                      = var.location

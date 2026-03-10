@@ -26,6 +26,7 @@ locals {
   ) : null
 }
 
+#checkov:skip=CKV2_ADO_1: The min-reviewers policy is enforced by azuredevops_branch_policy_min_reviewers, but the graph rule does not resolve settings.scope.repository_id.
 resource "azuredevops_git_repository" "this" {
   count      = var.enable ? 1 : 0
   project_id = local.project_id
