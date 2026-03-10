@@ -9,13 +9,13 @@ hub_address_space = [
   "10.0.0.0/16",
 ]
 
-enable_firewall = false
-business_owner  = "network"
-source_repo     = "azure-apim-function-app"
+enable_firewall     = false
+business_owner      = "network"
+source_repo         = "azure-apim-function-app"
 terraform_workspace = "platform-v2-connectivity-dev"
-recovery_tier   = "terraform"
-cost_center     = "shared-network"
-creation_date_utc = "2026-03-09T00:00:00Z"
+recovery_tier       = "terraform"
+cost_center         = "shared-network"
+creation_date_utc   = "2026-03-09T00:00:00Z"
 
 additional_tags = {
   owner = "charles"
