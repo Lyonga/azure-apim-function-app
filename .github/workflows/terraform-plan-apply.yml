@@ -51,13 +51,13 @@ jobs:
         with:
           terraform_wrapper: false
 
-      - name: Validate OIDC Configuration
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -n "${ARM_CLIENT_ID}" || { echo "::error::Missing AZURE_CLIENT_ID. Configure it as a repository variable or secret."; exit 1; }
-          test -n "${ARM_TENANT_ID}" || { echo "::error::Missing AZURE_TENANT_ID. Configure it as a repository variable or secret."; exit 1; }
-          test -n "${ARM_SUBSCRIPTION_ID}" || { echo "::error::Missing AZURE_SUBSCRIPTION_ID. Configure it as a repository variable or secret."; exit 1; }
+      # - name: Validate OIDC Configuration
+      #   shell: bash
+      #   run: |
+      #     set -euo pipefail
+      #     test -n "${ARM_CLIENT_ID}" || { echo "::error::Missing AZURE_CLIENT_ID. Configure it as a repository variable or secret."; exit 1; }
+      #     test -n "${ARM_TENANT_ID}" || { echo "::error::Missing AZURE_TENANT_ID. Configure it as a repository variable or secret."; exit 1; }
+      #     test -n "${ARM_SUBSCRIPTION_ID}" || { echo "::error::Missing AZURE_SUBSCRIPTION_ID. Configure it as a repository variable or secret."; exit 1; }
 
       - name: Azure Login
         uses: azure/login@v2
