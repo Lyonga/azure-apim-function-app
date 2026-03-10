@@ -308,24 +308,25 @@ module "key_vault_diagnostics" {
 }
 
 module "api_management" {
-  count                         = var.enable_apim ? 1 : 0
-  source                        = "../../../../modules/apim"
-  name                          = var.api_management_name
-  resource_group_name           = module.resource_group.name
-  location                      = var.location
-  publisher_name                = var.publisher_name
-  publisher_email               = var.publisher_email
-  public_network_access_enabled = false
-  virtual_network_type          = "Internal"
-  subnet_id                     = var.enable_apim ? module.spoke_network.subnet_ids["apim"] : null
-  api_name                      = var.api_name
-  api_display_name              = var.api_display_name
-  api_path                      = var.api_path
-  api_spec_path                 = local.api_spec_path
-  backend_url                   = "https://${module.function_app.default_hostname}/api/"
-  function_app_name             = module.function_app.name
-  function_resource_group       = module.resource_group.name
-  tags                          = module.tags.tags
+  count                           = var.enable_apim ? 1 : 0
+  source                          = "../../../../modules/apim"
+  name                            = var.api_management_name
+  resource_group_name             = module.resource_group.name
+  location                        = var.location
+  publisher_name                  = var.publisher_name
+  publisher_email                 = var.publisher_email
+  public_network_access_enabled   = false
+  virtual_network_type            = "Internal"
+  subnet_id                       = var.enable_apim ? module.spoke_network.subnet_ids["apim"] : null
+  api_name                        = var.api_name
+  api_display_name                = var.api_display_name
+  api_path                        = var.api_path
+  api_spec_path                   = local.api_spec_path
+  backend_url                     = "https://${module.function_app.default_hostname}/api/"
+  function_app_name               = module.function_app.name
+  function_app_key_lookup_enabled = false
+  function_resource_group         = module.resource_group.name
+  tags                            = module.tags.tags
 }
 
 #checkov:skip=CKV2_ADO_1: The repository uses azuredevops_branch_policy_min_reviewers, but Checkov's graph rule does not resolve the nested scope reference.

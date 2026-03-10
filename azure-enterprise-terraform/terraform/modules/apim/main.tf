@@ -1,3 +1,8 @@
+locals {
+  backend_enabled      = var.api_name != null && (var.function_app_name != null || var.backend_url != null)
+  function_key_enabled = var.function_app_name != null && (var.function_app_host_key != null || var.function_app_key_lookup_enabled)
+}
+
 resource "azurerm_api_management" "this" {
   name                          = var.name
   resource_group_name           = var.resource_group_name
@@ -42,38 +47,41 @@ resource "azurerm_api_management_api" "this" {
 }
 
 data "azurerm_function_app_host_keys" "host" {
-  count               = var.function_app_name == null ? 0 : 1
+  count               = var.function_app_name == null || var.function_app_host_key != null || !var.function_app_key_lookup_enabled ? 0 : 1
   name                = var.function_app_name
   resource_group_name = var.function_resource_group
 }
 
 resource "azurerm_api_management_named_value" "function_key" {
-  count               = var.function_app_name == null ? 0 : 1
+  count               = local.function_key_enabled ? 1 : 0
   name                = var.named_value_name
   resource_group_name = var.resource_group_name
   api_management_name = azurerm_api_management.this.name
   display_name        = var.named_value_name
-  value               = data.azurerm_function_app_host_keys.host[0].default_function_key
+  value               = var.function_app_host_key != null ? var.function_app_host_key : data.azurerm_function_app_host_keys.host[0].default_function_key
   secret              = true
 }
 
 resource "azurerm_api_management_backend" "this" {
-  count               = var.function_app_name == null ? 0 : 1
+  count               = local.backend_enabled ? 1 : 0
   name                = "${var.api_name}-backend"
   resource_group_name = var.resource_group_name
   api_management_name = azurerm_api_management.this.name
   protocol            = "http"
   url                 = var.function_app_name == null ? var.backend_url : "https://${var.function_app_name}.azurewebsites.net/api/"
 
-  credentials {
-    header = {
-      x-functions-key = "{{${azurerm_api_management_named_value.function_key[0].name}}}"
+  dynamic "credentials" {
+    for_each = local.function_key_enabled ? [1] : []
+    content {
+      header = {
+        x-functions-key = "{{${azurerm_api_management_named_value.function_key[0].name}}}"
+      }
     }
   }
 }
 
 resource "azurerm_api_management_api_policy" "this" {
-  count               = var.function_app_name == null ? 0 : 1
+  count               = local.backend_enabled ? 1 : 0
   api_name            = azurerm_api_management_api.this[0].name
   api_management_name = azurerm_api_management_api.this[0].api_management_name
   resource_group_name = var.resource_group_name

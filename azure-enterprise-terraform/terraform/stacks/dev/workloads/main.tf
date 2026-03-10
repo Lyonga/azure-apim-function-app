@@ -172,8 +172,9 @@ module "apim" {
   api_path                = "demo-charsett"
   api_spec_path           = "${path.root}/../../../../../api-spec.yml"
 
-  backend_url      = "https://${module.function_app.default_hostname}/api/"
-  named_value_name = "func-functionkey"
+  backend_url                     = "https://${module.function_app.default_hostname}/api/"
+  named_value_name                = "func-functionkey"
+  function_app_key_lookup_enabled = false
   //named_value_secret   = null
   tags = local.tags_common
 }

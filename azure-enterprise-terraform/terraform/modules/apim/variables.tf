@@ -93,6 +93,19 @@ variable "function_app_name" {
   default = null
 }
 
+variable "function_app_key_lookup_enabled" {
+  description = "Look up Function App host keys for APIM backend authentication."
+  type        = bool
+  default     = true
+}
+
+variable "function_app_host_key" {
+  description = "Optional Function App host key to inject into APIM instead of performing a lookup."
+  type        = string
+  default     = null
+  sensitive   = true
+}
+
 variable "function_resource_group" {
   type    = string
   default = null
