@@ -26,9 +26,13 @@ variable "ddos_protection_plan_id" {
 
 variable "subnets" {
   type = map(object({
-    address_prefixes                              = list(string)
-    service_endpoints                             = optional(list(string), [])
+    address_prefixes                  = list(string)
+    service_endpoints                 = optional(list(string), [])
+    private_endpoint_network_policies = optional(string)
+    # Keep the legacy boolean input until callers are fully migrated.
     private_endpoint_network_policies_enabled     = optional(bool, true)
+    enforce_private_link_service_network_policies = optional(bool, true)
+    # Keep the legacy boolean input until callers are fully migrated.
     private_link_service_network_policies_enabled = optional(bool, true)
     route_table_id                                = optional(string)
     nat_gateway_id                                = optional(string)

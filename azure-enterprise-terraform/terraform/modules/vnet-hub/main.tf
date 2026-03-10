@@ -13,9 +13,9 @@ locals {
       nsg_rules        = var.shared_services_nsg_rules
     }
     private-endpoints = {
-      address_prefixes                          = [var.private_endpoints_subnet_cidr]
-      private_endpoint_network_policies_enabled = false
-      nsg_rules                                 = []
+      address_prefixes                  = [var.private_endpoints_subnet_cidr]
+      private_endpoint_network_policies = "Disabled"
+      nsg_rules                         = []
     }
     dns-inbound = {
       address_prefixes = [var.dns_inbound_subnet_cidr]
