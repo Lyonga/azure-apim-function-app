@@ -69,17 +69,53 @@ jobs:
           subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
           audience: api://AzureADTokenExchange
 
+      - name: Resolve Terraform Inputs
+        id: resolve-inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          stack_dir="${GITHUB_WORKSPACE}/${STACK_PATH}"
+          backend_path="${GITHUB_WORKSPACE}/${BACKEND_CONFIG_PATH}"
+
+          if [ -f "${backend_path}" ]; then
+            resolved_backend="${backend_path}"
+          elif [ -f "${backend_path}.example" ]; then
+            resolved_backend="${backend_path}.example"
+          else
+            echo "::error::Backend config file not found: ${backend_path} or ${backend_path}.example"
+            exit 1
+          fi
+
+          if [ -n "${VAR_FILE}" ]; then
+            candidate_var_file="${VAR_FILE}"
+          elif [ -f "${stack_dir}/dev.tfvars" ]; then
+            candidate_var_file="dev.tfvars"
+          elif [ -f "${stack_dir}/dev.tfvars.example" ]; then
+            candidate_var_file="dev.tfvars.example"
+          else
+            candidate_var_file=""
+          fi
+
+          if [ -n "${candidate_var_file}" ] && [ ! -f "${stack_dir}/${candidate_var_file}" ]; then
+            echo "::error::Var file not found: ${stack_dir}/${candidate_var_file}"
+            exit 1
+          fi
+
+          echo "backend_config=${resolved_backend}" >> "${GITHUB_OUTPUT}"
+          echo "var_file=${candidate_var_file}" >> "${GITHUB_OUTPUT}"
+
       - name: Terraform Init
         working-directory: ${{ env.STACK_PATH }}
-        run: terraform init -backend-config="${{ github.workspace }}/${{ env.BACKEND_CONFIG_PATH }}"
+        run: terraform init -backend-config="${{ steps.resolve-inputs.outputs.backend_config }}"
 
       - name: Terraform Plan
         id: tf-plan
         working-directory: ${{ env.STACK_PATH }}
         run: |
           export exitcode=0
-          if [ -n "${VAR_FILE}" ]; then
-            terraform plan -detailed-exitcode -no-color -out tfplan -var-file="${VAR_FILE}" || export exitcode=$?
+          if [ -n "${{ steps.resolve-inputs.outputs.var_file }}" ]; then
+            terraform plan -detailed-exitcode -no-color -out tfplan -var-file="${{ steps.resolve-inputs.outputs.var_file }}" || export exitcode=$?
           else
             terraform plan -detailed-exitcode -no-color -out tfplan || export exitcode=$?
           fi
