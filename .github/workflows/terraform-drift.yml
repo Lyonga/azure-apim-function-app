@@ -34,9 +34,9 @@ jobs:
     environment: ${{ inputs.environment_name || 'dev' }}
     env:
       ARM_USE_OIDC: true
-      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID != '' && vars.AZURE_CLIENT_ID || secrets.AZURE_CLIENT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID != '' && vars.AZURE_SUBSCRIPTION_ID || secrets.AZURE_SUBSCRIPTION_ID }}
-      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID != '' && vars.AZURE_TENANT_ID || secrets.AZURE_TENANT_ID }}
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID != '' && vars.AZURE_CLIENT_ID || secrets.AZURE_CLIENT_ID != '' && secrets.AZURE_CLIENT_ID || secrets.ARM_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID != '' && vars.AZURE_SUBSCRIPTION_ID || secrets.AZURE_SUBSCRIPTION_ID != '' && secrets.AZURE_SUBSCRIPTION_ID || secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID != '' && vars.AZURE_TENANT_ID || secrets.AZURE_TENANT_ID != '' && secrets.AZURE_TENANT_ID || secrets.ARM_TENANT_ID }}
       ARM_SKIP_PROVIDER_REGISTRATION: true
       STACK_PATH: ${{ inputs.stack_path || 'azure-enterprise-terraform/terraform/stacks/dev/workload-v2/finserv-api' }}
       BACKEND_CONFIG_PATH: ${{ inputs.backend_config_path || 'azure-enterprise-terraform/terraform/stacks/dev/workload-v2/finserv-api/backend.hcl' }}
@@ -57,9 +57,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -n "${ARM_CLIENT_ID}" || { echo "::error::Missing AZURE_CLIENT_ID. Configure it as a GitHub Environment or repository variable/secret."; exit 1; }
-          test -n "${ARM_TENANT_ID}" || { echo "::error::Missing AZURE_TENANT_ID. Configure it as a GitHub Environment or repository variable/secret."; exit 1; }
-          test -n "${ARM_SUBSCRIPTION_ID}" || { echo "::error::Missing AZURE_SUBSCRIPTION_ID. Configure it as a GitHub Environment or repository variable/secret."; exit 1; }
+          test -n "${ARM_CLIENT_ID}" || { echo "::error::Missing client ID. Configure AZURE_CLIENT_ID or ARM_CLIENT_ID in GitHub variables/secrets."; exit 1; }
+          test -n "${ARM_TENANT_ID}" || { echo "::error::Missing tenant ID. Configure AZURE_TENANT_ID or ARM_TENANT_ID in GitHub variables/secrets."; exit 1; }
+          test -n "${ARM_SUBSCRIPTION_ID}" || { echo "::error::Missing subscription ID. Configure AZURE_SUBSCRIPTION_ID or ARM_SUBSCRIPTION_ID in GitHub variables/secrets."; exit 1; }
 
       - name: Azure Login
         uses: azure/login@v2
