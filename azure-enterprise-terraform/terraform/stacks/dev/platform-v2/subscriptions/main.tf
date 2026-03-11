@@ -11,10 +11,22 @@ locals {
     }
   }
 
+  resolved_subscription_catalog = {
+    for name, cfg in local.normalized_subscriptions :
+    name => {
+      management_group_key      = cfg.management_group_key
+      existing_subscription_id  = cfg.existing_subscription_id != null && trimspace(cfg.existing_subscription_id) != "" ? trimspace(cfg.existing_subscription_id) : try(module.subscription_aliases[name].subscription_id, null)
+      subscription_display_name = cfg.subscription_display_name
+      alias_resource_id         = try(module.subscription_aliases[name].subscription_resource_id, null)
+      provisioning_state        = try(module.subscription_aliases[name].provisioning_state, null)
+      created_via_alias         = cfg.enable_alias_creation
+    }
+  }
+
   subscriptions_by_group = {
-    for group_key in distinct([for cfg in local.normalized_subscriptions : cfg.management_group_key]) :
+    for group_key in distinct([for cfg in values(local.resolved_subscription_catalog) : cfg.management_group_key]) :
     group_key => [
-      for cfg in values(local.normalized_subscriptions) : cfg.existing_subscription_id
+      for cfg in values(local.resolved_subscription_catalog) : cfg.existing_subscription_id
       if cfg.management_group_key == group_key && cfg.existing_subscription_id != null && trimspace(cfg.existing_subscription_id) != ""
     ]
   }

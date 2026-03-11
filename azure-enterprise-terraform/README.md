@@ -138,9 +138,16 @@ This stack is responsible for:
 
 - declaring which subscription belongs to which management group branch;
 - providing a single output map for governance to consume;
-- optionally vending new subscriptions through subscription aliases where billing-scope permissions allow it.
+- optionally vending new subscriptions through subscription aliases where billing-scope permissions allow it;
+- returning a resolved subscription catalog that works for both existing subscriptions and alias-created subscriptions.
 
 This keeps subscription lifecycle concerns out of the governance stack and matches common enterprise practice where subscription vending and policy/RBAC are related but separate platform responsibilities.
+
+Mixed-mode behavior:
+
+- if `existing_subscription_id` is set, that subscription is treated as the source of truth;
+- if `enable_alias_creation = true`, the stack can vend a subscription alias and export the created subscription id;
+- downstream stacks continue to read `subscription_catalog[*].existing_subscription_id` as the resolved subscription id, regardless of whether the subscription was pre-existing or newly created.
 
 ## Subscription Targeting Pattern
 

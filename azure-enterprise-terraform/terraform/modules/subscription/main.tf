@@ -6,6 +6,10 @@ resource "azapi_resource" "subscription_alias" {
   type      = "Microsoft.Subscription/aliases@2021-10-01"
   name      = replace(lower(var.subscription_display_name), " ", "-")
   parent_id = "/"
+  response_export_values = [
+    "properties.subscriptionId",
+    "properties.provisioningState",
+  ]
 
   body = jsonencode({
     properties = {
