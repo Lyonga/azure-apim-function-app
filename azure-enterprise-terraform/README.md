@@ -149,7 +149,17 @@ Mixed-mode behavior:
 - if `enable_alias_creation = true`, the stack can vend a subscription alias and export the created subscription id;
 - downstream stacks continue to read `subscription_catalog[*].existing_subscription_id` as the resolved subscription id, regardless of whether the subscription was pre-existing or newly created.
 
-Example subscription-vending entry:
+Existing-subscription path:
+
+```hcl
+platform = {
+  management_group_key      = "platform"
+  existing_subscription_id  = "ce792f64-9e63-483b-8136-a2538b764f3d"
+  subscription_display_name = "FinServ Platform"
+}
+```
+
+Vended-subscription path:
 
 ```hcl
 sandbox_vended = {
@@ -166,6 +176,38 @@ Notes:
 - the active `dev.tfvars` keeps this entry present but disabled to avoid accidental subscription creation during normal dev testing;
 - to vend a real subscription, set `enable_alias_creation = true`, replace `billing_scope_id` with a real billing scope, and ensure the deploying identity has subscription alias creation permission at that billing scope;
 - if `enable_alias_creation` remains `false`, the stack will still succeed but only export catalog outputs and create no Azure subscription resources.
+
+## Ownership Matrix
+
+Use this as the default decision table for where resources belong.
+
+| Stack | Subscription Role | Owns VNet? | VNet Role | Owns Subnets? | Subnet Roles |
+| --- | --- | --- | --- | --- | --- |
+| `platform-v2/bootstrap` | platform/state subscription | No | None | No | None |
+| `platform-v2/subscriptions` | catalog only | No | None | No | None |
+| `platform-v2/governance` | tenant and management-group scope | No | None | No | None |
+| `platform-v2/connectivity` | connectivity subscription | Yes | Hub | Yes | Hub service subnets, firewall/gateway/private-dns-linking support |
+| `platform-v2/management` | management subscription | No | None by default | No | None by default |
+| `platform-v2/identity` | identity/shared-services subscription | Yes | Shared-services spoke | Yes | Shared identity-service subnets |
+| `workload-v2/finserv-api` | workload subscription | Yes | Workload spoke | Yes | `app`, `integration`, `data`, `private-endpoints`, optional `apim` |
+
+### How to choose a subscription
+
+- Put hub networking and shared DNS in `connectivity`.
+- Put monitoring, backup, and diagnostics platform services in `management`.
+- Put shared identities, shared CMKs, and identity-adjacent shared services in `identity`.
+- Put business applications and their spoke VNets in workload subscriptions.
+
+### How to choose a VNet or subnet
+
+- Use the hub VNet from `platform-v2/connectivity` only for central network services.
+- Give each workload its own spoke VNet in its workload stack.
+- Within a workload spoke, use subnet purpose rather than picking ad hoc:
+  - `app`: app-tier compute or front-end resources
+  - `integration`: Function/App Service VNet integration and outbound app connectivity
+  - `data`: data-tier workloads that need tighter isolation
+  - `private-endpoints`: all private endpoints
+  - `apim`: dedicated APIM subnet when APIM is enabled
 
 ## Subscription Targeting Pattern
 

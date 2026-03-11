@@ -1,5 +1,7 @@
 subscription_id = "00000000-0000-0000-0000-000000000004"
 
+# Existing subscription path:
+# - use existing_subscription_id for subscriptions that already exist
 target_subscriptions = {
   platform = {
     management_group_key     = "platform"
@@ -26,6 +28,10 @@ target_subscriptions = {
     existing_subscription_id = "00000000-0000-0000-0000-000000000003"
     subscription_display_name = "FinServ Nonprod Workloads"
   }
+
+  # Vended subscription path:
+  # - this entry is intentionally fully enabled in the example file
+  # - replace billing_scope_id with a real value before apply
   sandbox_vended = {
     management_group_key      = "sandbox"
     subscription_display_name = "FinServ Sandbox Vended"

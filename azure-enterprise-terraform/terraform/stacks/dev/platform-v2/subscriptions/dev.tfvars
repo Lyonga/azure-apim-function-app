@@ -1,5 +1,9 @@
 subscription_id = "ce792f64-9e63-483b-8136-a2538b764f3d"
 
+# Existing subscription path:
+# - use existing_subscription_id when the subscription already exists
+# - this is the safest default for normal dev testing
+# - these entries create catalog outputs only; they do not vend subscriptions
 target_subscriptions = {
   platform = {
     management_group_key      = "platform"
@@ -26,6 +30,11 @@ target_subscriptions = {
     existing_subscription_id  = "ce792f64-9e63-483b-8136-a2538b764f3d"
     subscription_display_name = "FinServ Nonprod Workloads"
   }
+
+  # Vended subscription path:
+  # - switch enable_alias_creation to true
+  # - set a real billing_scope_id
+  # - ensure the deploying identity has subscription alias permission
   sandbox_vended = {
     management_group_key      = "sandbox"
     subscription_display_name = "FinServ Sandbox Vended"
