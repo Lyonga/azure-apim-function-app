@@ -26,4 +26,11 @@ target_subscriptions = {
     existing_subscription_id = "00000000-0000-0000-0000-000000000003"
     subscription_display_name = "FinServ Nonprod Workloads"
   }
+  sandbox_vended = {
+    management_group_key      = "sandbox"
+    subscription_display_name = "FinServ Sandbox Vended"
+    enable_alias_creation     = true
+    billing_scope_id          = "/providers/Microsoft.Billing/REPLACE_ME"
+    workload                  = "DevTest"
+  }
 }

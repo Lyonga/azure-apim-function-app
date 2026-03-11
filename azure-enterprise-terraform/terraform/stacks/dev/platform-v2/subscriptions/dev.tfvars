@@ -26,4 +26,11 @@ target_subscriptions = {
     existing_subscription_id  = "ce792f64-9e63-483b-8136-a2538b764f3d"
     subscription_display_name = "FinServ Nonprod Workloads"
   }
+  sandbox_vended = {
+    management_group_key      = "sandbox"
+    subscription_display_name = "FinServ Sandbox Vended"
+    enable_alias_creation     = false
+    billing_scope_id          = null
+    workload                  = "DevTest"
+  }
 }

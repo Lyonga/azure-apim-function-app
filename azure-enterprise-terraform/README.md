@@ -149,6 +149,24 @@ Mixed-mode behavior:
 - if `enable_alias_creation = true`, the stack can vend a subscription alias and export the created subscription id;
 - downstream stacks continue to read `subscription_catalog[*].existing_subscription_id` as the resolved subscription id, regardless of whether the subscription was pre-existing or newly created.
 
+Example subscription-vending entry:
+
+```hcl
+sandbox_vended = {
+  management_group_key      = "sandbox"
+  subscription_display_name = "FinServ Sandbox Vended"
+  enable_alias_creation     = true
+  billing_scope_id          = "/providers/Microsoft.Billing/REPLACE_ME"
+  workload                  = "DevTest"
+}
+```
+
+Notes:
+
+- the active `dev.tfvars` keeps this entry present but disabled to avoid accidental subscription creation during normal dev testing;
+- to vend a real subscription, set `enable_alias_creation = true`, replace `billing_scope_id` with a real billing scope, and ensure the deploying identity has subscription alias creation permission at that billing scope;
+- if `enable_alias_creation` remains `false`, the stack will still succeed but only export catalog outputs and create no Azure subscription resources.
+
 ## Subscription Targeting Pattern
 
 The active v2 stacks do not auto-derive provider targets from remote state.
