@@ -77,7 +77,7 @@ locals {
   placeholder_hub_vnet_name       = "vnet-placeholder-hub"
   placeholder_hub_vnet_id         = "/subscriptions/${var.subscription_id}/resourceGroups/${local.placeholder_resource_group_name}/providers/Microsoft.Network/virtualNetworks/${local.placeholder_hub_vnet_name}"
   placeholder_workspace_id        = "/subscriptions/${var.subscription_id}/resourceGroups/${local.placeholder_resource_group_name}/providers/Microsoft.OperationalInsights/workspaces/law-placeholder-platform"
-  placeholder_key_vault_key_id    = "/subscriptions/${var.subscription_id}/resourceGroups/${local.placeholder_resource_group_name}/providers/Microsoft.KeyVault/vaults/kv-placeholder/keys/cmk-placeholder/${local.placeholder_guid}"
+  placeholder_key_vault_key_id    = "https://kv-placeholder.vault.azure.net/keys/cmk-placeholder/${local.placeholder_guid}"
   placeholder_shared_identity_id  = "/subscriptions/${var.subscription_id}/resourceGroups/${local.placeholder_resource_group_name}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/uai-placeholder-runtime"
   placeholder_private_dns_zone_ids = {
     blob       = "/subscriptions/${var.subscription_id}/resourceGroups/${local.placeholder_resource_group_name}/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net"
@@ -102,8 +102,10 @@ locals {
     websites   = "privatelink.azurewebsites.net"
   }
 
-  subscriptions_outputs_raw = var.use_subscriptions_state ? try(data.terraform_remote_state.subscriptions[0].outputs, {}) : {}
-  subscriptions_catalog     = try(local.subscriptions_outputs_raw.subscription_catalog, {})
+  subscriptions_catalog = var.use_subscriptions_state ? try(
+    data.terraform_remote_state.subscriptions[0].outputs.subscription_catalog,
+    {},
+  ) : {}
   expected_subscription_id = try(
     local.subscriptions_catalog[var.subscription_catalog_entry_key].existing_subscription_id,
     null,
