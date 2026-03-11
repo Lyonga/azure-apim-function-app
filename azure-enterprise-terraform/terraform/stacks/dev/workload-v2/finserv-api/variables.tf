@@ -6,6 +6,11 @@ variable "environment" {
 variable "subscription_id" {
   type        = string
   description = "Landing zone subscription id for the workload deployment."
+
+  validation {
+    condition     = !can(regex("^0{8}-0{4}-0{4}-0{4}-0{12}$", var.subscription_id))
+    error_message = "subscription_id still uses the placeholder all-zero value. Set the real workload subscription id in dev.tfvars before planning or applying."
+  }
 }
 
 variable "subscription_catalog_entry_key" {
@@ -48,6 +53,11 @@ variable "subscriptions_state_subscription_id" {
   type        = string
   description = "Subscription containing the subscriptions stack remote state."
   default     = null
+
+  validation {
+    condition     = var.subscriptions_state_subscription_id == null || !can(regex("^0{8}-0{4}-0{4}-0{4}-0{12}$", var.subscriptions_state_subscription_id))
+    error_message = "subscriptions_state_subscription_id still uses the placeholder all-zero value. Set the real platform-state subscription id or leave it null."
+  }
 }
 
 variable "location" {
@@ -407,6 +417,11 @@ variable "platform_state_subscription_id" {
   type        = string
   description = "Optional shared subscription id hosting platform remote state backends."
   default     = null
+
+  validation {
+    condition     = var.platform_state_subscription_id == null || !can(regex("^0{8}-0{4}-0{4}-0{4}-0{12}$", var.platform_state_subscription_id))
+    error_message = "platform_state_subscription_id still uses the placeholder all-zero value. Set the real platform-state subscription id or leave it null."
+  }
 }
 
 variable "connectivity_state_sa" {
@@ -429,6 +444,11 @@ variable "connectivity_state_subscription_id" {
   type        = string
   description = "Optional connectivity remote state subscription id override."
   default     = null
+
+  validation {
+    condition     = var.connectivity_state_subscription_id == null || !can(regex("^0{8}-0{4}-0{4}-0{4}-0{12}$", var.connectivity_state_subscription_id))
+    error_message = "connectivity_state_subscription_id still uses the placeholder all-zero value. Set the real connectivity-state subscription id or leave it null."
+  }
 }
 
 variable "management_state_rg" {
@@ -456,6 +476,11 @@ variable "management_state_subscription_id" {
   type        = string
   description = "Optional management remote state subscription id override."
   default     = null
+
+  validation {
+    condition     = var.management_state_subscription_id == null || !can(regex("^0{8}-0{4}-0{4}-0{4}-0{12}$", var.management_state_subscription_id))
+    error_message = "management_state_subscription_id still uses the placeholder all-zero value. Set the real management-state subscription id or leave it null."
+  }
 }
 
 variable "identity_state_rg" {
@@ -486,6 +511,11 @@ variable "identity_state_subscription_id" {
   type        = string
   description = "Optional identity remote state subscription id override."
   default     = null
+
+  validation {
+    condition     = var.identity_state_subscription_id == null || !can(regex("^0{8}-0{4}-0{4}-0{4}-0{12}$", var.identity_state_subscription_id))
+    error_message = "identity_state_subscription_id still uses the placeholder all-zero value. Set the real identity-state subscription id or leave it null."
+  }
 }
 
 variable "shared_identity_workload_identity_key" {

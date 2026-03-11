@@ -23,7 +23,7 @@ target_subscriptions = {
   }
   nonprod_workload = {
     management_group_key      = "nonprod"
-    existing_subscription_id  = "00000000-0000-0000-0000-000000000003"
+    existing_subscription_id  = "ce792f64-9e63-483b-8136-a2538b764f3d"
     subscription_display_name = "FinServ Nonprod Workloads"
   }
 }

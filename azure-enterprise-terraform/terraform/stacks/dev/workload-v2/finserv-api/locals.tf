@@ -1,7 +1,7 @@
 locals {
   api_spec_path               = var.api_spec_path != null ? abspath(var.api_spec_path) : abspath("${path.root}/../../../api-spec.yml")
   shared_services_cmk_enabled = var.enable_app_configuration || var.enable_service_bus
-  shared_identity_outputs     = var.use_shared_identity_services ? data.terraform_remote_state.identity[0].outputs : null
+  shared_identity_outputs     = var.use_shared_identity_services ? local.identity_outputs : null
 
   effective_app_identity = var.use_shared_identity_services ? {
     id           = local.shared_identity_outputs.shared_identity_ids[var.shared_identity_workload_identity_key]

@@ -32,18 +32,18 @@ module "spoke_network" {
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "spoke_links" {
-  for_each              = data.terraform_remote_state.connectivity.outputs.private_dns_zone_names
+  for_each              = local.connectivity_outputs.private_dns_zone_names
   name                  = "link-${var.environment}-${var.application}-${each.key}"
-  resource_group_name   = data.terraform_remote_state.connectivity.outputs.resource_group_name
+  resource_group_name   = local.connectivity_outputs.resource_group_name
   private_dns_zone_name = each.value
   virtual_network_id    = module.spoke_network.vnet_id
 }
 
 module "hub_to_spoke_peering" {
   source                  = "../../../../modules/vnet-peering"
-  hub_vnet_id             = data.terraform_remote_state.connectivity.outputs.hub_vnet_id
-  hub_vnet_name           = data.terraform_remote_state.connectivity.outputs.hub_vnet_name
-  hub_rg_name             = data.terraform_remote_state.connectivity.outputs.resource_group_name
+  hub_vnet_id             = local.connectivity_outputs.hub_vnet_id
+  hub_vnet_name           = local.connectivity_outputs.hub_vnet_name
+  hub_rg_name             = local.connectivity_outputs.resource_group_name
   spoke_vnet_id           = module.spoke_network.vnet_id
   spoke_vnet_name         = module.spoke_network.vnet_name
   spoke_rg_name           = module.resource_group.name
@@ -57,7 +57,7 @@ resource "azurerm_application_insights" "this" {
   resource_group_name = module.resource_group.name
   location            = var.location
   application_type    = "web"
-  workspace_id        = data.terraform_remote_state.management.outputs.workspace_id
+  workspace_id        = local.management_outputs.workspace_id
   tags                = module.tags.tags
 }
 
@@ -89,8 +89,8 @@ module "storage_account" {
 
 resource "azurerm_log_analytics_storage_insights" "workload_storage" {
   name                 = "insights-${var.environment}-${var.application}"
-  resource_group_name  = data.terraform_remote_state.management.outputs.resource_group_name
-  workspace_id         = data.terraform_remote_state.management.outputs.workspace_id
+  resource_group_name  = local.management_outputs.resource_group_name
+  workspace_id         = local.management_outputs.workspace_id
   storage_account_id   = module.storage_account.account_id
   storage_account_key  = module.storage_account.primary_access_key
   blob_container_names = length(module.storage_account.container_names) > 0 ? module.storage_account.container_names : ["*"]
@@ -229,7 +229,7 @@ module "storage_private_endpoints" {
   subnet_id            = module.spoke_network.subnet_ids["private-endpoints"]
   target_resource_id   = module.storage_account.account_id
   subresource_names    = each.value.subresource_names
-  private_dns_zone_ids = [data.terraform_remote_state.connectivity.outputs.private_dns_zone_ids[each.value.dns_key]]
+  private_dns_zone_ids = [local.connectivity_outputs.private_dns_zone_ids[each.value.dns_key]]
   tags                 = module.tags.tags
 }
 
@@ -241,7 +241,7 @@ module "key_vault_private_endpoint" {
   subnet_id            = module.spoke_network.subnet_ids["private-endpoints"]
   target_resource_id   = module.key_vault.id
   subresource_names    = ["vault"]
-  private_dns_zone_ids = [data.terraform_remote_state.connectivity.outputs.private_dns_zone_ids["keyvault"]]
+  private_dns_zone_ids = [local.connectivity_outputs.private_dns_zone_ids["keyvault"]]
   tags                 = module.tags.tags
 }
 
@@ -254,7 +254,7 @@ module "app_configuration_private_endpoint" {
   subnet_id            = module.spoke_network.subnet_ids["private-endpoints"]
   target_resource_id   = var.enable_app_configuration ? module.app_configuration[0].id : null
   subresource_names    = ["configurationStores"]
-  private_dns_zone_ids = var.enable_app_configuration ? [data.terraform_remote_state.connectivity.outputs.private_dns_zone_ids["appconfig"]] : []
+  private_dns_zone_ids = var.enable_app_configuration ? [local.connectivity_outputs.private_dns_zone_ids["appconfig"]] : []
   tags                 = module.tags.tags
 }
 
@@ -267,7 +267,7 @@ module "service_bus_private_endpoint" {
   subnet_id            = module.spoke_network.subnet_ids["private-endpoints"]
   target_resource_id   = var.enable_service_bus ? module.service_bus[0].id : null
   subresource_names    = ["namespace"]
-  private_dns_zone_ids = var.enable_service_bus ? [data.terraform_remote_state.connectivity.outputs.private_dns_zone_ids["servicebus"]] : []
+  private_dns_zone_ids = var.enable_service_bus ? [local.connectivity_outputs.private_dns_zone_ids["servicebus"]] : []
   tags                 = module.tags.tags
 }
 
@@ -280,7 +280,7 @@ module "sql_private_endpoint" {
   subnet_id            = module.spoke_network.subnet_ids["private-endpoints"]
   target_resource_id   = var.enable_sql ? module.sql_database[0].server_id : null
   subresource_names    = ["sqlServer"]
-  private_dns_zone_ids = var.enable_sql ? [data.terraform_remote_state.connectivity.outputs.private_dns_zone_ids["sql"]] : []
+  private_dns_zone_ids = var.enable_sql ? [local.connectivity_outputs.private_dns_zone_ids["sql"]] : []
   tags                 = module.tags.tags
 }
 
@@ -293,7 +293,7 @@ module "function_private_endpoint" {
   subnet_id            = module.spoke_network.subnet_ids["private-endpoints"]
   target_resource_id   = module.function_app.id
   subresource_names    = ["sites"]
-  private_dns_zone_ids = [data.terraform_remote_state.connectivity.outputs.private_dns_zone_ids["websites"]]
+  private_dns_zone_ids = [local.connectivity_outputs.private_dns_zone_ids["websites"]]
   tags                 = module.tags.tags
 }
 
@@ -306,7 +306,7 @@ module "key_vault_diagnostics" {
   source                     = "../../../../modules/diagnostics-1"
   name                       = "diag-kv-${var.environment}-${var.application}"
   target_resource_id         = module.key_vault.id
-  log_analytics_workspace_id = data.terraform_remote_state.management.outputs.workspace_id
+  log_analytics_workspace_id = local.management_outputs.workspace_id
   enabled_logs               = ["AuditEvent"]
   enabled_metrics            = ["AllMetrics"]
 }

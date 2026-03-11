@@ -89,12 +89,14 @@ Apply stacks in this order:
 
 This order matters because:
 
+- this is apply order, not just plan order; remote-state consumers need upstream stacks to have already written outputs into state;
 - the backend must exist before remote state can be used;
 - subscription ownership and placement should be declared before governance associations consume it;
 - governance should exist before platform and workloads are deployed;
 - connectivity and private DNS are shared dependencies for private endpoints;
 - management provides central logging and recovery services used by workloads;
 - identity provides shared managed identities and customer-managed keys consumed by workloads.
+- the committed `dev.tfvars` and `backend.hcl` files still use placeholder subscription IDs like `00000000-0000-0000-0000-000000000003`; replace them with real subscription IDs before live plans or applies.
 
 ## Stack Purpose
 
