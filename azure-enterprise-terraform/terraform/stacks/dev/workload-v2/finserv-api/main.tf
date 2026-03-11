@@ -332,16 +332,3 @@ module "api_management" {
   function_resource_group         = module.resource_group.name
   tags                            = module.tags.tags
 }
-
-#checkov:skip=CKV2_ADO_1: The repository uses azuredevops_branch_policy_min_reviewers, but Checkov's graph rule does not resolve the nested scope reference.
-module "azuredevops" {
-  count                       = var.enable_azuredevops ? 1 : 0
-  source                      = "../../../../modules/azuredevops_repo"
-  enable                      = true
-  create_project              = var.create_azuredevops_project
-  project_name                = var.azuredevops_project_name
-  repository_name             = var.azuredevops_repository_name
-  default_branch              = var.azuredevops_default_branch
-  enable_min_reviewers_policy = true
-  min_reviewer_count          = 2
-}

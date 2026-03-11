@@ -126,21 +126,21 @@ locals {
     workspace_id        = try(local.management_outputs_raw.workspace_id, local.placeholder_workspace_id)
   }
 
-  identity_outputs = var.use_shared_identity_services ? {
-    shared_identity_ids = try(local.identity_outputs_raw.shared_identity_ids, {
+  identity_outputs = {
+    shared_identity_ids = var.use_shared_identity_services ? try(local.identity_outputs_raw.shared_identity_ids, {
       (var.shared_identity_workload_identity_key) = local.placeholder_shared_identity_id
-    })
-    shared_identity_client_ids = try(local.identity_outputs_raw.shared_identity_client_ids, {
+    }) : {}
+    shared_identity_client_ids = var.use_shared_identity_services ? try(local.identity_outputs_raw.shared_identity_client_ids, {
       (var.shared_identity_workload_identity_key) = local.placeholder_guid
-    })
-    shared_identity_principal_ids = try(local.identity_outputs_raw.shared_identity_principal_ids, {
+    }) : {}
+    shared_identity_principal_ids = var.use_shared_identity_services ? try(local.identity_outputs_raw.shared_identity_principal_ids, {
       (var.shared_identity_workload_identity_key) = local.placeholder_secondary_guid
-    })
-    shared_identity_names = try(local.identity_outputs_raw.shared_identity_names, {
+    }) : {}
+    shared_identity_names = var.use_shared_identity_services ? try(local.identity_outputs_raw.shared_identity_names, {
       (var.shared_identity_workload_identity_key) = "uai-placeholder-runtime"
-    })
-    shared_services_cmk_key_id = try(local.identity_outputs_raw.shared_services_cmk_key_id, local.placeholder_key_vault_key_id)
-  } : {}
+    }) : {}
+    shared_services_cmk_key_id = var.use_shared_identity_services ? try(local.identity_outputs_raw.shared_services_cmk_key_id, local.placeholder_key_vault_key_id) : null
+  }
 
   dependency_errors = compact(concat(
     !var.use_subscriptions_state ? [] : length(keys(local.subscriptions_catalog)) > 0 ? [] : [
