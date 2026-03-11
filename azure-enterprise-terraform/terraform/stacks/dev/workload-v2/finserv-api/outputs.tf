@@ -2,6 +2,10 @@ output "resource_group_name" {
   value = module.resource_group.name
 }
 
+output "subscription_id" {
+  value = var.subscription_id
+}
+
 output "spoke_vnet_id" {
   value = module.spoke_network.vnet_id
 }
@@ -32,4 +36,8 @@ output "sql_server_name" {
 
 output "api_management_name" {
   value = try(module.api_management[0].name, null)
+}
+
+output "effective_app_identity_id" {
+  value = local.effective_app_identity.id
 }

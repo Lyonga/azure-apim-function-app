@@ -2,6 +2,10 @@ output "resource_group_name" {
   value = module.state_storage.resource_group_name
 }
 
+output "subscription_id" {
+  value = var.subscription_id
+}
+
 output "storage_account_name" {
   value = module.state_storage.storage_account_name
 }

@@ -3,6 +3,11 @@ variable "environment" {
   description = "Environment tag."
 }
 
+variable "subscription_id" {
+  type        = string
+  description = "Landing zone subscription id for the workload deployment."
+}
+
 variable "location" {
   type        = string
   description = "Azure region."
@@ -253,6 +258,25 @@ variable "azuredevops_default_branch" {
   default     = "refs/heads/main"
 }
 
+variable "azuredevops_org_service_url" {
+  type        = string
+  description = "Azure DevOps organization service URL. Required only when Azure DevOps resources are enabled."
+  default     = null
+}
+
+variable "azuredevops_personal_access_token" {
+  type        = string
+  description = "Azure DevOps personal access token. Required only when Azure DevOps resources are enabled."
+  default     = null
+  sensitive   = true
+}
+
+variable "use_shared_identity_services" {
+  type        = bool
+  description = "Consume shared identity and CMK resources from the platform identity stack."
+  default     = true
+}
+
 variable "business_owner" {
   type        = string
   description = "Business owner tag."
@@ -310,6 +334,12 @@ variable "connectivity_state_rg" {
   description = "Connectivity state resource group."
 }
 
+variable "platform_state_subscription_id" {
+  type        = string
+  description = "Optional shared subscription id hosting platform remote state backends."
+  default     = null
+}
+
 variable "connectivity_state_sa" {
   type        = string
   description = "Connectivity state storage account."
@@ -324,6 +354,12 @@ variable "connectivity_state_container" {
 variable "connectivity_state_key" {
   type        = string
   description = "Connectivity state key."
+}
+
+variable "connectivity_state_subscription_id" {
+  type        = string
+  description = "Optional connectivity remote state subscription id override."
+  default     = null
 }
 
 variable "management_state_rg" {
@@ -345,4 +381,46 @@ variable "management_state_container" {
 variable "management_state_key" {
   type        = string
   description = "Management state key."
+}
+
+variable "management_state_subscription_id" {
+  type        = string
+  description = "Optional management remote state subscription id override."
+  default     = null
+}
+
+variable "identity_state_rg" {
+  type        = string
+  description = "Identity state resource group."
+  default     = null
+}
+
+variable "identity_state_sa" {
+  type        = string
+  description = "Identity state storage account."
+  default     = null
+}
+
+variable "identity_state_container" {
+  type        = string
+  description = "Identity state container."
+  default     = "deploy-container"
+}
+
+variable "identity_state_key" {
+  type        = string
+  description = "Identity state key."
+  default     = null
+}
+
+variable "identity_state_subscription_id" {
+  type        = string
+  description = "Optional identity remote state subscription id override."
+  default     = null
+}
+
+variable "shared_identity_workload_identity_key" {
+  type        = string
+  description = "Logical key of the shared identity output to use for workload service encryption."
+  default     = "workload_runtime"
 }

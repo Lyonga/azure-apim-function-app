@@ -40,9 +40,11 @@ jobs:
       matrix:
         stack:
           - azure-enterprise-terraform/terraform/stacks/dev/platform-v2/bootstrap
+          - azure-enterprise-terraform/terraform/stacks/dev/platform-v2/subscriptions
           - azure-enterprise-terraform/terraform/stacks/dev/platform-v2/governance
           - azure-enterprise-terraform/terraform/stacks/dev/platform-v2/connectivity
           - azure-enterprise-terraform/terraform/stacks/dev/platform-v2/management
+          - azure-enterprise-terraform/terraform/stacks/dev/platform-v2/identity
           - azure-enterprise-terraform/terraform/stacks/dev/workload-v2/finserv-api
 
     steps:
@@ -71,6 +73,9 @@ jobs:
           - name: bootstrap
             path: azure-enterprise-terraform/terraform/stacks/dev/platform-v2/bootstrap
             skip_checks: CKV2_AZURE_1,CKV2_AZURE_21,CKV2_AZURE_33
+          - name: subscriptions
+            path: azure-enterprise-terraform/terraform/stacks/dev/platform-v2/subscriptions
+            skip_checks: ""
           - name: governance
             path: azure-enterprise-terraform/terraform/stacks/dev/platform-v2/governance
             skip_checks: ""
@@ -80,6 +85,9 @@ jobs:
           - name: management
             path: azure-enterprise-terraform/terraform/stacks/dev/platform-v2/management
             skip_checks: CKV2_AZURE_1,CKV2_AZURE_21,CKV2_AZURE_33
+          - name: identity
+            path: azure-enterprise-terraform/terraform/stacks/dev/platform-v2/identity
+            skip_checks: CKV2_AZURE_32
           - name: finserv-api
             path: azure-enterprise-terraform/terraform/stacks/dev/workload-v2/finserv-api
             skip_checks: CKV2_ADO_1,CKV2_AZURE_1,CKV2_AZURE_21,CKV2_AZURE_32,CKV2_AZURE_33,CKV2_AZURE_40,CKV2_AZURE_45

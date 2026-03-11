@@ -89,6 +89,22 @@ For Terraform, prefer:
 - small composition roots for governance, connectivity, management, and workloads;
 - one backend key per stack.
 
+## Current Pattern Status
+
+The active v2 path in this repo now maps to that target pattern as follows:
+
+- implemented: management-group hierarchy and subscription placement associations in governance
+- implemented: a dedicated `subscriptions` root for subscription inventory and optional vending
+- implemented: separate platform roots for `bootstrap`, `subscriptions`, `governance`, `connectivity`, `management`, and `identity`
+- implemented: explicit per-stack subscription targeting for active v2 roots
+- implemented: centralized backend state in a separate platform subscription using Azure AD-backed backend auth
+- implemented: hub-spoke networking, Private DNS, and workload peering
+- implemented: shared identity and shared CMK services in a dedicated identity stack
+- implemented: OIDC-ready plan and drift workflows for the active path
+- partial: governance policy set is still narrow relative to a full ALZ enterprise baseline
+- partial: active rollout is still `dev` only
+- partial: connectivity is still lighter than a full enterprise transit estate with VPN/ExpressRoute/firewall standards
+
 ## Azure Operating Model Requirements
 
 ### State and backend
@@ -150,18 +166,28 @@ The current repo already follows a large portion of that model.
 The active deployment model is split into separate root stacks:
 
 - [`terraform/stacks/dev/platform-v2/bootstrap`](./terraform/stacks/dev/platform-v2/bootstrap)
+- [`terraform/stacks/dev/platform-v2/subscriptions`](./terraform/stacks/dev/platform-v2/subscriptions)
 - [`terraform/stacks/dev/platform-v2/governance`](./terraform/stacks/dev/platform-v2/governance)
 - [`terraform/stacks/dev/platform-v2/connectivity`](./terraform/stacks/dev/platform-v2/connectivity)
 - [`terraform/stacks/dev/platform-v2/management`](./terraform/stacks/dev/platform-v2/management)
+- [`terraform/stacks/dev/platform-v2/identity`](./terraform/stacks/dev/platform-v2/identity)
 - [`terraform/stacks/dev/workload-v2/finserv-api`](./terraform/stacks/dev/workload-v2/finserv-api)
 
 This is the right operating-model split for Azure:
 
 - bootstrap owns backend state infrastructure;
-- governance owns management groups, policy, and RBAC;
+- subscriptions owns subscription inventory and optional vending;
+- governance owns management groups, policy, RBAC, and subscription associations;
 - connectivity owns hub networking and private DNS;
 - management owns logging, activity log export, and recovery;
+- identity owns shared managed identities, shared encryption keys, and identity-adjacent shared services;
 - workloads consume shared state outputs and stay thinner.
+
+### Subscription isolation
+
+The active v2 roots now declare `subscription_id` explicitly at the root provider level. This means the blueprint is no longer only separated by state files; it is separated by deployment subscription as well.
+
+That is the right baseline for an enterprise Azure landing-zone implementation when each platform layer is deployed from a separate Terraform root.
 
 ### Governance as code
 
@@ -196,6 +222,20 @@ The active v2 path uses:
 
 That is consistent with an Azure Landing Zone hub-spoke model rather than a flat VNet approach.
 
+### Shared identity services
+
+The repo now includes a dedicated identity layer in [`terraform/stacks/dev/platform-v2/identity`](./terraform/stacks/dev/platform-v2/identity) that provides:
+
+- a separate identity subscription target;
+- a shared-services VNet;
+- hub peering and Private DNS linking;
+- a premium Key Vault;
+- shared user-assigned identities;
+- a shared HSM-backed CMK;
+- diagnostics into the management workspace.
+
+The sample workload consumes that shared identity and CMK path by default instead of recreating those encryption primitives inside the workload subscription.
+
 ### Security and workload composition
 
 The v2 workload root demonstrates the right general direction:
@@ -225,7 +265,9 @@ The repo mostly follows the intended pattern, but it is not fully at enterprise 
 
 - Separate platform and workload roots are in place.
 - Governance, networking, management, and workloads are separated by state.
+- Active v2 roots are now explicitly separated by subscription target as well.
 - The active workload path uses shared-state consumption rather than a monolith.
+- Shared identity and CMK services are centralized in a dedicated identity stack.
 - Private endpoints, Private DNS, and hub-spoke peering are modeled.
 - Checkov, validation, and drift detection are built into CI.
 - The new pipeline path is designed for OIDC rather than long-lived secrets.
@@ -315,6 +357,16 @@ Recommendation:
 - keep OIDC for active stacks;
 - keep service-principal secret auth only for the legacy workflow until it is retired;
 - document environment-scoped identity prerequisites alongside each deployment workflow.
+
+#### 7. Backend RBAC is now a hard prerequisite
+
+Because the active v2 backends use `use_azuread_auth = true`, the deployment identity must have Blob data-plane access to the backend storage account or container.
+
+Recommendation:
+
+- grant `Storage Blob Data Contributor` at the backend storage account or container scope;
+- keep backend state in a platform-owned subscription separate from workload subscriptions;
+- document backend subscription ownership and RBAC alongside the OIDC setup.
 
 ## Recommended Next Steps
 

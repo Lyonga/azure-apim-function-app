@@ -3,6 +3,11 @@ variable "environment" {
   description = "Environment tag."
 }
 
+variable "subscription_id" {
+  type        = string
+  description = "Connectivity subscription id."
+}
+
 variable "application" {
   type        = string
   description = "Application code."

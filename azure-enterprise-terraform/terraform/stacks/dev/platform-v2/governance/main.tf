@@ -13,12 +13,46 @@ module "tags" {
   last_modified_utc   = var.last_modified_utc
 }
 
+data "terraform_remote_state" "subscriptions" {
+  count   = var.use_subscriptions_state ? 1 : 0
+  backend = "azurerm"
+
+  config = {
+    resource_group_name  = var.subscriptions_state_rg
+    storage_account_name = var.subscriptions_state_sa
+    container_name       = var.subscriptions_state_container
+    key                  = var.subscriptions_state_key
+    subscription_id      = var.subscriptions_state_subscription_id
+    use_azuread_auth     = true
+  }
+}
+
+locals {
+  subscriptions_from_state = var.use_subscriptions_state ? try(
+    data.terraform_remote_state.subscriptions[0].outputs.subscriptions_by_group,
+    {},
+  ) : {}
+
+  subscription_group_keys = distinct(concat(
+    keys(var.subscriptions_by_group),
+    keys(local.subscriptions_from_state),
+  ))
+
+  effective_subscriptions_by_group = {
+    for key in local.subscription_group_keys :
+    key => distinct(concat(
+      lookup(var.subscriptions_by_group, key, []),
+      lookup(local.subscriptions_from_state, key, []),
+    ))
+  }
+}
+
 module "management_groups" {
   source                   = "../../../../modules/management_groups"
   root_management_group_id = var.root_management_group_id
   prefix                   = var.organization_prefix
   display_name_prefix      = var.organization_display_name
-  subscriptions_by_group   = var.subscriptions_by_group
+  subscriptions_by_group   = local.effective_subscriptions_by_group
 }
 
 locals {

@@ -1,3 +1,4 @@
+subscription_id     = "00000000-0000-0000-0000-000000000004"
 environment         = "dev"
 application         = "governance"
 created_by          = "terraform"
@@ -18,10 +19,18 @@ allowed_locations = [
 ]
 
 subscriptions_by_group = {
+  platform     = ["00000000-0000-0000-0000-000000000004"]
   connectivity = ["00000000-0000-0000-0000-000000000001"]
   management   = ["00000000-0000-0000-0000-000000000002"]
+  identity     = ["00000000-0000-0000-0000-000000000005"]
   nonprod      = ["00000000-0000-0000-0000-000000000003"]
 }
+
+use_subscriptions_state             = true
+subscriptions_state_rg              = "rg-tfstate-dev"
+subscriptions_state_sa              = "demotest822e"
+subscriptions_state_key             = "stacks/dev/platform-v2/subscriptions.tfstate"
+subscriptions_state_subscription_id = "00000000-0000-0000-0000-000000000004"
 
 platform_deployer_principal_id         = "00000000-0000-0000-0000-000000000010"
 security_reader_principal_id           = "00000000-0000-0000-0000-000000000011"

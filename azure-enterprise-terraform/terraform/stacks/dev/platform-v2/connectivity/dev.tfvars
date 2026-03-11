@@ -1,4 +1,5 @@
 environment         = "dev"
+subscription_id     = "00000000-0000-0000-0000-000000000001"
 application         = "connectivity"
 created_by          = "terraform"
 location            = "eastus2"

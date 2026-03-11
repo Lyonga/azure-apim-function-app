@@ -62,6 +62,7 @@ resource "azurerm_application_insights" "this" {
 }
 
 module "app_identity" {
+  count               = var.use_shared_identity_services ? 0 : 1
   source              = "../../../../modules/user-assigned-identity"
   name                = "uai-${var.environment}-${var.application}"
   resource_group_name = module.resource_group.name
@@ -103,7 +104,7 @@ module "key_vault" {
   resource_group_name                     = module.resource_group.name
   location                                = var.location
   tenant_id                               = data.azurerm_client_config.current.tenant_id
-  sku_name                                = local.shared_services_cmk_enabled ? "premium" : "standard"
+  sku_name                                = var.use_shared_identity_services ? "standard" : local.shared_services_cmk_enabled ? "premium" : "standard"
   enable_rbac_authorization               = true
   public_network_access_enabled           = false
   network_acls_virtual_network_subnet_ids = [module.spoke_network.subnet_ids["private-endpoints"]]
@@ -111,7 +112,7 @@ module "key_vault" {
 }
 
 resource "azurerm_key_vault_key" "shared_services_cmk" {
-  count           = local.shared_services_cmk_enabled ? 1 : 0
+  count           = !var.use_shared_identity_services && local.shared_services_cmk_enabled ? 1 : 0
   name            = "cmk-${var.environment}-${var.application}"
   key_vault_id    = module.key_vault.id
   key_type        = "RSA-HSM"
@@ -132,9 +133,9 @@ module "app_configuration" {
   resource_group_name           = module.resource_group.name
   location                      = var.location
   identity_type                 = "UserAssigned"
-  identity_ids                  = [module.app_identity.id]
-  encryption_key_identifier     = var.enable_app_configuration ? azurerm_key_vault_key.shared_services_cmk[0].id : null
-  encryption_identity_client_id = var.enable_app_configuration ? module.app_identity.client_id : null
+  identity_ids                  = [local.effective_app_identity.id]
+  encryption_key_identifier     = var.enable_app_configuration ? local.shared_services_cmk_key_id : null
+  encryption_identity_client_id = var.enable_app_configuration ? local.effective_app_identity.client_id : null
   tags                          = module.tags.tags
   depends_on                    = [module.encryption_role_assignments]
 }
@@ -146,9 +147,9 @@ module "service_bus" {
   resource_group_name              = module.resource_group.name
   location                         = var.location
   identity_type                    = "UserAssigned"
-  identity_ids                     = [module.app_identity.id]
-  customer_managed_key_id          = var.enable_service_bus ? azurerm_key_vault_key.shared_services_cmk[0].id : null
-  customer_managed_key_identity_id = var.enable_service_bus ? module.app_identity.id : null
+  identity_ids                     = [local.effective_app_identity.id]
+  customer_managed_key_id          = var.enable_service_bus ? local.shared_services_cmk_key_id : null
+  customer_managed_key_identity_id = var.enable_service_bus ? local.effective_app_identity.id : null
   queues = {
     commands = {}
     events   = {}

@@ -3,6 +3,11 @@ variable "environment" {
   description = "Environment tag value."
 }
 
+variable "subscription_id" {
+  type        = string
+  description = "Platform subscription id hosting the bootstrap state resources."
+}
+
 variable "application" {
   type        = string
   description = "Application code for the backend resources."

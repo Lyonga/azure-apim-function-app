@@ -1,6 +1,21 @@
 locals {
   api_spec_path               = var.api_spec_path != null ? abspath(var.api_spec_path) : abspath("${path.root}/../../../api-spec.yml")
   shared_services_cmk_enabled = var.enable_app_configuration || var.enable_service_bus
+  shared_identity_outputs     = var.use_shared_identity_services ? data.terraform_remote_state.identity[0].outputs : null
+
+  effective_app_identity = var.use_shared_identity_services ? {
+    id           = local.shared_identity_outputs.shared_identity_ids[var.shared_identity_workload_identity_key]
+    client_id    = local.shared_identity_outputs.shared_identity_client_ids[var.shared_identity_workload_identity_key]
+    principal_id = local.shared_identity_outputs.shared_identity_principal_ids[var.shared_identity_workload_identity_key]
+    name         = local.shared_identity_outputs.shared_identity_names[var.shared_identity_workload_identity_key]
+    } : {
+    id           = module.app_identity[0].id
+    client_id    = module.app_identity[0].client_id
+    principal_id = module.app_identity[0].principal_id
+    name         = "uai-${var.environment}-${var.application}"
+  }
+
+  shared_services_cmk_key_id = var.use_shared_identity_services ? local.shared_identity_outputs.shared_services_cmk_key_id : try(azurerm_key_vault_key.shared_services_cmk[0].id, null)
 
   app_subnet_nsg_rules = [
     {
@@ -172,11 +187,11 @@ locals {
     } : {},
   )
 
-  encryption_role_assignments = local.shared_services_cmk_enabled ? {
+  encryption_role_assignments = !var.use_shared_identity_services && local.shared_services_cmk_enabled ? {
     app_identity_key_crypto = {
       scope                = module.key_vault.id
       role_definition_name = "Key Vault Crypto Service Encryption User"
-      principal_id         = module.app_identity.principal_id
+      principal_id         = local.effective_app_identity.principal_id
     }
   } : {}
 }

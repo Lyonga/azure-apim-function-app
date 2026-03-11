@@ -2,6 +2,10 @@ output "resource_group_name" {
   value = module.resource_group.name
 }
 
+output "subscription_id" {
+  value = var.subscription_id
+}
+
 output "workspace_id" {
   value = module.workspace.workspace_id
 }

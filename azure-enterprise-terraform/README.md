@@ -47,9 +47,11 @@ azure-enterprise-terraform/
       dev/
         platform-v2/
           bootstrap/
+          subscriptions/
           governance/
           connectivity/
           management/
+          identity/
         workload-v2/
           finserv-api/
 ```
@@ -58,22 +60,40 @@ azure-enterprise-terraform/
 
 Legacy folders under `terraform/stacks/dev/platform`, `terraform/stacks/dev/workloads`, `terraform/stacks/prod/*`, and `terraform/global/*` are retained only as reference while this blueprint is adopted. Do not extend them.
 
+## Pattern Status
+
+Current landing-zone alignment for the active v2 path:
+
+- implemented: separate root stacks for `bootstrap`, `subscriptions`, `governance`, `connectivity`, `management`, `identity`, and workload composition
+- implemented: a dedicated `subscriptions` root to keep subscription inventory and optional vending separate from governance
+- implemented: explicit subscription targeting per active stack through root provider configuration
+- implemented: hub-spoke networking, hub peering, central Private DNS, and private endpoints
+- implemented: shared identity and CMK services through `platform-v2/identity`
+- implemented: OIDC-capable plan/drift workflows and backend Azure AD auth
+- partial: governance baseline is still intentionally small and needs broader ALZ-style policy initiatives and exemptions
+- partial: only the `dev` v2 estate is active; nonprod/prod rollout still needs to be added
+- partial: modules are custom and ALZ/AVM-aligned in structure, but not yet AVM-backed across the board
+
 ## Deployment Order
 
 Apply stacks in this order:
 
 1. `terraform/stacks/dev/platform-v2/bootstrap`
-2. `terraform/stacks/dev/platform-v2/governance`
-3. `terraform/stacks/dev/platform-v2/connectivity`
-4. `terraform/stacks/dev/platform-v2/management`
-5. `terraform/stacks/dev/workload-v2/finserv-api`
+2. `terraform/stacks/dev/platform-v2/subscriptions`
+3. `terraform/stacks/dev/platform-v2/governance`
+4. `terraform/stacks/dev/platform-v2/connectivity`
+5. `terraform/stacks/dev/platform-v2/management`
+6. `terraform/stacks/dev/platform-v2/identity`
+7. `terraform/stacks/dev/workload-v2/finserv-api`
 
 This order matters because:
 
 - the backend must exist before remote state can be used;
+- subscription ownership and placement should be declared before governance associations consume it;
 - governance should exist before platform and workloads are deployed;
 - connectivity and private DNS are shared dependencies for private endpoints;
-- management provides central logging and recovery services used by workloads.
+- management provides central logging and recovery services used by workloads;
+- identity provides shared managed identities and customer-managed keys consumed by workloads.
 
 ## Stack Purpose
 
@@ -95,7 +115,7 @@ Key design choices:
 Creates:
 
 - management group hierarchy
-- subscription placement
+- subscription placement associations
 - sample landing-zone baseline initiative
 - sample RBAC assignments for platform and workload deployers
 
@@ -106,6 +126,18 @@ The baseline currently includes:
 - deny public IP creation
 
 This is intentionally opinionated and should be extended with your client-specific controls, exemptions, and `deployIfNotExists` policies for diagnostics.
+
+### `platform-v2/subscriptions`
+
+Creates a dedicated source of truth for subscription isolation.
+
+This stack is responsible for:
+
+- declaring which subscription belongs to which management group branch;
+- providing a single output map for governance to consume;
+- optionally vending new subscriptions through subscription aliases where billing-scope permissions allow it.
+
+This keeps subscription lifecycle concerns out of the governance stack and matches common enterprise practice where subscription vending and policy/RBAC are related but separate platform responsibilities.
 
 ### `platform-v2/connectivity`
 
@@ -131,6 +163,21 @@ Creates:
 
 This is the starting point for Sentinel, Defender integrations, alert routing, and operational observability standardization.
 
+### `platform-v2/identity`
+
+Creates a shared-services identity landing zone that demonstrates:
+
+- an isolated identity subscription target
+- a dedicated shared-services VNet
+- hub peering back to central connectivity
+- central Private DNS linking
+- a premium Key Vault for shared service encryption
+- shared user-assigned identities for workload and platform service integration
+- a shared HSM-backed CMK
+- diagnostics to the central management workspace
+
+This layer is where shared managed identities, shared keys, and other identity-adjacent platform services should live instead of being recreated in every workload stack.
+
 ### `workload-v2/finserv-api`
 
 Creates a sample workload stack that demonstrates:
@@ -140,9 +187,9 @@ Creates a sample workload stack that demonstrates:
 - restrictive NSG defaults
 - VNet peering to the hub
 - Private DNS zone links from connectivity state
-- user-assigned identity
+- shared identity and CMK consumption from the identity stack by default
 - storage account
-- Key Vault
+- workload-local Key Vault for application secrets
 - App Configuration
 - Service Bus
 - optional Azure SQL
@@ -205,6 +252,7 @@ resource_group_name  = "rg-tfstate-dev"
 storage_account_name = "demotest822e"
 container_name       = "deploy-container"
 key                  = "stacks/dev/platform-v2/connectivity.tfstate"
+subscription_id      = "00000000-0000-0000-0000-000000000004"
 use_azuread_auth     = true
 ```
 
@@ -214,6 +262,7 @@ use_azuread_auth     = true
 - Keep one backend key per stack.
 - Never share a single key across multiple stacks.
 - Prefer Azure AD auth over shared keys and SAS tokens.
+- When `use_azuread_auth = true`, grant the CI identity `Storage Blob Data Contributor` on the backend storage account or container.
 - Restrict write access to CI identities. Humans should generally be read-only.
 - Keep the backend resource group and storage account in a platform-owned scope, not inside a workload stack.
 - Enable blob versioning, blob soft delete, and container soft delete so state can be recovered.
@@ -226,6 +275,7 @@ For personal testing, this repo uses:
 
 - storage account `demotest822e`
 - container `deploy-container`
+- backend subscription `00000000-0000-0000-0000-000000000004`
 - one blob key per v2 stack
 
 For enterprise use, prefer:
@@ -243,6 +293,17 @@ For enterprise use, prefer:
 - Do not let workload identities write platform state.
 - If using GitHub-hosted runners, keep backend public access enabled only when justified and IP restriction is not practical.
 - If backend public access is disabled, run Terraform from a self-hosted runner in an allowed network path.
+
+### Provider and Subscription Isolation
+
+Each active v2 stack now declares its own `subscription_id` and uses that in the root `azurerm` provider. That means:
+
+- `bootstrap` can live in a platform/shared subscription
+- `governance` can run in a platform execution subscription while targeting management groups
+- `connectivity`, `management`, `identity`, and workload stacks can each deploy into separate subscriptions
+- backend state can stay centralized in a different subscription from the resource deployment target
+
+This is the minimum practical subscription-isolation pattern for an enterprise Azure landing zone when each stack is a separate Terraform root.
 
 ## State Locking, Blob Leasing, and Concurrency
 

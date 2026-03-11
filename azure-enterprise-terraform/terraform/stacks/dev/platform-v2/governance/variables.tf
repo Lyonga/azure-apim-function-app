@@ -3,6 +3,11 @@ variable "root_management_group_id" {
   description = "Tenant root management group resource id."
 }
 
+variable "subscription_id" {
+  type        = string
+  description = "Platform subscription id used as the execution context for governance changes."
+}
+
 variable "organization_prefix" {
   type        = string
   description = "Short prefix used for management group names."
@@ -85,6 +90,42 @@ variable "subscriptions_by_group" {
   type        = map(list(string))
   description = "Subscription placement keyed by target management group alias."
   default     = {}
+}
+
+variable "use_subscriptions_state" {
+  type        = bool
+  description = "Read subscription placement from the dedicated subscriptions stack."
+  default     = false
+}
+
+variable "subscriptions_state_rg" {
+  type        = string
+  description = "Resource group hosting the subscriptions stack state."
+  default     = null
+}
+
+variable "subscriptions_state_sa" {
+  type        = string
+  description = "Storage account hosting the subscriptions stack state."
+  default     = null
+}
+
+variable "subscriptions_state_container" {
+  type        = string
+  description = "Container hosting the subscriptions stack state."
+  default     = "deploy-container"
+}
+
+variable "subscriptions_state_key" {
+  type        = string
+  description = "State blob key for the subscriptions stack."
+  default     = null
+}
+
+variable "subscriptions_state_subscription_id" {
+  type        = string
+  description = "Subscription containing the subscriptions stack remote state."
+  default     = null
 }
 
 variable "allowed_locations" {

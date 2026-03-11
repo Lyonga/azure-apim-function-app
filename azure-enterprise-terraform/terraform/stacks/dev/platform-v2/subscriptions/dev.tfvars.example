@@ -1,0 +1,29 @@
+subscription_id = "00000000-0000-0000-0000-000000000004"
+
+target_subscriptions = {
+  platform = {
+    management_group_key     = "platform"
+    existing_subscription_id = "00000000-0000-0000-0000-000000000004"
+    subscription_display_name = "FinServ Platform"
+  }
+  connectivity = {
+    management_group_key     = "connectivity"
+    existing_subscription_id = "00000000-0000-0000-0000-000000000001"
+    subscription_display_name = "FinServ Connectivity"
+  }
+  management = {
+    management_group_key     = "management"
+    existing_subscription_id = "00000000-0000-0000-0000-000000000002"
+    subscription_display_name = "FinServ Management"
+  }
+  identity = {
+    management_group_key     = "identity"
+    existing_subscription_id = "00000000-0000-0000-0000-000000000005"
+    subscription_display_name = "FinServ Identity"
+  }
+  nonprod_workload = {
+    management_group_key     = "nonprod"
+    existing_subscription_id = "00000000-0000-0000-0000-000000000003"
+    subscription_display_name = "FinServ Nonprod Workloads"
+  }
+}

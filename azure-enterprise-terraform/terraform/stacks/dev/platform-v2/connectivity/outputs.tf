@@ -2,6 +2,10 @@ output "resource_group_name" {
   value = module.resource_group.name
 }
 
+output "subscription_id" {
+  value = var.subscription_id
+}
+
 output "hub_vnet_id" {
   value = module.hub_network.vnet_id
 }

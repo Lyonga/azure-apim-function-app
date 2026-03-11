@@ -1,4 +1,5 @@
 environment                  = "dev"
+subscription_id              = "00000000-0000-0000-0000-000000000003"
 location                     = "eastus2"
 application                  = "loans-api"
 created_by                   = "terraform"
@@ -28,6 +29,11 @@ connectivity_state_key = "stacks/dev/platform-v2/connectivity.tfstate"
 management_state_rg  = "rg-tfstate-dev"
 management_state_sa  = "demotest822e"
 management_state_key = "stacks/dev/platform-v2/management.tfstate"
+
+platform_state_subscription_id = "00000000-0000-0000-0000-000000000004"
+identity_state_rg              = "rg-tfstate-dev"
+identity_state_sa              = "demotest822e"
+identity_state_key             = "stacks/dev/platform-v2/identity.tfstate"
 
 enable_apim               = false
 enable_sql                = false
