@@ -5,6 +5,17 @@
 #   workload_rg_location = data.terraform_remote_state.global.outputs.workload_rg_location
 # }
 
+resource "terraform_data" "input_guard" {
+  input = true
+
+  lifecycle {
+    precondition {
+      condition     = length(local.validation_errors) == 0
+      error_message = join("\n", local.validation_errors)
+    }
+  }
+}
+
 # Demo VM (in app subnet)
 module "vm" {
   count               = var.create_demo_vm ? 1 : 0

@@ -51,8 +51,8 @@ locals {
     },
   )
 
-  _validate = [
-    local.rg_name != null ? null : throw("Set var.resource_group or enable global remote state before planning the legacy dev/workloads stack."),
-    !var.create_demo_vm || local.app_subnet_id != null ? null : throw("Set var.app_subnet_id or enable platform remote state before creating the legacy demo VM."),
-  ]
+  validation_errors = compact([
+    local.rg_name != null ? null : "Set var.resource_group or enable global remote state before planning the legacy dev/workloads stack.",
+    !var.create_demo_vm || local.app_subnet_id != null ? null : "Set var.app_subnet_id or enable platform remote state before creating the legacy demo VM.",
+  ])
 }
