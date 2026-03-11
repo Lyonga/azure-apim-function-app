@@ -1,9 +1,9 @@
-subscription_id = "00000000-0000-0000-0000-000000000004"
+subscription_id = "ce792f64-9e63-483b-8136-a2538b764f3d"
 
 target_subscriptions = {
   platform = {
     management_group_key      = "platform"
-    existing_subscription_id  = "00000000-0000-0000-0000-000000000004"
+    existing_subscription_id  = "ce792f64-9e63-483b-8136-a2538b764f3d"
     subscription_display_name = "FinServ Platform"
   }
   connectivity = {

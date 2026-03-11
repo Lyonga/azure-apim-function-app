@@ -15,7 +15,7 @@ locals {
     for group_key in distinct([for cfg in local.normalized_subscriptions : cfg.management_group_key]) :
     group_key => [
       for cfg in values(local.normalized_subscriptions) : cfg.existing_subscription_id
-      if cfg.management_group_key == group_key && cfg.existing_subscription_id != null && trim(cfg.existing_subscription_id) != ""
+      if cfg.management_group_key == group_key && cfg.existing_subscription_id != null && trimspace(cfg.existing_subscription_id) != ""
     ]
   }
 }
