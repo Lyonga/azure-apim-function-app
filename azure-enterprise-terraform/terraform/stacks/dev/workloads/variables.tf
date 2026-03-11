@@ -74,6 +74,13 @@ variable "create_demo_vm" {
   type    = bool
   default = false
 }
+
+variable "enable_demo_vm_baseline_access" {
+  description = "Attach a small baseline of runtime access for the legacy demo VM when it is created."
+  type        = bool
+  default     = true
+}
+
 variable "vm_name" {
   type    = string
   default = "vm-dev-demo-01"
@@ -175,6 +182,21 @@ variable "app_settings" {
   description = "Additional Function App settings."
   type        = map(string)
   default     = {}
+}
+
+variable "demo_vm_additional_role_assignments" {
+  description = "Additional RBAC assignments for the legacy demo VM identity. principal_id defaults to the VM managed identity when omitted."
+  type = map(object({
+    scope                                  = string
+    role_definition_name                   = string
+    principal_id                           = optional(string)
+    principal_type                         = optional(string)
+    condition                              = optional(string)
+    condition_version                      = optional(string)
+    delegated_managed_identity_resource_id = optional(string)
+    skip_service_principal_aad_check       = optional(bool, false)
+  }))
+  default = {}
 }
 
 variable "storage_account_key" {

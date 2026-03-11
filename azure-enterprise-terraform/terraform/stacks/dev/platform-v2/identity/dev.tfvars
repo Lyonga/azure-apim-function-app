@@ -24,7 +24,8 @@ management_state_rg  = "rg-tfstate-dev"
 management_state_sa  = "demotest822e"
 management_state_key = "stacks/dev/platform-v2/management.tfstate"
 
-platform_state_subscription_id = "00000000-0000-0000-0000-000000000004"
+platform_state_subscription_id      = "00000000-0000-0000-0000-000000000004"
+subscriptions_state_subscription_id = "00000000-0000-0000-0000-000000000004"
 
 business_owner      = "identity-engineering"
 source_repo         = "azure-apim-function-app"

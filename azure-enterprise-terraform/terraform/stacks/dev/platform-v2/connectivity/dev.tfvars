@@ -18,6 +18,8 @@ recovery_tier       = "terraform"
 cost_center         = "shared-network"
 creation_date_utc   = "2026-03-09T00:00:00Z"
 
+subscriptions_state_subscription_id = "00000000-0000-0000-0000-000000000004"
+
 additional_tags = {
   owner = "charles"
 }

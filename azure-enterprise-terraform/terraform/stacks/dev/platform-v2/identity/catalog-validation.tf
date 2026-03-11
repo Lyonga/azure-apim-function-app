@@ -1,0 +1,23 @@
+data "terraform_remote_state" "subscriptions" {
+  count   = var.use_subscriptions_state ? 1 : 0
+  backend = "azurerm"
+
+  config = {
+    resource_group_name  = var.subscriptions_state_rg
+    storage_account_name = var.subscriptions_state_sa
+    container_name       = var.subscriptions_state_container
+    key                  = var.subscriptions_state_key
+    subscription_id      = coalesce(var.subscriptions_state_subscription_id, var.platform_state_subscription_id)
+    use_azuread_auth     = true
+  }
+}
+
+check "subscription_target_matches_catalog" {
+  assert {
+    condition = !var.use_subscriptions_state || try(
+      data.terraform_remote_state.subscriptions[0].outputs.subscription_catalog[var.subscription_catalog_entry_key].existing_subscription_id,
+      null,
+    ) == var.subscription_id
+    error_message = "The identity stack subscription_id does not match the central subscriptions catalog."
+  }
+}

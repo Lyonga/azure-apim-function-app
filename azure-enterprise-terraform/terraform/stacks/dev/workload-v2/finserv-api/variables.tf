@@ -8,6 +8,48 @@ variable "subscription_id" {
   description = "Landing zone subscription id for the workload deployment."
 }
 
+variable "subscription_catalog_entry_key" {
+  type        = string
+  description = "Entry key in the subscriptions catalog for this stack."
+  default     = "nonprod_workload"
+}
+
+variable "use_subscriptions_state" {
+  type        = bool
+  description = "Validate the stack subscription against the central subscriptions state."
+  default     = true
+}
+
+variable "subscriptions_state_rg" {
+  type        = string
+  description = "Resource group hosting the subscriptions stack state."
+  default     = "rg-tfstate-dev"
+}
+
+variable "subscriptions_state_sa" {
+  type        = string
+  description = "Storage account hosting the subscriptions stack state."
+  default     = "demotest822e"
+}
+
+variable "subscriptions_state_container" {
+  type        = string
+  description = "Container hosting the subscriptions stack state."
+  default     = "deploy-container"
+}
+
+variable "subscriptions_state_key" {
+  type        = string
+  description = "State blob key for the subscriptions stack."
+  default     = "stacks/dev/platform-v2/subscriptions.tfstate"
+}
+
+variable "subscriptions_state_subscription_id" {
+  type        = string
+  description = "Subscription containing the subscriptions stack remote state."
+  default     = null
+}
+
 variable "location" {
   type        = string
   description = "Azure region."
@@ -225,6 +267,33 @@ variable "enable_function_private_endpoint" {
 variable "function_app_settings" {
   type        = map(string)
   description = "Additional Function App settings."
+  default     = {}
+}
+
+variable "assign_storage_blob_data_contributor" {
+  type        = bool
+  description = "Grant the workload managed identity Storage Blob Data Contributor on the workload storage account."
+  default     = true
+}
+
+variable "assign_storage_queue_data_contributor" {
+  type        = bool
+  description = "Grant the workload managed identity Storage Queue Data Contributor on the workload storage account."
+  default     = false
+}
+
+variable "additional_workload_role_assignments" {
+  type = map(object({
+    scope                                  = string
+    role_definition_name                   = string
+    principal_id                           = optional(string)
+    principal_type                         = optional(string)
+    condition                              = optional(string)
+    condition_version                      = optional(string)
+    delegated_managed_identity_resource_id = optional(string)
+    skip_service_principal_aad_check       = optional(bool, false)
+  }))
+  description = "Additional RBAC assignments merged with the baseline workload identity access. principal_id defaults to the workload managed identity when omitted."
   default     = {}
 }
 

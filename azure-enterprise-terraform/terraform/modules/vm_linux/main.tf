@@ -26,6 +26,14 @@ resource "azurerm_linux_virtual_machine" "this" {
     public_key = var.ssh_public_key
   }
 
+  dynamic "identity" {
+    for_each = var.identity_type == "None" ? [] : [1]
+    content {
+      type         = var.identity_type
+      identity_ids = contains(["UserAssigned", "SystemAssigned, UserAssigned"], var.identity_type) ? var.identity_ids : null
+    }
+  }
+
   os_disk {
     caching              = "ReadWrite"
     storage_account_type = "StandardSSD_LRS"
@@ -37,5 +45,12 @@ resource "azurerm_linux_virtual_machine" "this" {
     offer     = var.image.offer
     sku       = var.image.sku
     version   = var.image.version
+  }
+
+  lifecycle {
+    precondition {
+      condition     = !contains(["UserAssigned", "SystemAssigned, UserAssigned"], var.identity_type) || length(var.identity_ids) > 0
+      error_message = "identity_ids must contain at least one user-assigned identity when identity_type includes UserAssigned."
+    }
   }
 }

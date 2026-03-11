@@ -24,10 +24,10 @@ resource "azurerm_linux_function_app" "this" {
   tags                          = var.tags
 
   dynamic "identity" {
-    for_each = var.identity_type == null ? [] : [1]
+    for_each = var.identity_type == null || var.identity_type == "None" ? [] : [1]
     content {
       type         = var.identity_type
-      identity_ids = var.identity_ids
+      identity_ids = contains(["UserAssigned", "SystemAssigned, UserAssigned"], var.identity_type) ? var.identity_ids : null
     }
   }
 
@@ -42,6 +42,13 @@ resource "azurerm_linux_function_app" "this" {
 
     application_stack {
       python_version = var.runtime == "python" ? var.runtime_version : null
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition     = !contains(["UserAssigned", "SystemAssigned, UserAssigned"], var.identity_type) || length(var.identity_ids) > 0
+      error_message = "identity_ids must contain at least one user-assigned identity when identity_type includes UserAssigned."
     }
   }
 }

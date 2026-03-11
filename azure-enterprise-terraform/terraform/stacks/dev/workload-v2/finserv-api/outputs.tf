@@ -41,3 +41,11 @@ output "api_management_name" {
 output "effective_app_identity_id" {
   value = local.effective_app_identity.id
 }
+
+output "effective_app_identity_principal_id" {
+  value = local.effective_app_identity.principal_id
+}
+
+output "effective_app_identity_client_id" {
+  value = local.effective_app_identity.client_id
+}

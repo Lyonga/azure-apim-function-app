@@ -205,10 +205,13 @@ module "function_app" {
   application_insights_connection_string = azurerm_application_insights.this.connection_string
   virtual_network_subnet_id              = module.spoke_network.subnet_ids["integration"]
   public_network_access_enabled          = var.function_public_network_access_enabled
+  identity_type                          = "UserAssigned"
+  identity_ids                           = [local.effective_app_identity.id]
   app_settings = merge({
     WEBSITE_RUN_FROM_PACKAGE = "1"
     WEBSITE_CONTENTOVERVNET  = "1"
     KEY_VAULT_URI            = module.key_vault.vault_uri
+    AZURE_CLIENT_ID          = local.effective_app_identity.client_id
     }, var.function_app_settings, var.enable_service_bus ? {
     SERVICEBUS_NAMESPACE = module.service_bus[0].name
     } : {}, var.enable_app_configuration ? {

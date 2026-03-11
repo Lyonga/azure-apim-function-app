@@ -67,6 +67,7 @@ Current landing-zone alignment for the active v2 path:
 - implemented: separate root stacks for `bootstrap`, `subscriptions`, `governance`, `connectivity`, `management`, `identity`, and workload composition
 - implemented: a dedicated `subscriptions` root to keep subscription inventory and optional vending separate from governance
 - implemented: explicit subscription targeting per active stack through root provider configuration
+- implemented: active v2 stacks validate their explicit `subscription_id` against the central `subscriptions` remote state
 - implemented: hub-spoke networking, hub peering, central Private DNS, and private endpoints
 - implemented: shared identity and CMK services through `platform-v2/identity`
 - implemented: OIDC-capable plan/drift workflows and backend Azure AD auth
@@ -139,6 +140,53 @@ This stack is responsible for:
 
 This keeps subscription lifecycle concerns out of the governance stack and matches common enterprise practice where subscription vending and policy/RBAC are related but separate platform responsibilities.
 
+## Subscription Targeting Pattern
+
+The active v2 stacks do not auto-derive provider targets from remote state.
+
+Instead, they use this pattern:
+
+- each root stack keeps an explicit `subscription_id`;
+- the `platform-v2/subscriptions` stack is the catalog of approved subscription ownership;
+- active v2 stacks validate their explicit `subscription_id` against that catalog before planning.
+
+This is safer than deriving provider targets implicitly from remote state because it keeps execution scope obvious while still preventing drift between stack config and the central landing-zone subscription map.
+
+## Ownership Boundaries
+
+Do not apply the same ownership pattern to subscriptions, management groups, and resource groups. They serve different control-plane purposes.
+
+### Subscriptions
+
+Use a central catalog and validation pattern:
+
+- the `platform-v2/subscriptions` stack is the source of truth;
+- active stacks keep an explicit `subscription_id`;
+- active stacks validate that `subscription_id` against the catalog before planning.
+
+This keeps execution scope obvious while still enforcing central control.
+
+### Management Groups
+
+Manage these centrally in `platform-v2/governance`.
+
+- management groups are tenant-level governance objects;
+- subscription-to-management-group associations belong in governance;
+- workload and platform stacks should not each manage or reinterpret management-group structure.
+
+The right pattern is central ownership, not per-stack validation.
+
+### Resource Groups
+
+Usually keep resource groups owned by the stack that deploys into them.
+
+- connectivity owns its hub resource group;
+- management owns its monitoring resource group;
+- identity owns its shared-services resource group;
+- workloads own their workload resource groups.
+
+Only shared resource groups, such as the Terraform state resource group, should be treated as cross-stack dependencies and referenced through remote state or shared configuration.
+
 ### `platform-v2/connectivity`
 
 Creates:
@@ -200,6 +248,33 @@ Creates a sample workload stack that demonstrates:
 - optional Azure DevOps repository/project resources
 
 Some services are behind toggles because APIM, Premium App Service plans, SQL, and ACR can be expensive for personal testing.
+
+### Runtime Identity and RBAC Baseline
+
+The active workload pattern now treats Azure managed identity and RBAC as the Azure equivalent of an AWS application role:
+
+- `workload-v2/finserv-api` runs the Function App with a user-assigned managed identity, not a separate implicit runtime identity.
+- the same workload identity is reused for App Configuration, Service Bus CMK access, and runtime RBAC assignments.
+- baseline workload RBAC now includes:
+  - `Key Vault Secrets User` on the workload Key Vault
+  - `Storage Blob Data Contributor` on the workload storage account
+  - optional `Storage Queue Data Contributor`
+  - `App Configuration Data Reader` when App Configuration is enabled
+  - `Azure Service Bus Data Sender` and `Azure Service Bus Data Receiver` when Service Bus is enabled
+
+Expand the baseline in the workload root instead of changing shared modules:
+
+- `additional_workload_role_assignments` in [`terraform/stacks/dev/workload-v2/finserv-api/variables.tf`](./terraform/stacks/dev/workload-v2/finserv-api/variables.tf) lets you add more runtime RBAC assignments while defaulting `principal_id` to the workload identity.
+
+There is still one deliberate exception: the Function App host storage path still uses the storage account access key for compatibility, even though the workload identity now also has storage RBAC for application data access.
+
+For legacy demo stacks:
+
+- the reusable Linux VM module now supports managed identities by default
+- the legacy `dev/workloads` stack gives the demo VM a system-assigned identity
+- when `create_demo_vm = true`, the stack can apply a small baseline access set and be extended with `demo_vm_additional_role_assignments`
+
+That gives you an expandable template without making every stack invent its own identity pattern.
 
 ## Tagging Guidance
 

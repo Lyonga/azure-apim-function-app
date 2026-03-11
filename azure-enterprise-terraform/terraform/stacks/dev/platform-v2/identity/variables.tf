@@ -8,6 +8,48 @@ variable "subscription_id" {
   description = "Identity subscription id."
 }
 
+variable "subscription_catalog_entry_key" {
+  type        = string
+  description = "Entry key in the subscriptions catalog for this stack."
+  default     = "identity"
+}
+
+variable "use_subscriptions_state" {
+  type        = bool
+  description = "Validate the stack subscription against the central subscriptions state."
+  default     = true
+}
+
+variable "subscriptions_state_rg" {
+  type        = string
+  description = "Resource group hosting the subscriptions stack state."
+  default     = "rg-tfstate-dev"
+}
+
+variable "subscriptions_state_sa" {
+  type        = string
+  description = "Storage account hosting the subscriptions stack state."
+  default     = "demotest822e"
+}
+
+variable "subscriptions_state_container" {
+  type        = string
+  description = "Container hosting the subscriptions stack state."
+  default     = "deploy-container"
+}
+
+variable "subscriptions_state_key" {
+  type        = string
+  description = "State blob key for the subscriptions stack."
+  default     = "stacks/dev/platform-v2/subscriptions.tfstate"
+}
+
+variable "subscriptions_state_subscription_id" {
+  type        = string
+  description = "Subscription containing the subscriptions stack remote state."
+  default     = null
+}
+
 variable "application" {
   type        = string
   description = "Application code."

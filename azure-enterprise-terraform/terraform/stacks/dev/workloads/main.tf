@@ -118,9 +118,19 @@ resource "azurerm_key_vault_access_policy" "deployer" {
 
   secret_permissions = ["Get", "List", "Set", "Delete", "Recover", "Purge"]
 }
+
+resource "azurerm_key_vault_access_policy" "demo_vm" {
+  count        = var.create_demo_vm && !var.kv_enable_rbac ? 1 : 0
+  key_vault_id = module.keyvault.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = module.vm[0].identity_principal_id
+
+  secret_permissions = ["Get", "List"]
+}
+
 resource "time_sleep" "kv_policy_propagation" {
   count           = var.kv_enable_rbac ? 0 : 1
-  depends_on      = [azurerm_key_vault_access_policy.deployer]
+  depends_on      = [azurerm_key_vault_access_policy.deployer, azurerm_key_vault_access_policy.demo_vm]
   create_duration = "30s"
 }
 
@@ -153,6 +163,11 @@ module "storage_account" {
 
   # If your module supports containers map, you can pass it; otherwise omit.
   # containers = {}
+}
+
+module "demo_vm_role_assignments" {
+  source      = "../../../modules/role-assignments"
+  assignments = local.demo_vm_role_assignments
 }
 
 

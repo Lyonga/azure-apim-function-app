@@ -97,6 +97,7 @@ The active v2 path in this repo now maps to that target pattern as follows:
 - implemented: a dedicated `subscriptions` root for subscription inventory and optional vending
 - implemented: separate platform roots for `bootstrap`, `subscriptions`, `governance`, `connectivity`, `management`, and `identity`
 - implemented: explicit per-stack subscription targeting for active v2 roots
+- implemented: central validation that active stack `subscription_id` values match the subscriptions catalog
 - implemented: centralized backend state in a separate platform subscription using Azure AD-backed backend auth
 - implemented: hub-spoke networking, Private DNS, and workload peering
 - implemented: shared identity and shared CMK services in a dedicated identity stack
@@ -186,6 +187,8 @@ This is the right operating-model split for Azure:
 ### Subscription isolation
 
 The active v2 roots now declare `subscription_id` explicitly at the root provider level. This means the blueprint is no longer only separated by state files; it is separated by deployment subscription as well.
+
+The repo now also validates those explicit root `subscription_id` values against the dedicated `platform-v2/subscriptions` stack. That is the preferred pattern here: explicit execution scope plus a central consistency check, rather than hidden provider target selection through remote state.
 
 That is the right baseline for an enterprise Azure landing-zone implementation when each platform layer is deployed from a separate Terraform root.
 

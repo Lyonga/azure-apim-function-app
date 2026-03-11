@@ -63,6 +63,16 @@ variable "virtual_network_subnet_id" {
 variable "identity_type" {
   type    = string
   default = "SystemAssigned"
+
+  validation {
+    condition = contains([
+      "None",
+      "SystemAssigned",
+      "UserAssigned",
+      "SystemAssigned, UserAssigned"
+    ], var.identity_type)
+    error_message = "identity_type must be None, SystemAssigned, UserAssigned, or SystemAssigned, UserAssigned."
+  }
 }
 
 variable "identity_ids" {

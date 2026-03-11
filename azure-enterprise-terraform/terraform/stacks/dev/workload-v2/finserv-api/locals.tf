@@ -15,6 +15,8 @@ locals {
     name         = "uai-${var.environment}-${var.application}"
   }
 
+  runtime_principal_id = local.effective_app_identity.principal_id
+
   shared_services_cmk_key_id = var.use_shared_identity_services ? local.shared_identity_outputs.shared_services_cmk_key_id : try(azurerm_key_vault_key.shared_services_cmk[0].id, null)
 
   app_subnet_nsg_rules = [
@@ -158,33 +160,66 @@ locals {
     }
   }
 
-  workload_role_assignments = merge(
+  baseline_workload_role_assignments = merge(
     {
       function_keyvault_reader = {
         scope                = module.key_vault.id
         role_definition_name = "Key Vault Secrets User"
-        principal_id         = module.function_app.principal_id
+        principal_id         = local.runtime_principal_id
       }
     },
+    var.assign_storage_blob_data_contributor ? {
+      function_storage_blob_contributor = {
+        scope                = module.storage_account.account_id
+        role_definition_name = "Storage Blob Data Contributor"
+        principal_id         = local.runtime_principal_id
+      }
+    } : {},
+    var.assign_storage_queue_data_contributor ? {
+      function_storage_queue_contributor = {
+        scope                = module.storage_account.account_id
+        role_definition_name = "Storage Queue Data Contributor"
+        principal_id         = local.runtime_principal_id
+      }
+    } : {},
     var.enable_app_configuration ? {
       function_appconfig_reader = {
         scope                = module.app_configuration[0].id
         role_definition_name = "App Configuration Data Reader"
-        principal_id         = module.function_app.principal_id
+        principal_id         = local.runtime_principal_id
       }
     } : {},
     var.enable_service_bus ? {
       function_servicebus_sender = {
         scope                = module.service_bus[0].id
         role_definition_name = "Azure Service Bus Data Sender"
-        principal_id         = module.function_app.principal_id
+        principal_id         = local.runtime_principal_id
       }
       function_servicebus_receiver = {
         scope                = module.service_bus[0].id
         role_definition_name = "Azure Service Bus Data Receiver"
-        principal_id         = module.function_app.principal_id
+        principal_id         = local.runtime_principal_id
       }
     } : {},
+  )
+
+  additional_workload_role_assignments = {
+    for name, assignment in var.additional_workload_role_assignments :
+    name => {
+      scope                                  = assignment.scope
+      role_definition_name                   = assignment.role_definition_name
+      principal_id                           = coalesce(try(assignment.principal_id, null), local.runtime_principal_id)
+      principal_type                         = try(assignment.principal_type, null)
+      condition                              = try(assignment.condition, null)
+      condition_version                      = try(assignment.condition_version, null)
+      delegated_managed_identity_resource_id = try(assignment.delegated_managed_identity_resource_id, null)
+      skip_service_principal_aad_check       = try(assignment.skip_service_principal_aad_check, false)
+    }
+  }
+
+  workload_role_assignments = merge(
+    local.baseline_workload_role_assignments,
+    local.additional_workload_role_assignments,
   )
 
   encryption_role_assignments = !var.use_shared_identity_services && local.shared_services_cmk_enabled ? {
