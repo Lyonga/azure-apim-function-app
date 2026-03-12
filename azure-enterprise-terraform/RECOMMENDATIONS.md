@@ -97,6 +97,7 @@ The active v2 path in this repo now maps to that target pattern as follows:
 - implemented: a dedicated `terraform/global/subscriptions` root for central existing-subscription inventory and placement metadata
 - implemented: separate company-wide control-plane roots for `global/subscriptions`, `global/management-groups`, `global/policy`, and `global/role-assignments`
 - implemented: separate environment-scoped roots for `bootstrap`, `connectivity`, `management`, `identity`, and workload composition
+- implemented: placeholder `test` and `prod` v2 environment trees to show the intended multi-environment landing-zone shape during review
 - implemented: explicit per-stack subscription targeting for active v2 roots
 - implemented: central validation that active stack `subscription_id` values match the subscriptions catalog
 - implemented: centralized backend state in a separate platform subscription using Azure AD-backed backend auth
@@ -104,7 +105,7 @@ The active v2 path in this repo now maps to that target pattern as follows:
 - implemented: shared identity and shared CMK services in a dedicated identity stack
 - implemented: OIDC-ready plan and drift workflows for the active path
 - partial: governance policy set is still narrow relative to a full ALZ enterprise baseline
-- partial: active rollout is still `dev` only
+- partial: only `dev` is active and validated; `test` and `prod` are placeholder scaffolds pending real environment-specific values and promotion
 - partial: connectivity is still lighter than a full enterprise transit estate with VPN/ExpressRoute/firewall standards
 
 ## Azure Operating Model Requirements

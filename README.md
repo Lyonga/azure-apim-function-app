@@ -11,6 +11,8 @@ The root Terraform monolith has been removed. Infrastructure now lives under [`a
 - `terraform/stacks/dev/platform-v2/management`
 - `terraform/stacks/dev/platform-v2/identity`
 - `terraform/stacks/dev/workload-v2/finserv-api`
+- `terraform/stacks/test/...` placeholder v2 environment scaffolding
+- `terraform/stacks/prod/...` placeholder v2 environment scaffolding
 
 Current pattern status:
 
@@ -21,7 +23,7 @@ Current pattern status:
 - active dev v2 stacks keep explicit root `subscription_id` values and validate them against the central global `subscriptions` catalog
 - hub-spoke, peering, private DNS, and private endpoints are implemented for the active path
 - workloads consume shared platform state and shared identity/CMK services by default
-- the repo is still a `dev`-first blueprint, not yet a full multi-environment landing zone estate
+- the repo is still a `dev`-first blueprint; `test` and `prod` exist as placeholders for enterprise review but are not active deployable environments yet
 
 The application assets remain in this repo:
 

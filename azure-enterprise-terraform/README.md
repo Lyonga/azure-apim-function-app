@@ -59,9 +59,25 @@ azure-enterprise-terraform/
           identity/
         workload-v2/
           finserv-api/
+      test/
+        platform-v2/
+          bootstrap/
+          connectivity/
+          management/
+          identity/
+        workload-v2/
+          finserv-api/
+      prod/
+        platform-v2/
+          bootstrap/
+          connectivity/
+          management/
+          identity/
+        workload-v2/
+          finserv-api/
 ```
 
-`terraform/global` plus `terraform/stacks/dev/platform-v2` and `terraform/stacks/dev/workload-v2` are the active deployment model.
+`terraform/global` plus `terraform/stacks/<env>/platform-v2` and `terraform/stacks/<env>/workload-v2` are the intended deployment model. In this repo, `dev` is the only active validated environment. `test` and `prod` are placeholder scaffolds that exist to show the full enterprise layout during review.
 
 Deprecated reference roots:
 
@@ -78,6 +94,7 @@ Current landing-zone alignment for the active v2 path:
 
 - implemented: separate company-wide roots for `global/subscriptions`, `global/management-groups`, `global/policy`, and `global/role-assignments`
 - implemented: environment-scoped roots for `bootstrap`, `connectivity`, `management`, `identity`, and workload composition
+- implemented: placeholder `test` and `prod` v2 environment trees so the target multi-environment shape is visible during review
 - implemented: a dedicated global `subscriptions` root to keep subscription inventory separate from governance
 - implemented: explicit subscription targeting per active stack through root provider configuration
 - implemented: active v2 stacks validate their explicit `subscription_id` against the central `subscriptions` remote state
@@ -86,7 +103,7 @@ Current landing-zone alignment for the active v2 path:
 - implemented: OIDC-capable plan/drift workflows and backend Azure AD auth
 - implemented: ALZ-lite governance baseline for regions, enterprise tags, public IP denial, and private-by-default platform services in landing zones
 - partial: governance baseline is still smaller than a full enterprise ALZ policy estate and does not yet model diagnostics `deployIfNotExists`, policy exemptions, or broader compliance initiatives
-- partial: only the `dev` v2 estate is active; nonprod/prod rollout still needs to be added
+- partial: only the `dev` v2 estate is active and validated; `test` and `prod` are placeholders that still need environment-specific configuration and promotion
 - partial: modules are custom and ALZ/AVM-aligned in structure, but not yet AVM-backed across the board
 
 ## Deployment Order
@@ -102,6 +119,8 @@ Apply stacks in this order:
 7. `terraform/stacks/dev/platform-v2/management`
 8. `terraform/stacks/dev/platform-v2/identity`
 9. `terraform/stacks/dev/workload-v2/finserv-api`
+
+For `test` and `prod`, follow the same ordering after replacing the placeholder environment values with real subscription ids, backend keys, and naming inputs.
 
 This order matters because:
 
@@ -158,6 +177,7 @@ Notes:
 
 - the active `dev.tfvars` maps all platform-v2 stacks to one existing platform subscription and workload-v2 to one existing nonprod workload subscription;
 - this keeps the dev demo low-friction while preserving the landing-zone stack boundaries;
+- the `test` and `prod` environment trees are present as placeholders only; replace their placeholder subscription ids and stack config before treating them as deployable roots.
 
 ## Ownership Matrix
 
@@ -174,6 +194,16 @@ Use this as the default decision table for where resources belong.
 | `platform-v2/management` | shared platform subscription in this demo | No | None by default | No | None by default |
 | `platform-v2/identity` | shared platform subscription in this demo | Yes | Shared-services spoke | Yes | Shared identity-service subnets |
 | `workload-v2/finserv-api` | nonprod workload subscription | Yes | Workload spoke | Yes | `app`, `integration`, `data`, `private-endpoints`, optional `apim` |
+
+## Environment Scaffolding
+
+This repo now shows a full three-environment landing-zone picture:
+
+- `dev`: active demo environment and the only path currently validated end to end
+- `test`: placeholder nonprod environment that can stand in for QA or stage in client reviews
+- `prod`: placeholder production environment
+
+Only `dev` should be planned or applied without first replacing placeholder values in the other environments.
 
 ### How to choose a subscription
 
