@@ -16,6 +16,13 @@ For the assessment framework, remediation-vs-rebuild guidance, official Azure an
 ```text
 azure-enterprise-terraform/
   terraform/
+    global/
+      subscriptions/
+      management-groups/
+      policy/
+      role-assignments/
+      platform-connectivity-bootstrap/   # optional, only for a truly shared corporate hub
+      platform-management-bootstrap/     # optional, only for a truly shared global management plane
     modules/
       action-group/
       app-configuration/
@@ -47,8 +54,6 @@ azure-enterprise-terraform/
       dev/
         platform-v2/
           bootstrap/
-          subscriptions/
-          governance/
           connectivity/
           management/
           identity/
@@ -56,16 +61,24 @@ azure-enterprise-terraform/
           finserv-api/
 ```
 
-`terraform/stacks/dev/platform-v2` and `terraform/stacks/dev/workload-v2` are the active deployment model.
+`terraform/global` plus `terraform/stacks/dev/platform-v2` and `terraform/stacks/dev/workload-v2` are the active deployment model.
 
-Legacy folders under `terraform/stacks/dev/platform`, `terraform/stacks/dev/workloads`, `terraform/stacks/prod/*`, and `terraform/global/*` are retained only as reference while this blueprint is adopted. Do not extend them.
+Deprecated reference roots:
+
+- `terraform/stacks/dev/platform`
+- `terraform/stacks/dev/workloads`
+- `terraform/stacks/prod/*`
+- `terraform/global/resource_grouping`
+
+Do not extend those deprecated roots. The active control plane is under `terraform/global`, and the old dev-scoped `platform-v2/subscriptions` and `platform-v2/governance` roots have been retired in favor of `global/subscriptions`, `global/management-groups`, `global/policy`, and `global/role-assignments`.
 
 ## Pattern Status
 
 Current landing-zone alignment for the active v2 path:
 
-- implemented: separate root stacks for `bootstrap`, `subscriptions`, `governance`, `connectivity`, `management`, `identity`, and workload composition
-- implemented: a dedicated `subscriptions` root to keep subscription inventory separate from governance
+- implemented: separate company-wide roots for `global/subscriptions`, `global/management-groups`, `global/policy`, and `global/role-assignments`
+- implemented: environment-scoped roots for `bootstrap`, `connectivity`, `management`, `identity`, and workload composition
+- implemented: a dedicated global `subscriptions` root to keep subscription inventory separate from governance
 - implemented: explicit subscription targeting per active stack through root provider configuration
 - implemented: active v2 stacks validate their explicit `subscription_id` against the central `subscriptions` remote state
 - implemented: hub-spoke networking, hub peering, central Private DNS, and private endpoints
@@ -81,19 +94,21 @@ Current landing-zone alignment for the active v2 path:
 Apply stacks in this order:
 
 1. `terraform/stacks/dev/platform-v2/bootstrap`
-2. `terraform/stacks/dev/platform-v2/subscriptions`
-3. `terraform/stacks/dev/platform-v2/governance`
-4. `terraform/stacks/dev/platform-v2/connectivity`
-5. `terraform/stacks/dev/platform-v2/management`
-6. `terraform/stacks/dev/platform-v2/identity`
-7. `terraform/stacks/dev/workload-v2/finserv-api`
+2. `terraform/global/subscriptions`
+3. `terraform/global/management-groups`
+4. `terraform/global/policy`
+5. `terraform/global/role-assignments`
+6. `terraform/stacks/dev/platform-v2/connectivity`
+7. `terraform/stacks/dev/platform-v2/management`
+8. `terraform/stacks/dev/platform-v2/identity`
+9. `terraform/stacks/dev/workload-v2/finserv-api`
 
 This order matters because:
 
 - this is apply order, not just plan order; remote-state consumers need upstream stacks to have already written outputs into state;
 - the backend must exist before remote state can be used;
-- subscription ownership and placement should be declared before governance associations consume it;
-- governance should exist before platform and workloads are deployed;
+- subscription ownership and placement should be declared before management-group associations consume them;
+- management groups, global policy, and global RBAC should exist before platform and workloads are deployed;
 - connectivity and private DNS are shared dependencies for private endpoints;
 - management provides central logging and recovery services used by workloads;
 - identity provides shared managed identities and customer-managed keys consumed by workloads.
@@ -117,24 +132,7 @@ Key design choices:
 - Azure AD auth supported via `use_azuread_auth = true`
 - optional network rules, but public access can remain on when using GitHub-hosted runners
 
-### `platform-v2/governance`
-
-Creates:
-
-- management group hierarchy
-- subscription placement associations
-- sample landing-zone baseline initiative
-- sample RBAC assignments for platform and workload deployers
-
-The baseline currently includes:
-
-- allowed locations
-- required tags
-- deny public IP creation
-
-This is intentionally opinionated and should be extended with your client-specific controls, exemptions, and `deployIfNotExists` policies for diagnostics.
-
-### `platform-v2/subscriptions`
+### `global/subscriptions`
 
 Creates a dedicated source of truth for subscription isolation.
 
@@ -168,8 +166,10 @@ Use this as the default decision table for where resources belong.
 | Stack | Subscription Role | Owns VNet? | VNet Role | Owns Subnets? | Subnet Roles |
 | --- | --- | --- | --- | --- | --- |
 | `platform-v2/bootstrap` | shared platform/state subscription | No | None | No | None |
-| `platform-v2/subscriptions` | catalog only | No | None | No | None |
-| `platform-v2/governance` | tenant and management-group scope | No | None | No | None |
+| `global/subscriptions` | catalog only | No | None | No | None |
+| `global/management-groups` | tenant and management-group scope | No | None | No | None |
+| `global/policy` | tenant and management-group scope | No | None | No | None |
+| `global/role-assignments` | tenant and management-group scope | No | None | No | None |
 | `platform-v2/connectivity` | shared platform subscription in this demo | Yes | Hub | Yes | Hub service subnets, firewall/gateway/private-dns-linking support |
 | `platform-v2/management` | shared platform subscription in this demo | No | None by default | No | None by default |
 | `platform-v2/identity` | shared platform subscription in this demo | Yes | Shared-services spoke | Yes | Shared identity-service subnets |
@@ -199,7 +199,7 @@ The active v2 stacks do not auto-derive provider targets from remote state.
 Instead, they use this pattern:
 
 - each root stack keeps an explicit `subscription_id`;
-- the `platform-v2/subscriptions` stack is the catalog of approved subscription ownership;
+- the `global/subscriptions` stack is the catalog of approved subscription ownership;
 - active v2 stacks validate their explicit `subscription_id` against that catalog before planning.
 
 This is safer than deriving provider targets implicitly from remote state because it keeps execution scope obvious while still preventing drift between stack config and the central landing-zone subscription map.
@@ -212,7 +212,7 @@ Do not apply the same ownership pattern to subscriptions, management groups, and
 
 Use a central catalog and validation pattern:
 
-- the `platform-v2/subscriptions` stack is the source of truth;
+- the `global/subscriptions` stack is the source of truth;
 - active stacks keep an explicit `subscription_id`;
 - active stacks validate that `subscription_id` against the catalog before planning.
 
@@ -220,7 +220,7 @@ This keeps execution scope obvious while still enforcing central control.
 
 ### Management Groups
 
-Manage these centrally in `platform-v2/governance`.
+Manage these centrally under `terraform/global`.
 
 - management groups are tenant-level governance objects;
 - subscription-to-management-group associations belong in governance;
@@ -239,6 +239,34 @@ Usually keep resource groups owned by the stack that deploys into them.
 
 Only shared resource groups, such as the Terraform state resource group, should be treated as cross-stack dependencies and referenced through remote state or shared configuration.
 
+### `global/management-groups`
+
+Creates:
+
+- enterprise management-group hierarchy
+- subscription placement associations based on the global subscriptions catalog
+
+This is the company-wide control plane for Azure hierarchy and should not be duplicated per environment.
+
+### `global/policy`
+
+Creates:
+
+- global custom policy definitions
+- a platform foundation initiative
+- a landing-zone baseline initiative
+- management-group policy assignments for `platform`, `nonprod`, and `prod`
+
+This is where enterprise Azure Policy belongs. It is intentionally ALZ-lite today and should be expanded with exemptions and `deployIfNotExists` diagnostics over time.
+
+### `global/role-assignments`
+
+Creates:
+
+- company-wide RBAC assignments at management-group scope for platform deployers, security readers, and workload deployment identities
+
+This keeps high-scope RBAC out of workload stacks.
+
 ### `platform-v2/connectivity`
 
 Creates:
@@ -250,6 +278,8 @@ Creates:
 - hub VNet links to those Private DNS zones
 
 This is where you swap in a third-party firewall or DNS design if the client standard is Palo Alto, Cisco Umbrella, or another centralized service. The module structure stays valid even if the egress implementation changes.
+
+Keep connectivity here at environment/platform scope unless the organization operates one truly shared corporate hub across environments. In that special case, use `terraform/global/platform-connectivity-bootstrap`.
 
 ### `platform-v2/management`
 
@@ -671,7 +701,7 @@ Use the same flow for every stack.
 Reasonable low-cost path:
 
 - deploy `platform-v2/bootstrap`
-- deploy `platform-v2/governance`
+- deploy `global/management-groups`, `global/policy`, and `global/role-assignments`
 - deploy `platform-v2/connectivity` without Azure Firewall
 - deploy `platform-v2/management`
 - deploy `workload-v2/finserv-api` with:

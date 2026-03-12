@@ -93,9 +93,10 @@ For Terraform, prefer:
 
 The active v2 path in this repo now maps to that target pattern as follows:
 
-- implemented: management-group hierarchy and subscription placement associations in governance
-- implemented: a dedicated `subscriptions` root for central existing-subscription inventory and placement metadata
-- implemented: separate platform roots for `bootstrap`, `subscriptions`, `governance`, `connectivity`, `management`, and `identity`
+- implemented: management-group hierarchy and subscription placement associations in `terraform/global/management-groups`
+- implemented: a dedicated `terraform/global/subscriptions` root for central existing-subscription inventory and placement metadata
+- implemented: separate company-wide control-plane roots for `global/subscriptions`, `global/management-groups`, `global/policy`, and `global/role-assignments`
+- implemented: separate environment-scoped roots for `bootstrap`, `connectivity`, `management`, `identity`, and workload composition
 - implemented: explicit per-stack subscription targeting for active v2 roots
 - implemented: central validation that active stack `subscription_id` values match the subscriptions catalog
 - implemented: centralized backend state in a separate platform subscription using Azure AD-backed backend auth
@@ -166,9 +167,11 @@ The current repo already follows a large portion of that model.
 
 The active deployment model is split into separate root stacks:
 
+- [`terraform/global/subscriptions`](./terraform/global/subscriptions)
+- [`terraform/global/management-groups`](./terraform/global/management-groups)
+- [`terraform/global/policy`](./terraform/global/policy)
+- [`terraform/global/role-assignments`](./terraform/global/role-assignments)
 - [`terraform/stacks/dev/platform-v2/bootstrap`](./terraform/stacks/dev/platform-v2/bootstrap)
-- [`terraform/stacks/dev/platform-v2/subscriptions`](./terraform/stacks/dev/platform-v2/subscriptions)
-- [`terraform/stacks/dev/platform-v2/governance`](./terraform/stacks/dev/platform-v2/governance)
 - [`terraform/stacks/dev/platform-v2/connectivity`](./terraform/stacks/dev/platform-v2/connectivity)
 - [`terraform/stacks/dev/platform-v2/management`](./terraform/stacks/dev/platform-v2/management)
 - [`terraform/stacks/dev/platform-v2/identity`](./terraform/stacks/dev/platform-v2/identity)
@@ -176,9 +179,11 @@ The active deployment model is split into separate root stacks:
 
 This is the right operating-model split for Azure:
 
+- global `subscriptions` owns subscription inventory and placement metadata for existing subscriptions;
+- global `management-groups` owns management-group creation and subscription associations;
+- global `policy` owns company-wide policy definitions, initiatives, and assignments;
+- global `role-assignments` owns company-wide management-group RBAC;
 - bootstrap owns backend state infrastructure;
-- subscriptions owns subscription inventory and placement metadata for existing subscriptions;
-- governance owns management groups, policy, RBAC, and subscription associations;
 - connectivity owns hub networking and private DNS;
 - management owns logging, activity log export, and recovery;
 - identity owns shared managed identities, shared encryption keys, and identity-adjacent shared services;
@@ -188,18 +193,18 @@ This is the right operating-model split for Azure:
 
 The active v2 roots now declare `subscription_id` explicitly at the root provider level. This means the blueprint is no longer only separated by state files; it is separated by deployment subscription as well.
 
-The repo now also validates those explicit root `subscription_id` values against the dedicated `platform-v2/subscriptions` stack. That is the preferred pattern here: explicit execution scope plus a central consistency check, rather than hidden provider target selection through remote state.
+The repo now also validates those explicit root `subscription_id` values against the dedicated `global/subscriptions` stack. That is the preferred pattern here: explicit execution scope plus a central consistency check, rather than hidden provider target selection through remote state.
 
 That is the right baseline for an enterprise Azure landing-zone implementation when each platform layer is deployed from a separate Terraform root.
 
 ### Governance as code
 
-The active governance stack already creates:
+The active global control plane already creates:
 
 - management groups through [`terraform/modules/management_groups`](./terraform/modules/management_groups);
-- policy definitions and a policy set in [`terraform/stacks/dev/platform-v2/governance/main.tf`](./terraform/stacks/dev/platform-v2/governance/main.tf);
+- policy definitions and initiatives in [`terraform/global/policy/main.tf`](./terraform/global/policy/main.tf);
 - management-group policy assignments;
-- role assignments through [`terraform/modules/role-assignments`](./terraform/modules/role-assignments).
+- role assignments through [`terraform/modules/role-assignments`](./terraform/modules/role-assignments) in [`terraform/global/role-assignments/main.tf`](./terraform/global/role-assignments/main.tf).
 
 That is materially better than a resource-group-only policy model.
 
@@ -297,7 +302,7 @@ Recommendation:
 
 #### 3. Governance baseline is still lightweight
 
-[`terraform/stacks/dev/platform-v2/governance/main.tf`](./terraform/stacks/dev/platform-v2/governance/main.tf) currently defines:
+[`terraform/global/policy/main.tf`](./terraform/global/policy/main.tf) currently defines:
 
 - allowed locations;
 - required tags;

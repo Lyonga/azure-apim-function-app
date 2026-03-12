@@ -1,6 +1,6 @@
 variable "subscription_id" {
   type        = string
-  description = "Execution subscription used for global policy deployment."
+  description = "Execution subscription used for global RBAC deployment."
 }
 
 variable "management_groups_state_rg" {
@@ -33,28 +33,26 @@ variable "management_groups_state_subscription_id" {
   default     = "65ac2b14-e13a-40a0-bb50-93359232816e"
 }
 
-variable "organization_prefix" {
+variable "platform_deployer_principal_id" {
   type        = string
-  description = "Short prefix used for policy resource names."
-  default     = "fin"
+  description = "Principal id for the platform deployment pipeline."
+  default     = ""
 }
 
-variable "allowed_locations" {
-  type        = list(string)
-  description = "Allowed Azure regions."
+variable "security_reader_principal_id" {
+  type        = string
+  description = "Principal id for the security reader group or identity."
+  default     = ""
 }
 
-variable "required_tags" {
-  type        = list(string)
-  description = "Required enterprise tags."
-  default = [
-    "env",
-    "application",
-    "created_by",
-    "bt_owner",
-    "source_repo",
-    "tf_workspace",
-    "recovery",
-    "cost_center",
-  ]
+variable "nonprod_workload_deployer_principal_id" {
+  type        = string
+  description = "Principal id for the nonprod workload deployment identity."
+  default     = ""
+}
+
+variable "prod_workload_reader_principal_id" {
+  type        = string
+  description = "Principal id for a read-only prod workload identity."
+  default     = ""
 }

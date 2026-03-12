@@ -58,7 +58,7 @@ variable "subscriptions_state_container" {
 variable "subscriptions_state_key" {
   type        = string
   description = "State blob key for the subscriptions stack."
-  default     = "stacks/dev/platform-v2/subscriptions.tfstate"
+  default     = "global/subscriptions.tfstate"
 }
 
 variable "subscriptions_state_subscription_id" {

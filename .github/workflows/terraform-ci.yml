@@ -40,8 +40,10 @@ jobs:
       matrix:
         stack:
           - azure-enterprise-terraform/terraform/stacks/dev/platform-v2/bootstrap
-          - azure-enterprise-terraform/terraform/stacks/dev/platform-v2/subscriptions
-          - azure-enterprise-terraform/terraform/stacks/dev/platform-v2/governance
+          - azure-enterprise-terraform/terraform/global/subscriptions
+          - azure-enterprise-terraform/terraform/global/management-groups
+          - azure-enterprise-terraform/terraform/global/policy
+          - azure-enterprise-terraform/terraform/global/role-assignments
           - azure-enterprise-terraform/terraform/stacks/dev/platform-v2/connectivity
           - azure-enterprise-terraform/terraform/stacks/dev/platform-v2/management
           - azure-enterprise-terraform/terraform/stacks/dev/platform-v2/identity
@@ -73,11 +75,17 @@ jobs:
           - name: bootstrap
             path: azure-enterprise-terraform/terraform/stacks/dev/platform-v2/bootstrap
             skip_checks: CKV2_AZURE_1,CKV2_AZURE_21,CKV2_AZURE_33
-          - name: subscriptions
-            path: azure-enterprise-terraform/terraform/stacks/dev/platform-v2/subscriptions
+          - name: global-subscriptions
+            path: azure-enterprise-terraform/terraform/global/subscriptions
             skip_checks: ""
-          - name: governance
-            path: azure-enterprise-terraform/terraform/stacks/dev/platform-v2/governance
+          - name: global-management-groups
+            path: azure-enterprise-terraform/terraform/global/management-groups
+            skip_checks: ""
+          - name: global-policy
+            path: azure-enterprise-terraform/terraform/global/policy
+            skip_checks: ""
+          - name: global-role-assignments
+            path: azure-enterprise-terraform/terraform/global/role-assignments
             skip_checks: ""
           - name: connectivity
             path: azure-enterprise-terraform/terraform/stacks/dev/platform-v2/connectivity

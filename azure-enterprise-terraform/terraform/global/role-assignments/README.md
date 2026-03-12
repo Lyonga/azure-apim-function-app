@@ -1,2 +1,3 @@
-Place tenant/subscription-level RBAC role assignments here if you manage them as code.
-Keep this separated from app workloads to avoid privilege escalation risks.
+This root owns company-wide Azure RBAC assignments at management-group scope.
+
+Use it for platform deployer, security reader, and workload deployment identities that should be managed centrally rather than inside workload stacks.

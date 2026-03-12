@@ -102,10 +102,8 @@ locals {
     websites   = "privatelink.azurewebsites.net"
   }
 
-  subscriptions_catalog = var.use_subscriptions_state ? try(
-    data.terraform_remote_state.subscriptions[0].outputs.subscription_catalog,
-    {},
-  ) : {}
+  subscriptions_outputs_raw = try(data.terraform_remote_state.subscriptions[0].outputs, {})
+  subscriptions_catalog     = var.use_subscriptions_state ? tomap(try(local.subscriptions_outputs_raw.subscription_catalog, {})) : tomap({})
   expected_subscription_id = try(
     local.subscriptions_catalog[var.subscription_catalog_entry_key].existing_subscription_id,
     null,
@@ -146,7 +144,7 @@ locals {
 
   dependency_errors = compact(concat(
     !var.use_subscriptions_state ? [] : length(keys(local.subscriptions_catalog)) > 0 ? [] : [
-      "Apply platform-v2/subscriptions before planning workload-v2/finserv-api, or disable use_subscriptions_state if you intentionally are not using the central subscription catalog.",
+      "Apply global/subscriptions before planning workload-v2/finserv-api, or disable use_subscriptions_state if you intentionally are not using the central subscription catalog.",
     ],
     !var.use_subscriptions_state ? [] : local.expected_subscription_id != null ? [] : [
       "The subscriptions stack does not contain an entry for subscription_catalog_entry_key = ${var.subscription_catalog_entry_key}.",

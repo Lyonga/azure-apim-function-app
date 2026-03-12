@@ -98,6 +98,12 @@ jobs:
             candidate_var_file="${var_file_input}"
           elif [ -f "${stack_dir}/dev.tfvars" ]; then
             candidate_var_file="dev.tfvars"
+          elif [ -f "${stack_dir}/global.auto.tfvars" ]; then
+            candidate_var_file="global.auto.tfvars"
+          elif [ -f "${stack_dir}/dev.auto.tfvars" ]; then
+            candidate_var_file="dev.auto.tfvars"
+          elif [ -f "${stack_dir}/terraform.auto.tfvars" ]; then
+            candidate_var_file="terraform.auto.tfvars"
           elif [ -f "${stack_dir}/dev.tfvars.example" ]; then
             candidate_var_file="dev.tfvars.example"
           else

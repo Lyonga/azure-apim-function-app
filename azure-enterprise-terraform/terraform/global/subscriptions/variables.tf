@@ -1,6 +1,6 @@
 variable "subscription_id" {
   type        = string
-  description = "Execution subscription used for reading tenant metadata and writing the subscription catalog state."
+  description = "Execution subscription used to write the catalog state."
 }
 
 variable "target_subscriptions" {
@@ -9,6 +9,6 @@ variable "target_subscriptions" {
     existing_subscription_id  = string
     subscription_display_name = optional(string)
   }))
-  description = "Catalog of existing subscriptions by logical purpose."
+  description = "Existing subscriptions keyed by logical landing-zone role."
   default     = {}
 }
