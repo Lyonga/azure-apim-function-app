@@ -30,11 +30,14 @@ management_state_rg  = "rg-tfstate-dev"
 management_state_sa  = "demotest822e"
 management_state_key = "stacks/dev/platform-v2/management.tfstate"
 
-platform_state_subscription_id      = "ce792f64-9e63-483b-8136-a2538b764f3d"
+platform_state_subscription_id      = "65ac2b14-e13a-40a0-bb50-93359232816e"
 identity_state_rg                   = "rg-tfstate-dev"
 identity_state_sa                   = "demotest822e"
 identity_state_key                  = "stacks/dev/platform-v2/identity.tfstate"
-subscriptions_state_subscription_id = "ce792f64-9e63-483b-8136-a2538b764f3d"
+subscriptions_state_subscription_id = "65ac2b14-e13a-40a0-bb50-93359232816e"
+connectivity_state_subscription_id  = "65ac2b14-e13a-40a0-bb50-93359232816e"
+management_state_subscription_id    = "65ac2b14-e13a-40a0-bb50-93359232816e"
+identity_state_subscription_id      = "65ac2b14-e13a-40a0-bb50-93359232816e"
 
 enable_apim               = false
 enable_sql                = false

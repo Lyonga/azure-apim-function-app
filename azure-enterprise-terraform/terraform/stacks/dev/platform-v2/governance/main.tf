@@ -173,6 +173,168 @@ resource "azurerm_policy_definition" "deny_public_ip" {
   })
 }
 
+resource "azurerm_policy_definition" "deny_storage_public_network" {
+  name                = "${var.organization_prefix}-deny-storage-public-network"
+  management_group_id = module.management_groups.management_group_ids["landing_zones"]
+  policy_type         = "Custom"
+  mode                = "Indexed"
+  display_name        = "Deny public network access for storage accounts"
+  description         = "Requires storage accounts in workload landing zones to disable public network access."
+
+  policy_rule = jsonencode({
+    "if" = {
+      "allOf" = [
+        {
+          "field"  = "type"
+          "equals" = "Microsoft.Storage/storageAccounts"
+        },
+        {
+          "field"     = "Microsoft.Storage/storageAccounts/publicNetworkAccess"
+          "notEquals" = "Disabled"
+        }
+      ]
+    }
+    "then" = {
+      "effect" = "deny"
+    }
+  })
+}
+
+resource "azurerm_policy_definition" "deny_key_vault_public_network" {
+  name                = "${var.organization_prefix}-deny-keyvault-public-network"
+  management_group_id = module.management_groups.management_group_ids["landing_zones"]
+  policy_type         = "Custom"
+  mode                = "All"
+  display_name        = "Deny public network access for Key Vault"
+  description         = "Requires Key Vaults in workload landing zones to disable public network access."
+
+  policy_rule = jsonencode({
+    "if" = {
+      "allOf" = [
+        {
+          "field"  = "type"
+          "equals" = "Microsoft.KeyVault/vaults"
+        },
+        {
+          "field"     = "Microsoft.KeyVault/vaults/publicNetworkAccess"
+          "notEquals" = "Disabled"
+        }
+      ]
+    }
+    "then" = {
+      "effect" = "deny"
+    }
+  })
+}
+
+resource "azurerm_policy_definition" "deny_service_bus_public_network" {
+  name                = "${var.organization_prefix}-deny-servicebus-public-network"
+  management_group_id = module.management_groups.management_group_ids["landing_zones"]
+  policy_type         = "Custom"
+  mode                = "All"
+  display_name        = "Deny public network access for Service Bus"
+  description         = "Requires Service Bus namespaces in workload landing zones to disable public network access."
+
+  policy_rule = jsonencode({
+    "if" = {
+      "allOf" = [
+        {
+          "field"  = "type"
+          "equals" = "Microsoft.ServiceBus/namespaces"
+        },
+        {
+          "field"     = "Microsoft.ServiceBus/namespaces/publicNetworkAccess"
+          "notEquals" = "Disabled"
+        }
+      ]
+    }
+    "then" = {
+      "effect" = "deny"
+    }
+  })
+}
+
+resource "azurerm_policy_definition" "deny_app_configuration_public_network" {
+  name                = "${var.organization_prefix}-deny-appconfig-public-network"
+  management_group_id = module.management_groups.management_group_ids["landing_zones"]
+  policy_type         = "Custom"
+  mode                = "All"
+  display_name        = "Deny public network access for App Configuration"
+  description         = "Requires App Configuration stores in workload landing zones to disable public network access."
+
+  policy_rule = jsonencode({
+    "if" = {
+      "allOf" = [
+        {
+          "field"  = "type"
+          "equals" = "Microsoft.AppConfiguration/configurationStores"
+        },
+        {
+          "field"     = "Microsoft.AppConfiguration/configurationStores/publicNetworkAccess"
+          "notEquals" = "Disabled"
+        }
+      ]
+    }
+    "then" = {
+      "effect" = "deny"
+    }
+  })
+}
+
+resource "azurerm_policy_definition" "deny_sql_public_network" {
+  name                = "${var.organization_prefix}-deny-sql-public-network"
+  management_group_id = module.management_groups.management_group_ids["landing_zones"]
+  policy_type         = "Custom"
+  mode                = "All"
+  display_name        = "Deny public network access for SQL servers"
+  description         = "Requires Azure SQL servers in workload landing zones to disable public network access."
+
+  policy_rule = jsonencode({
+    "if" = {
+      "allOf" = [
+        {
+          "field"  = "type"
+          "equals" = "Microsoft.Sql/servers"
+        },
+        {
+          "field"     = "Microsoft.Sql/servers/publicNetworkAccess"
+          "notEquals" = "Disabled"
+        }
+      ]
+    }
+    "then" = {
+      "effect" = "deny"
+    }
+  })
+}
+
+resource "azurerm_policy_definition" "deny_webapp_public_network" {
+  name                = "${var.organization_prefix}-deny-webapp-public-network"
+  management_group_id = module.management_groups.management_group_ids["landing_zones"]
+  policy_type         = "Custom"
+  mode                = "All"
+  display_name        = "Deny public network access for App Service workloads"
+  description         = "Requires App Service and Function App resources in workload landing zones to disable public network access."
+
+  policy_rule = jsonencode({
+    "if" = {
+      "allOf" = [
+        {
+          "field"  = "type"
+          "equals" = "Microsoft.Web/sites"
+        },
+        {
+          "field"     = "Microsoft.Web/sites/publicNetworkAccess"
+          "notEquals" = "Disabled"
+        }
+      ]
+    }
+    "then" = {
+      "effect" = "deny"
+    }
+  })
+}
+
 resource "azurerm_policy_set_definition" "finserv_baseline" {
   name                = "${var.organization_prefix}-finserv-baseline"
   display_name        = "FinServ Landing Zone Baseline"
@@ -192,6 +354,36 @@ resource "azurerm_policy_set_definition" "finserv_baseline" {
   policy_definition_reference {
     policy_definition_id = azurerm_policy_definition.deny_public_ip.id
     reference_id         = "denyPublicIp"
+  }
+
+  policy_definition_reference {
+    policy_definition_id = azurerm_policy_definition.deny_storage_public_network.id
+    reference_id         = "denyStoragePublicNetwork"
+  }
+
+  policy_definition_reference {
+    policy_definition_id = azurerm_policy_definition.deny_key_vault_public_network.id
+    reference_id         = "denyKeyVaultPublicNetwork"
+  }
+
+  policy_definition_reference {
+    policy_definition_id = azurerm_policy_definition.deny_service_bus_public_network.id
+    reference_id         = "denyServiceBusPublicNetwork"
+  }
+
+  policy_definition_reference {
+    policy_definition_id = azurerm_policy_definition.deny_app_configuration_public_network.id
+    reference_id         = "denyAppConfigurationPublicNetwork"
+  }
+
+  policy_definition_reference {
+    policy_definition_id = azurerm_policy_definition.deny_sql_public_network.id
+    reference_id         = "denySqlPublicNetwork"
+  }
+
+  policy_definition_reference {
+    policy_definition_id = azurerm_policy_definition.deny_webapp_public_network.id
+    reference_id         = "denyWebAppPublicNetwork"
   }
 }
 

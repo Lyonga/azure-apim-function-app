@@ -64,7 +64,7 @@ variable "subscriptions_state_key" {
 variable "subscriptions_state_subscription_id" {
   type        = string
   description = "Subscription containing the subscriptions stack remote state."
-  default     = "00000000-0000-0000-0000-000000000004"
+  default     = null
 }
 
 variable "resource_group_name" {

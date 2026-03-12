@@ -1,10 +1,11 @@
-environment         = "dev"
-subscription_id     = "00000000-0000-0000-0000-000000000001"
-application         = "connectivity"
-created_by          = "terraform"
-location            = "eastus2"
-resource_group_name = "rg-dev-connectivity"
-hub_vnet_name       = "vnet-dev-hub"
+environment                    = "dev"
+subscription_id                = "65ac2b14-e13a-40a0-bb50-93359232816e"
+subscription_catalog_entry_key = "platform"
+application                    = "connectivity"
+created_by                     = "terraform"
+location                       = "eastus2"
+resource_group_name            = "rg-dev-connectivity"
+hub_vnet_name                  = "vnet-dev-hub"
 
 hub_address_space = [
   "10.0.0.0/16",
@@ -18,7 +19,7 @@ recovery_tier       = "terraform"
 cost_center         = "shared-network"
 creation_date_utc   = "2026-03-09T00:00:00Z"
 
-subscriptions_state_subscription_id = "00000000-0000-0000-0000-000000000004"
+subscriptions_state_subscription_id = "65ac2b14-e13a-40a0-bb50-93359232816e"
 
 additional_tags = {
   owner = "charles"

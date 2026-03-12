@@ -65,13 +65,14 @@ Legacy folders under `terraform/stacks/dev/platform`, `terraform/stacks/dev/work
 Current landing-zone alignment for the active v2 path:
 
 - implemented: separate root stacks for `bootstrap`, `subscriptions`, `governance`, `connectivity`, `management`, `identity`, and workload composition
-- implemented: a dedicated `subscriptions` root to keep subscription inventory and optional vending separate from governance
+- implemented: a dedicated `subscriptions` root to keep subscription inventory separate from governance
 - implemented: explicit subscription targeting per active stack through root provider configuration
 - implemented: active v2 stacks validate their explicit `subscription_id` against the central `subscriptions` remote state
 - implemented: hub-spoke networking, hub peering, central Private DNS, and private endpoints
 - implemented: shared identity and CMK services through `platform-v2/identity`
 - implemented: OIDC-capable plan/drift workflows and backend Azure AD auth
-- partial: governance baseline is still intentionally small and needs broader ALZ-style policy initiatives and exemptions
+- implemented: ALZ-lite governance baseline for regions, enterprise tags, public IP denial, and private-by-default platform services in landing zones
+- partial: governance baseline is still smaller than a full enterprise ALZ policy estate and does not yet model diagnostics `deployIfNotExists`, policy exemptions, or broader compliance initiatives
 - partial: only the `dev` v2 estate is active; nonprod/prod rollout still needs to be added
 - partial: modules are custom and ALZ/AVM-aligned in structure, but not yet AVM-backed across the board
 
@@ -96,7 +97,10 @@ This order matters because:
 - connectivity and private DNS are shared dependencies for private endpoints;
 - management provides central logging and recovery services used by workloads;
 - identity provides shared managed identities and customer-managed keys consumed by workloads.
-- the committed `dev.tfvars` and `backend.hcl` files still use placeholder subscription IDs like `00000000-0000-0000-0000-000000000003`; replace them with real subscription IDs before live plans or applies.
+- the active dev demo is pinned to two existing subscriptions:
+  - platform-v2 stacks use `65ac2b14-e13a-40a0-bb50-93359232816e`
+  - workload-v2 stacks use `ce792f64-9e63-483b-8136-a2538b764f3d`
+- a fuller enterprise rollout would normally split `connectivity`, `management`, and `identity` into separate subscriptions even though this dev demo intentionally collapses them into the shared platform subscription.
 
 ## Stack Purpose
 
@@ -136,46 +140,26 @@ Creates a dedicated source of truth for subscription isolation.
 
 This stack is responsible for:
 
-- declaring which subscription belongs to which management group branch;
-- providing a single output map for governance to consume;
-- optionally vending new subscriptions through subscription aliases where billing-scope permissions allow it;
-- returning a resolved subscription catalog that works for both existing subscriptions and alias-created subscriptions.
+- declaring which existing subscription belongs to which management group branch;
+- providing a single output map for governance and the active stacks to consume;
+- keeping the demo environment explicit about which subscription is the shared platform subscription and which is the workload subscription.
 
-This keeps subscription lifecycle concerns out of the governance stack and matches common enterprise practice where subscription vending and policy/RBAC are related but separate platform responsibilities.
-
-Mixed-mode behavior:
-
-- if `existing_subscription_id` is set, that subscription is treated as the source of truth;
-- if `enable_alias_creation = true`, the stack can vend a subscription alias and export the created subscription id;
-- downstream stacks continue to read `subscription_catalog[*].existing_subscription_id` as the resolved subscription id, regardless of whether the subscription was pre-existing or newly created.
+This dev blueprint intentionally assumes the client already has existing subscriptions. The active pattern is existing-subscriptions-only.
 
 Existing-subscription path:
 
 ```hcl
 platform = {
   management_group_key      = "platform"
-  existing_subscription_id  = "ce792f64-9e63-483b-8136-a2538b764f3d"
+  existing_subscription_id  = "65ac2b14-e13a-40a0-bb50-93359232816e"
   subscription_display_name = "FinServ Platform"
-}
-```
-
-Vended-subscription path:
-
-```hcl
-sandbox_vended = {
-  management_group_key      = "sandbox"
-  subscription_display_name = "FinServ Sandbox Vended"
-  enable_alias_creation     = true
-  billing_scope_id          = "/providers/Microsoft.Billing/REPLACE_ME"
-  workload                  = "DevTest"
 }
 ```
 
 Notes:
 
-- the active `dev.tfvars` keeps this entry present but disabled to avoid accidental subscription creation during normal dev testing;
-- to vend a real subscription, set `enable_alias_creation = true`, replace `billing_scope_id` with a real billing scope, and ensure the deploying identity has subscription alias creation permission at that billing scope;
-- if `enable_alias_creation` remains `false`, the stack will still succeed but only export catalog outputs and create no Azure subscription resources.
+- the active `dev.tfvars` maps all platform-v2 stacks to one existing platform subscription and workload-v2 to one existing nonprod workload subscription;
+- this keeps the dev demo low-friction while preserving the landing-zone stack boundaries;
 
 ## Ownership Matrix
 
@@ -183,20 +167,19 @@ Use this as the default decision table for where resources belong.
 
 | Stack | Subscription Role | Owns VNet? | VNet Role | Owns Subnets? | Subnet Roles |
 | --- | --- | --- | --- | --- | --- |
-| `platform-v2/bootstrap` | platform/state subscription | No | None | No | None |
+| `platform-v2/bootstrap` | shared platform/state subscription | No | None | No | None |
 | `platform-v2/subscriptions` | catalog only | No | None | No | None |
 | `platform-v2/governance` | tenant and management-group scope | No | None | No | None |
-| `platform-v2/connectivity` | connectivity subscription | Yes | Hub | Yes | Hub service subnets, firewall/gateway/private-dns-linking support |
-| `platform-v2/management` | management subscription | No | None by default | No | None by default |
-| `platform-v2/identity` | identity/shared-services subscription | Yes | Shared-services spoke | Yes | Shared identity-service subnets |
-| `workload-v2/finserv-api` | workload subscription | Yes | Workload spoke | Yes | `app`, `integration`, `data`, `private-endpoints`, optional `apim` |
+| `platform-v2/connectivity` | shared platform subscription in this demo | Yes | Hub | Yes | Hub service subnets, firewall/gateway/private-dns-linking support |
+| `platform-v2/management` | shared platform subscription in this demo | No | None by default | No | None by default |
+| `platform-v2/identity` | shared platform subscription in this demo | Yes | Shared-services spoke | Yes | Shared identity-service subnets |
+| `workload-v2/finserv-api` | nonprod workload subscription | Yes | Workload spoke | Yes | `app`, `integration`, `data`, `private-endpoints`, optional `apim` |
 
 ### How to choose a subscription
 
-- Put hub networking and shared DNS in `connectivity`.
-- Put monitoring, backup, and diagnostics platform services in `management`.
-- Put shared identities, shared CMKs, and identity-adjacent shared services in `identity`.
-- Put business applications and their spoke VNets in workload subscriptions.
+- In this demo, use the shared platform subscription for `bootstrap`, `connectivity`, `management`, and `identity`.
+- Use the separate nonprod workload subscription for `workload-v2/finserv-api`.
+- In a fuller enterprise rollout, split hub networking, monitoring, and shared identity services into separate subscriptions even though the dev demo intentionally collapses them.
 
 ### How to choose a VNet or subnet
 

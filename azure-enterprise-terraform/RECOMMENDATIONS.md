@@ -94,7 +94,7 @@ For Terraform, prefer:
 The active v2 path in this repo now maps to that target pattern as follows:
 
 - implemented: management-group hierarchy and subscription placement associations in governance
-- implemented: a dedicated `subscriptions` root for subscription inventory and optional vending
+- implemented: a dedicated `subscriptions` root for central existing-subscription inventory and placement metadata
 - implemented: separate platform roots for `bootstrap`, `subscriptions`, `governance`, `connectivity`, `management`, and `identity`
 - implemented: explicit per-stack subscription targeting for active v2 roots
 - implemented: central validation that active stack `subscription_id` values match the subscriptions catalog
@@ -177,7 +177,7 @@ The active deployment model is split into separate root stacks:
 This is the right operating-model split for Azure:
 
 - bootstrap owns backend state infrastructure;
-- subscriptions owns subscription inventory and optional vending;
+- subscriptions owns subscription inventory and placement metadata for existing subscriptions;
 - governance owns management groups, policy, RBAC, and subscription associations;
 - connectivity owns hub networking and private DNS;
 - management owns logging, activity log export, and recovery;
