@@ -61,13 +61,23 @@ resource "azurerm_policy_definition" "allowed_locations" {
   })
 }
 
-resource "azurerm_policy_definition" "required_tags" {
-  name                = "${var.organization_prefix}-required-tags"
+resource "azurerm_policy_definition" "required_tag" {
+  name                = "${var.organization_prefix}-required-tag"
   management_group_id = local.management_group_ids["landing_zones"]
   policy_type         = "Custom"
   mode                = "Indexed"
-  display_name        = "Require enterprise tags"
-  description         = "Denies resources missing required enterprise tags."
+  display_name        = "Require enterprise tag"
+  description         = "Denies resources missing a required enterprise tag."
+
+  parameters = jsonencode({
+    tagName = {
+      type = "String"
+      metadata = {
+        displayName = "Tag name"
+        description = "Name of the required tag."
+      }
+    }
+  })
 
   policy_rule = jsonencode({
     if = {
@@ -77,15 +87,8 @@ resource "azurerm_policy_definition" "required_tags" {
           notEquals = "Microsoft.Resources/subscriptions/resourceGroups"
         },
         {
-          count = {
-            value = var.required_tags
-            name  = "tagName"
-            where = {
-              field  = "[concat('tags[', current('tagName'), ']')]"
-              exists = "false"
-            }
-          }
-          greater = 0
+          field  = "[concat('tags[', parameters('tagName'), ']')]"
+          exists = "false"
         }
       ]
     }
@@ -287,9 +290,18 @@ resource "azurerm_policy_set_definition" "platform_foundation" {
     reference_id         = "allowedLocations"
   }
 
-  policy_definition_reference {
-    policy_definition_id = azurerm_policy_definition.required_tags.id
-    reference_id         = "requiredTags"
+  dynamic "policy_definition_reference" {
+    for_each = toset(var.required_tags)
+
+    content {
+      policy_definition_id = azurerm_policy_definition.required_tag.id
+      reference_id         = "required-tag-${replace(policy_definition_reference.value, "_", "-")}"
+      parameter_values = jsonencode({
+        tagName = {
+          value = policy_definition_reference.value
+        }
+      })
+    }
   }
 }
 
@@ -304,9 +316,18 @@ resource "azurerm_policy_set_definition" "landing_zone_baseline" {
     reference_id         = "allowedLocations"
   }
 
-  policy_definition_reference {
-    policy_definition_id = azurerm_policy_definition.required_tags.id
-    reference_id         = "requiredTags"
+  dynamic "policy_definition_reference" {
+    for_each = toset(var.required_tags)
+
+    content {
+      policy_definition_id = azurerm_policy_definition.required_tag.id
+      reference_id         = "required-tag-${replace(policy_definition_reference.value, "_", "-")}"
+      parameter_values = jsonencode({
+        tagName = {
+          value = policy_definition_reference.value
+        }
+      })
+    }
   }
 
   policy_definition_reference {
