@@ -77,6 +77,22 @@ jobs:
           backend_input="${{ inputs.backend_config_path }}"
           var_file_input="${{ inputs.var_file }}"
 
+          case "${{ inputs.stack_path }}" in
+            "azure-enterprise-terraform/terraform/stacks/dev/platform-v2/subscriptions")
+              echo "::error::The stack path azure-enterprise-terraform/terraform/stacks/dev/platform-v2/subscriptions has been retired. Use azure-enterprise-terraform/terraform/global/subscriptions instead."
+              exit 1
+              ;;
+            "azure-enterprise-terraform/terraform/stacks/dev/platform-v2/governance")
+              echo "::error::The stack path azure-enterprise-terraform/terraform/stacks/dev/platform-v2/governance has been retired. Use azure-enterprise-terraform/terraform/global/management-groups, azure-enterprise-terraform/terraform/global/policy, and azure-enterprise-terraform/terraform/global/role-assignments instead."
+              exit 1
+              ;;
+          esac
+
+          if [ ! -d "${stack_dir}" ]; then
+            echo "::error::Terraform stack path not found: ${{ inputs.stack_path }}"
+            exit 1
+          fi
+
           backend_input="${backend_input#backend_config_path=}"
           var_file_input="${var_file_input#var_file=}"
 
