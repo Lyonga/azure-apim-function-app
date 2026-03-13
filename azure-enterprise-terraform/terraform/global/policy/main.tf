@@ -13,9 +13,14 @@ data "terraform_remote_state" "management_groups" {
 
 locals {
   management_group_ids = try(data.terraform_remote_state.management_groups.outputs.management_group_ids, {})
+  root_management_group_id = try(
+    data.terraform_remote_state.management_groups.outputs.root_management_group_id,
+    null,
+  )
 
   dependency_errors = compact([
     length(keys(local.management_group_ids)) > 0 ? null : "Apply global/management-groups before planning or applying global/policy.",
+    local.root_management_group_id != null ? null : "Management groups state is missing the root_management_group_id output.",
     contains(keys(local.management_group_ids), "platform") ? null : "Management groups state is missing the platform management group id.",
     contains(keys(local.management_group_ids), "landing_zones") ? null : "Management groups state is missing the landing_zones management group id.",
     contains(keys(local.management_group_ids), "prod") ? null : "Management groups state is missing the prod management group id.",
@@ -36,7 +41,7 @@ resource "terraform_data" "dependency_guard" {
 
 resource "azurerm_policy_definition" "allowed_locations" {
   name                = "${var.organization_prefix}-allowed-locations"
-  management_group_id = local.management_group_ids["landing_zones"]
+  management_group_id = local.root_management_group_id
   policy_type         = "Custom"
   mode                = "Indexed"
   display_name        = "Allow approved Azure regions"
@@ -63,7 +68,7 @@ resource "azurerm_policy_definition" "allowed_locations" {
 
 resource "azurerm_policy_definition" "required_tag" {
   name                = "${var.organization_prefix}-required-tag"
-  management_group_id = local.management_group_ids["landing_zones"]
+  management_group_id = local.root_management_group_id
   policy_type         = "Custom"
   mode                = "Indexed"
   display_name        = "Require enterprise tag"
