@@ -13,10 +13,10 @@ data "terraform_remote_state" "subscriptions" {
 }
 
 locals {
-  subscriptions_from_state = var.use_subscriptions_state ? try(
-    data.terraform_remote_state.subscriptions[0].outputs.subscriptions_by_group,
-    {},
-  ) : {}
+  subscriptions_from_state = var.use_subscriptions_state ? {
+    for key, ids in try(data.terraform_remote_state.subscriptions[0].outputs.subscriptions_by_group, {}) :
+    key => tolist(ids)
+  } : {}
 
   subscription_group_keys = distinct(concat(
     keys(var.subscriptions_by_group),
@@ -27,7 +27,7 @@ locals {
     for key in local.subscription_group_keys :
     key => distinct(concat(
       lookup(var.subscriptions_by_group, key, []),
-      lookup(local.subscriptions_from_state, key, []),
+      try(local.subscriptions_from_state[key], tolist([])),
     ))
   }
 
