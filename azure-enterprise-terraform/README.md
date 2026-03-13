@@ -234,6 +234,8 @@ Instead, they use this pattern:
 
 This is safer than deriving provider targets implicitly from remote state because it keeps execution scope obvious while still preventing drift between stack config and the central landing-zone subscription map.
 
+The active global and dev v2 roots also set `skip_provider_registration = true` in the root `azurerm` provider. That is intentional. In enterprise estates, provider registration is usually handled centrally or pre-registered once by a platform admin, rather than giving every deployment identity permission to register resource providers on demand.
+
 ## Ownership Boundaries
 
 Do not apply the same ownership pattern to subscriptions, management groups, and resource groups. They serve different control-plane purposes.
