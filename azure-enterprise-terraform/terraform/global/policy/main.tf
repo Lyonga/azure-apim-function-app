@@ -288,7 +288,7 @@ resource "azurerm_policy_set_definition" "platform_foundation" {
   name                = "${var.organization_prefix}-platform-foundation"
   display_name        = "FinServ Platform Foundation"
   policy_type         = "Custom"
-  management_group_id = local.management_group_ids["platform"]
+  management_group_id = local.root_management_group_id
 
   policy_definition_reference {
     policy_definition_id = azurerm_policy_definition.allowed_locations.id
