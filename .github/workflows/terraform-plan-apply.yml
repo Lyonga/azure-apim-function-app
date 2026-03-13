@@ -78,6 +78,10 @@ jobs:
           var_file_input="${{ inputs.var_file }}"
 
           case "${{ inputs.stack_path }}" in
+            "azure-enterprise-terraform/terraform/stacks/dev/platform-v2/bootstrap")
+              echo "::error::The stack path azure-enterprise-terraform/terraform/stacks/dev/platform-v2/bootstrap has been retired. This repo now assumes a precreated shared backend in demotest822e; bootstrap is a platform prerequisite, not an active stack."
+              exit 1
+              ;;
             "azure-enterprise-terraform/terraform/stacks/dev/platform-v2/subscriptions")
               echo "::error::The stack path azure-enterprise-terraform/terraform/stacks/dev/platform-v2/subscriptions has been retired. Use azure-enterprise-terraform/terraform/global/subscriptions instead."
               exit 1

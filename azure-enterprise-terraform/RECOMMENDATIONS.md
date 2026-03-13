@@ -96,7 +96,7 @@ The active v2 path in this repo now maps to that target pattern as follows:
 - implemented: management-group hierarchy and subscription placement associations in `terraform/global/management-groups`
 - implemented: a dedicated `terraform/global/subscriptions` root for central existing-subscription inventory and placement metadata
 - implemented: separate company-wide control-plane roots for `global/subscriptions`, `global/management-groups`, `global/policy`, and `global/role-assignments`
-- implemented: separate environment-scoped roots for `bootstrap`, `connectivity`, `management`, `identity`, and workload composition
+- implemented: separate environment-scoped roots for `connectivity`, `management`, `identity`, and workload composition
 - implemented: placeholder `test` and `prod` v2 environment trees to show the intended multi-environment landing-zone shape during review
 - implemented: explicit per-stack subscription targeting for active v2 roots
 - implemented: central validation that active stack `subscription_id` values match the subscriptions catalog
@@ -172,7 +172,6 @@ The active deployment model is split into separate root stacks:
 - [`terraform/global/management-groups`](./terraform/global/management-groups)
 - [`terraform/global/policy`](./terraform/global/policy)
 - [`terraform/global/role-assignments`](./terraform/global/role-assignments)
-- [`terraform/stacks/dev/platform-v2/bootstrap`](./terraform/stacks/dev/platform-v2/bootstrap)
 - [`terraform/stacks/dev/platform-v2/connectivity`](./terraform/stacks/dev/platform-v2/connectivity)
 - [`terraform/stacks/dev/platform-v2/management`](./terraform/stacks/dev/platform-v2/management)
 - [`terraform/stacks/dev/platform-v2/identity`](./terraform/stacks/dev/platform-v2/identity)
@@ -184,7 +183,7 @@ This is the right operating-model split for Azure:
 - global `management-groups` owns management-group creation and subscription associations;
 - global `policy` owns company-wide policy definitions, initiatives, and assignments;
 - global `role-assignments` owns company-wide management-group RBAC;
-- bootstrap owns backend state infrastructure;
+- the shared backend is a platform prerequisite, not an active stack in this repo;
 - connectivity owns hub networking and private DNS;
 - management owns logging, activity log export, and recovery;
 - identity owns shared managed identities, shared encryption keys, and identity-adjacent shared services;
@@ -211,7 +210,7 @@ That is materially better than a resource-group-only policy model.
 
 ### State boundaries and backend usage
 
-The active v2 stacks use the AzureRM backend pattern documented in [`README.md`](./README.md), and the bootstrap stack provisions the backend storage in [`terraform/stacks/dev/platform-v2/bootstrap/main.tf`](./terraform/stacks/dev/platform-v2/bootstrap/main.tf).
+The active v2 stacks use the AzureRM backend pattern documented in [`README.md`](./README.md), and the backend storage is treated as a shared prerequisite rather than an active stack in this repo.
 
 The repo also documents:
 

@@ -6,7 +6,6 @@ The root Terraform monolith has been removed. Infrastructure now lives under [`a
 - `terraform/global/management-groups`
 - `terraform/global/policy`
 - `terraform/global/role-assignments`
-- `terraform/stacks/dev/platform-v2/bootstrap`
 - `terraform/stacks/dev/platform-v2/connectivity`
 - `terraform/stacks/dev/platform-v2/management`
 - `terraform/stacks/dev/platform-v2/identity`
@@ -18,7 +17,7 @@ Current pattern status:
 
 - management groups, policy, and RBAC are centralized under `terraform/global`
 - subscription inventory and placement inputs are centralized in `terraform/global/subscriptions`
-- platform layers are split into `bootstrap`, `connectivity`, `management`, and `identity`
+- the shared Terraform backend is a precreated platform prerequisite, and active platform layers are `connectivity`, `management`, and `identity`
 - active dev v2 stacks are now subscription-aware instead of only state-separated
 - active dev v2 stacks keep explicit root `subscription_id` values and validate them against the central global `subscriptions` catalog
 - hub-spoke, peering, private DNS, and private endpoints are implemented for the active path

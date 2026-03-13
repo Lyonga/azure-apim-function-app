@@ -39,7 +39,6 @@ jobs:
       fail-fast: false
       matrix:
         stack:
-          - azure-enterprise-terraform/terraform/stacks/dev/platform-v2/bootstrap
           - azure-enterprise-terraform/terraform/global/subscriptions
           - azure-enterprise-terraform/terraform/global/management-groups
           - azure-enterprise-terraform/terraform/global/policy
@@ -72,9 +71,6 @@ jobs:
       fail-fast: false
       matrix:
         stack:
-          - name: bootstrap
-            path: azure-enterprise-terraform/terraform/stacks/dev/platform-v2/bootstrap
-            skip_checks: CKV2_AZURE_1,CKV2_AZURE_21,CKV2_AZURE_33
           - name: global-subscriptions
             path: azure-enterprise-terraform/terraform/global/subscriptions
             skip_checks: ""

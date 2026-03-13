@@ -21,8 +21,8 @@ azure-enterprise-terraform/
       management-groups/
       policy/
       role-assignments/
-      platform-connectivity-bootstrap/   # optional, only for a truly shared corporate hub
-      platform-management-bootstrap/     # optional, only for a truly shared global management plane
+      platform-connectivity-shared/      # optional, only for a truly shared corporate hub
+      platform-management-shared/        # optional, only for a truly shared global management plane
     modules/
       action-group/
       app-configuration/
@@ -53,7 +53,6 @@ azure-enterprise-terraform/
     stacks/
       dev/
         platform-v2/
-          bootstrap/
           connectivity/
           management/
           identity/
@@ -61,7 +60,6 @@ azure-enterprise-terraform/
           finserv-api/
       test/
         platform-v2/
-          bootstrap/
           connectivity/
           management/
           identity/
@@ -69,7 +67,6 @@ azure-enterprise-terraform/
           finserv-api/
       prod/
         platform-v2/
-          bootstrap/
           connectivity/
           management/
           identity/
@@ -93,7 +90,7 @@ Do not extend those deprecated roots. The active control plane is under `terrafo
 Current landing-zone alignment for the active v2 path:
 
 - implemented: separate company-wide roots for `global/subscriptions`, `global/management-groups`, `global/policy`, and `global/role-assignments`
-- implemented: environment-scoped roots for `bootstrap`, `connectivity`, `management`, `identity`, and workload composition
+- implemented: environment-scoped roots for `connectivity`, `management`, `identity`, and workload composition
 - implemented: placeholder `test` and `prod` v2 environment trees so the target multi-environment shape is visible during review
 - implemented: a dedicated global `subscriptions` root to keep subscription inventory separate from governance
 - implemented: explicit subscription targeting per active stack through root provider configuration
@@ -110,22 +107,21 @@ Current landing-zone alignment for the active v2 path:
 
 Apply stacks in this order:
 
-1. `terraform/stacks/dev/platform-v2/bootstrap`
-2. `terraform/global/subscriptions`
-3. `terraform/global/management-groups`
-4. `terraform/global/policy`
-5. `terraform/global/role-assignments`
-6. `terraform/stacks/dev/platform-v2/connectivity`
-7. `terraform/stacks/dev/platform-v2/management`
-8. `terraform/stacks/dev/platform-v2/identity`
-9. `terraform/stacks/dev/workload-v2/finserv-api`
+1. `terraform/global/subscriptions`
+2. `terraform/global/management-groups`
+3. `terraform/global/policy`
+4. `terraform/global/role-assignments`
+5. `terraform/stacks/dev/platform-v2/connectivity`
+6. `terraform/stacks/dev/platform-v2/management`
+7. `terraform/stacks/dev/platform-v2/identity`
+8. `terraform/stacks/dev/workload-v2/finserv-api`
 
 For `test` and `prod`, follow the same ordering after replacing the placeholder environment values with real subscription ids, backend keys, and naming inputs.
 
 This order matters because:
 
 - this is apply order, not just plan order; remote-state consumers need upstream stacks to have already written outputs into state;
-- the backend must exist before remote state can be used;
+- the shared backend must exist before remote state can be used;
 - subscription ownership and placement should be declared before management-group associations consume them;
 - management groups, global policy, and global RBAC should exist before platform and workloads are deployed;
 - connectivity and private DNS are shared dependencies for private endpoints;
@@ -138,18 +134,16 @@ This order matters because:
 
 ## Stack Purpose
 
-### `platform-v2/bootstrap`
+### Shared backend prerequisite
 
-Creates the Azure Storage backend used by all other stacks.
+This repo assumes the Azure Storage backend already exists in the shared state account `demotest822e`.
 
 Key design choices:
 
-- blob versioning enabled
-- blob and container soft delete enabled
-- infrastructure encryption enabled
-- separate backend key per stack
-- Azure AD auth supported via `use_azuread_auth = true`
-- optional network rules, but public access can remain on when using GitHub-hosted runners
+- the backend is a platform prerequisite, not a per-project stack;
+- each root keeps its own backend key;
+- Azure AD auth is used via `use_azuread_auth = true`;
+- backend access is controlled with Blob data-plane RBAC rather than storage keys in CI.
 
 ### `global/subscriptions`
 
@@ -185,7 +179,6 @@ Use this as the default decision table for where resources belong.
 
 | Stack | Subscription Role | Owns VNet? | VNet Role | Owns Subnets? | Subnet Roles |
 | --- | --- | --- | --- | --- | --- |
-| `platform-v2/bootstrap` | shared platform/state subscription | No | None | No | None |
 | `global/subscriptions` | catalog only | No | None | No | None |
 | `global/management-groups` | tenant and management-group scope | No | None | No | None |
 | `global/policy` | tenant and management-group scope | No | None | No | None |
@@ -207,7 +200,7 @@ Only `dev` should be planned or applied without first replacing placeholder valu
 
 ### How to choose a subscription
 
-- In this demo, use the shared platform subscription for `bootstrap`, `connectivity`, `management`, and `identity`.
+- In this demo, use the shared platform subscription for `connectivity`, `management`, and `identity`.
 - Use the separate nonprod workload subscription for `workload-v2/finserv-api`.
 - In a fuller enterprise rollout, split hub networking, monitoring, and shared identity services into separate subscriptions even though the dev demo intentionally collapses them.
 
@@ -311,7 +304,7 @@ Creates:
 
 This is where you swap in a third-party firewall or DNS design if the client standard is Palo Alto, Cisco Umbrella, or another centralized service. The module structure stays valid even if the egress implementation changes.
 
-Keep connectivity here at environment/platform scope unless the organization operates one truly shared corporate hub across environments. In that special case, use `terraform/global/platform-connectivity-bootstrap`.
+Keep connectivity here at environment/platform scope unless the organization operates one truly shared corporate hub across environments. In that special case, use a dedicated shared-global connectivity root such as `terraform/global/platform-connectivity-shared`.
 
 ### `platform-v2/management`
 
@@ -471,7 +464,7 @@ For enterprise use, prefer:
 
 - a dedicated backend storage account per environment or landing-zone trust boundary
 - a separate backend subscription or shared platform subscription when required by policy
-- separate keys for `bootstrap`, `governance`, `connectivity`, `management`, and each workload stack
+- separate keys for each global root, each platform stack, and each workload stack
 - private endpoints plus self-hosted runners if the backend must not be publicly reachable
 
 ### Backend Security Rules
@@ -487,8 +480,7 @@ For enterprise use, prefer:
 
 Each active v2 stack now declares its own `subscription_id` and uses that in the root `azurerm` provider. That means:
 
-- `bootstrap` can live in a platform/shared subscription
-- `governance` can run in a platform execution subscription while targeting management groups
+- global governance roots can run in a platform execution subscription while targeting management groups
 - `connectivity`, `management`, `identity`, and workload stacks can each deploy into separate subscriptions
 - backend state can stay centralized in a different subscription from the resource deployment target
 
@@ -732,7 +724,8 @@ Use the same flow for every stack.
 
 Reasonable low-cost path:
 
-- deploy `platform-v2/bootstrap`
+- use the precreated shared backend in `demotest822e`
+- deploy `global/subscriptions`
 - deploy `global/management-groups`, `global/policy`, and `global/role-assignments`
 - deploy `platform-v2/connectivity` without Azure Firewall
 - deploy `platform-v2/management`
