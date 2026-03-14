@@ -15,12 +15,12 @@ locals {
   management_group_ids = try(data.terraform_remote_state.management_groups.outputs.management_group_ids, {})
   root_management_group_id = try(
     data.terraform_remote_state.management_groups.outputs.root_management_group_id,
-    null,
+    var.root_management_group_id,
   )
 
   dependency_errors = compact([
     length(keys(local.management_group_ids)) > 0 ? null : "Apply global/management-groups before planning or applying global/policy.",
-    local.root_management_group_id != null ? null : "Management groups state is missing the root_management_group_id output.",
+    local.root_management_group_id != null ? null : "Set root_management_group_id in global/policy/global.auto.tfvars or apply global/management-groups with the new output contract.",
     contains(keys(local.management_group_ids), "platform") ? null : "Management groups state is missing the platform management group id.",
     contains(keys(local.management_group_ids), "landing_zones") ? null : "Management groups state is missing the landing_zones management group id.",
     contains(keys(local.management_group_ids), "prod") ? null : "Management groups state is missing the prod management group id.",

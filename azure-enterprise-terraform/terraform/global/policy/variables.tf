@@ -33,6 +33,11 @@ variable "management_groups_state_subscription_id" {
   default     = "65ac2b14-e13a-40a0-bb50-93359232816e"
 }
 
+variable "root_management_group_id" {
+  type        = string
+  description = "Tenant root management group id used as the parent scope for shared policy definitions."
+}
+
 variable "organization_prefix" {
   type        = string
   description = "Short prefix used for policy resource names."
