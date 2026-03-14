@@ -41,7 +41,7 @@ resource "terraform_data" "dependency_guard" {
 
 resource "azurerm_policy_definition" "allowed_locations" {
   name                = "${var.organization_prefix}-allowed-locations"
-  management_group_id = local.root_management_group_id
+  management_group_id = local.management_group_ids["landing_zones"]
   policy_type         = "Custom"
   mode                = "Indexed"
   display_name        = "Allow approved Azure regions"
@@ -68,10 +68,74 @@ resource "azurerm_policy_definition" "allowed_locations" {
 
 resource "azurerm_policy_definition" "required_tag" {
   name                = "${var.organization_prefix}-required-tag"
-  management_group_id = local.root_management_group_id
+  management_group_id = local.management_group_ids["landing_zones"]
   policy_type         = "Custom"
   mode                = "Indexed"
   display_name        = "Require enterprise tag"
+  description         = "Denies resources missing a required enterprise tag."
+
+  parameters = jsonencode({
+    tagName = {
+      type = "String"
+      metadata = {
+        displayName = "Tag name"
+        description = "Name of the required tag."
+      }
+    }
+  })
+
+  policy_rule = jsonencode({
+    if = {
+      allOf = [
+        {
+          field     = "type"
+          notEquals = "Microsoft.Resources/subscriptions/resourceGroups"
+        },
+        {
+          field  = "[concat('tags[', parameters('tagName'), ']')]"
+          exists = "false"
+        }
+      ]
+    }
+    then = {
+      effect = "deny"
+    }
+  })
+}
+
+resource "azurerm_policy_definition" "allowed_locations_root" {
+  name                = "${var.organization_prefix}-allowed-locations-root"
+  management_group_id = local.root_management_group_id
+  policy_type         = "Custom"
+  mode                = "Indexed"
+  display_name        = "Allow approved Azure regions (root)"
+  description         = "Denies deployments outside approved Azure regions."
+
+  policy_rule = jsonencode({
+    if = {
+      allOf = [
+        {
+          field = "location"
+          notIn = var.allowed_locations
+        },
+        {
+          field     = "location"
+          notEquals = "global"
+        }
+      ]
+    }
+    then = {
+      effect = "deny"
+    }
+  })
+}
+
+resource "azurerm_policy_definition" "required_tag_root" {
+  name                = "${var.organization_prefix}-required-tag-root"
+  management_group_id = local.root_management_group_id
+  policy_type         = "Custom"
+  mode                = "Indexed"
+  display_name        = "Require enterprise tag (root)"
   description         = "Denies resources missing a required enterprise tag."
 
   parameters = jsonencode({
@@ -291,7 +355,7 @@ resource "azurerm_policy_set_definition" "platform_foundation" {
   management_group_id = local.root_management_group_id
 
   policy_definition_reference {
-    policy_definition_id = azurerm_policy_definition.allowed_locations.id
+    policy_definition_id = azurerm_policy_definition.allowed_locations_root.id
     reference_id         = "allowedLocations"
   }
 
@@ -299,7 +363,7 @@ resource "azurerm_policy_set_definition" "platform_foundation" {
     for_each = toset(var.required_tags)
 
     content {
-      policy_definition_id = azurerm_policy_definition.required_tag.id
+      policy_definition_id = azurerm_policy_definition.required_tag_root.id
       reference_id         = "required-tag-${replace(policy_definition_reference.value, "_", "-")}"
       parameter_values = jsonencode({
         tagName = {
