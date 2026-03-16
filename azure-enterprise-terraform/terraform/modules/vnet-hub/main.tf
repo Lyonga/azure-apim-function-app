@@ -1,4 +1,16 @@
 locals {
+  subnet_defaults = {
+    service_endpoints                             = []
+    private_endpoint_network_policies             = null
+    private_endpoint_network_policies_enabled     = true
+    enforce_private_link_service_network_policies = true
+    private_link_service_network_policies_enabled = true
+    route_table_id                                = null
+    nat_gateway_id                                = null
+    nsg_rules                                     = []
+    delegations                                   = []
+  }
+
   default_subnets = {
     AzureFirewallSubnet = {
       address_prefixes                              = [var.firewall_subnet_cidr]
@@ -73,6 +85,19 @@ locals {
       delegations                                   = []
     }
   }
+
+  effective_subnets = tomap({
+    for subnet_name, subnet in (length(var.subnets) == 0 ? local.default_subnets : var.subnets) :
+    subnet_name => merge(
+      local.subnet_defaults,
+      subnet,
+      {
+        service_endpoints = try(subnet.service_endpoints, [])
+        nsg_rules         = try(subnet.nsg_rules, [])
+        delegations       = try(subnet.delegations, [])
+      }
+    )
+  })
 }
 
 module "network" {
@@ -83,7 +108,7 @@ module "network" {
   address_space           = var.address_space
   dns_servers             = var.dns_servers
   ddos_protection_plan_id = var.ddos_protection_plan_id
-  subnets                 = length(var.subnets) == 0 ? local.default_subnets : var.subnets
+  subnets                 = local.effective_subnets
   tags                    = var.tags
 }
 

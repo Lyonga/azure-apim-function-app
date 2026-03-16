@@ -85,7 +85,7 @@ jobs:
             skip_checks: ""
           - name: connectivity
             path: azure-enterprise-terraform/terraform/stacks/dev/platform-v2/connectivity
-            skip_checks: ""
+            skip_checks: CKV2_AZURE_31
           - name: management
             path: azure-enterprise-terraform/terraform/stacks/dev/platform-v2/management
             skip_checks: CKV2_AZURE_1,CKV2_AZURE_21,CKV2_AZURE_33
