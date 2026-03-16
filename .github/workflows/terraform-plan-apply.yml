@@ -15,6 +15,14 @@ on:
         description: "Optional tfvars filename/path inside the stack dir. Use dev.tfvars, not var_file=dev.tfvars"
         required: false
         default: "dev.tfvars"
+      import_address:
+        description: "Optional Terraform resource address to import before plan/apply"
+        required: false
+        default: ""
+      import_id:
+        description: "Optional cloud resource ID to import before plan/apply"
+        required: false
+        default: ""
       apply:
         description: "Apply the reviewed plan"
         type: boolean
@@ -158,6 +166,27 @@ jobs:
       - name: Terraform Validate
         working-directory: ${{ inputs.stack_path }}
         run: terraform validate
+
+      - name: Terraform Import
+        if: ${{ inputs.import_address != '' && inputs.import_id != '' }}
+        working-directory: ${{ inputs.stack_path }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          import_address="${{ inputs.import_address }}"
+          import_id="${{ inputs.import_id }}"
+
+          if terraform state show "${import_address}" >/dev/null 2>&1; then
+            echo "Resource already exists in Terraform state: ${import_address}"
+            exit 0
+          fi
+
+          if [ -n "${{ steps.resolve-inputs.outputs.var_file }}" ]; then
+            terraform import -var-file="${{ steps.resolve-inputs.outputs.var_file }}" "${import_address}" "${import_id}"
+          else
+            terraform import "${import_address}" "${import_id}"
+          fi
 
       - name: Terraform Plan
         working-directory: ${{ inputs.stack_path }}
