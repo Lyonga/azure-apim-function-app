@@ -1,5 +1,5 @@
 locals {
-  default_computer_name = substr(regexreplace(var.name, "[^0-9A-Za-z-]", ""), 0, 15)
+  default_computer_name = substr(replace(replace(replace(var.name, "_", ""), ".", ""), " ", ""), 0, 15)
 }
 
 resource "azurerm_network_interface" "this" {
@@ -29,7 +29,6 @@ resource "azurerm_network_interface_security_group_association" "this" {
 resource "azurerm_network_interface_application_security_group_association" "this" {
   for_each                      = toset(var.application_security_group_ids)
   network_interface_id          = azurerm_network_interface.this.id
-  ip_configuration_name         = "primary"
   application_security_group_id = each.value
 }
 
