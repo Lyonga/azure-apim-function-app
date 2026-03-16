@@ -111,7 +111,7 @@ locals {
 
   connectivity_outputs_raw = try(data.terraform_remote_state.connectivity.outputs, {})
   management_outputs_raw   = try(data.terraform_remote_state.management.outputs, {})
-  identity_outputs_raw     = var.use_shared_identity_services ? try(data.terraform_remote_state.identity[0].outputs, {}) : {}
+  identity_outputs_raw     = try(data.terraform_remote_state.identity[0].outputs, {})
 
   connectivity_outputs = {
     resource_group_name    = try(local.connectivity_outputs_raw.resource_group_name, local.placeholder_resource_group_name)
@@ -127,18 +127,18 @@ locals {
   }
 
   identity_outputs = {
-    shared_identity_ids = var.use_shared_identity_services ? try(local.identity_outputs_raw.shared_identity_ids, {
+    shared_identity_ids = var.use_shared_identity_services ? tomap(try(local.identity_outputs_raw.shared_identity_ids, {
       (var.shared_identity_workload_identity_key) = local.placeholder_shared_identity_id
-    }) : {}
-    shared_identity_client_ids = var.use_shared_identity_services ? try(local.identity_outputs_raw.shared_identity_client_ids, {
+    })) : tomap({})
+    shared_identity_client_ids = var.use_shared_identity_services ? tomap(try(local.identity_outputs_raw.shared_identity_client_ids, {
       (var.shared_identity_workload_identity_key) = local.placeholder_guid
-    }) : {}
-    shared_identity_principal_ids = var.use_shared_identity_services ? try(local.identity_outputs_raw.shared_identity_principal_ids, {
+    })) : tomap({})
+    shared_identity_principal_ids = var.use_shared_identity_services ? tomap(try(local.identity_outputs_raw.shared_identity_principal_ids, {
       (var.shared_identity_workload_identity_key) = local.placeholder_secondary_guid
-    }) : {}
-    shared_identity_names = var.use_shared_identity_services ? try(local.identity_outputs_raw.shared_identity_names, {
+    })) : tomap({})
+    shared_identity_names = var.use_shared_identity_services ? tomap(try(local.identity_outputs_raw.shared_identity_names, {
       (var.shared_identity_workload_identity_key) = "uai-placeholder-runtime"
-    }) : {}
+    })) : tomap({})
     shared_services_cmk_key_id = var.use_shared_identity_services ? try(local.identity_outputs_raw.shared_services_cmk_key_id, local.placeholder_key_vault_key_id) : null
   }
 
