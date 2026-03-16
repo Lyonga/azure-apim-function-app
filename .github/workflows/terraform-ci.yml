@@ -117,7 +117,10 @@ jobs:
 
       - name: Run Checkov
         shell: bash
+        env:
+          CHECKOV_SARIF_PATH: ${{ runner.temp }}/checkov-${{ matrix.stack.name }}.sarif
         run: |
+          set +e
           skip_checks="${{ matrix.stack.skip_checks }}"
           if [ -n "$skip_checks" ]; then
             extra_args=(--skip-check "$skip_checks")
@@ -130,13 +133,28 @@ jobs:
             --framework terraform \
             --compact \
             "${extra_args[@]}" \
-            -o cli \
+            -o cli
+          cli_exit=$?
+
+          rm -f "${CHECKOV_SARIF_PATH}"
+          checkov \
+            -d ./${{ matrix.stack.path }} \
+            --framework terraform \
+            --compact \
+            "${extra_args[@]}" \
             -o sarif \
-            --output-file-path console,results.sarif
+            --output-file-path "${CHECKOV_SARIF_PATH}"
+          sarif_exit=$?
+
+          set -e
+          if [ "${cli_exit}" -ne 0 ]; then
+            exit "${cli_exit}"
+          fi
+          exit "${sarif_exit}"
 
       - name: Upload SARIF file
         if: success() || failure()
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: results.sarif
+          sarif_file: ${{ runner.temp }}/checkov-${{ matrix.stack.name }}.sarif
           category: checkov-${{ matrix.stack.name }}
