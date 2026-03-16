@@ -335,7 +335,7 @@ variable "demo_windows_vm_admin_username" {
 
 variable "demo_windows_vm_admin_password" {
   type        = string
-  description = "Local admin password for the optional demo Windows VM. Set via TF_VAR_demo_windows_vm_admin_password or the DEMO_WINDOWS_VM_ADMIN_PASSWORD GitHub secret."
+  description = "Optional local admin password for the demo Windows VM. If omitted or invalid, Terraform will generate a compliant password and keep it in state."
   default     = null
   sensitive   = true
 }
