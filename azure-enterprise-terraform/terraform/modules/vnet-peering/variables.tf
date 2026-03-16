@@ -2,6 +2,11 @@ variable "hub_vnet_id" {
   type = string
 }
 
+variable "hub_to_spoke_name" {
+  type    = string
+  default = "peer-hub-to-spoke"
+}
+
 variable "hub_vnet_name" {
   type = string
 }
@@ -12,6 +17,11 @@ variable "hub_rg_name" {
 
 variable "spoke_vnet_id" {
   type = string
+}
+
+variable "spoke_to_hub_name" {
+  type    = string
+  default = "peer-spoke-to-hub"
 }
 
 variable "spoke_vnet_name" {

@@ -32,6 +32,7 @@ module "spoke_network" {
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "spoke_links" {
+  provider              = azurerm.platform
   for_each              = local.connectivity_outputs.private_dns_zone_names
   name                  = "link-${var.environment}-${var.application}-${each.key}"
   resource_group_name   = local.connectivity_outputs.resource_group_name
@@ -46,6 +47,8 @@ module "hub_to_spoke_peering" {
     azurerm     = azurerm
     azurerm.hub = azurerm.platform
   }
+  hub_to_spoke_name       = "peer-hub-to-${var.application}"
+  spoke_to_hub_name       = "peer-${var.application}-to-hub"
   hub_vnet_id             = local.connectivity_outputs.hub_vnet_id
   hub_vnet_name           = local.connectivity_outputs.hub_vnet_name
   hub_rg_name             = local.connectivity_outputs.resource_group_name
@@ -93,6 +96,7 @@ module "storage_account" {
 }
 
 resource "azurerm_log_analytics_storage_insights" "workload_storage" {
+  provider             = azurerm.platform
   name                 = "insights-${var.environment}-${var.application}"
   resource_group_name  = local.management_outputs.resource_group_name
   workspace_id         = local.management_outputs.workspace_id
