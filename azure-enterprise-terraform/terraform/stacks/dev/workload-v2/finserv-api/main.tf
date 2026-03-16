@@ -21,10 +21,15 @@ module "resource_group" {
   tags     = module.tags.tags
 }
 
-resource "random_password" "demo_windows_vm" {
-  count   = local.demo_windows_vm_enabled && !local.demo_windows_vm_password_valid ? 1 : 0
-  length  = 24
-  special = true
+resource "terraform_data" "demo_windows_vm_password_guard" {
+  count = local.demo_windows_vm_enabled ? 1 : 0
+
+  lifecycle {
+    precondition {
+      condition     = local.demo_windows_vm_password_valid
+      error_message = "demo_windows_vm_admin_password is required when enable_demo_windows_vm is true and must be at least 14 characters with upper, lower, numeric, and special characters. Update the DEMO_WINDOWS_VM_ADMIN_PASSWORD secret and rerun."
+    }
+  }
 }
 
 module "spoke_network" {
@@ -38,14 +43,14 @@ module "spoke_network" {
 }
 
 module "demo_windows_vm" {
-  count                         = local.demo_windows_vm_enabled ? 1 : 0
+  count                         = local.demo_windows_vm_enabled && local.demo_windows_vm_password_valid ? 1 : 0
   source                        = "../../../../modules/vm_windows"
   name                          = coalesce(var.demo_windows_vm_name, "vm-${var.environment}-${var.application}")
   resource_group_name           = module.resource_group.name
   location                      = var.location
   subnet_id                     = module.spoke_network.subnet_ids[var.demo_windows_vm_subnet_key]
   admin_username                = var.demo_windows_vm_admin_username
-  admin_password                = local.demo_windows_vm_effective_password
+  admin_password                = var.demo_windows_vm_admin_password
   vm_size                       = var.demo_windows_vm_size
   identity_type                 = "SystemAssigned"
   os_disk_storage_account_type  = var.demo_windows_vm_os_disk_storage_account_type
@@ -53,6 +58,7 @@ module "demo_windows_vm" {
   encryption_at_host_enabled    = false
   allow_extension_operations    = true
   tags                          = module.tags.tags
+  depends_on                    = [terraform_data.demo_windows_vm_password_guard]
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "spoke_links" {

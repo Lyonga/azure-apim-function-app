@@ -1,10 +1,9 @@
 locals {
-  api_spec_path                     = var.api_spec_path != null ? abspath(var.api_spec_path) : abspath("${path.root}/../../../api-spec.yml")
-  shared_services_cmk_enabled       = var.enable_app_configuration || var.enable_service_bus
-  shared_identity_outputs           = var.use_shared_identity_services ? local.identity_outputs : null
-  demo_windows_vm_enabled           = var.enable_demo_windows_vm
-  demo_windows_vm_password_supplied = trimspace(coalesce(var.demo_windows_vm_admin_password, "")) != ""
-  demo_windows_vm_password_valid = local.demo_windows_vm_password_supplied && (
+  api_spec_path               = var.api_spec_path != null ? abspath(var.api_spec_path) : abspath("${path.root}/../../../api-spec.yml")
+  shared_services_cmk_enabled = var.enable_app_configuration || var.enable_service_bus
+  shared_identity_outputs     = var.use_shared_identity_services ? local.identity_outputs : null
+  demo_windows_vm_enabled     = var.enable_demo_windows_vm
+  demo_windows_vm_password_valid = trimspace(coalesce(var.demo_windows_vm_admin_password, "")) != "" && (
     length(var.demo_windows_vm_admin_password) >= 14 &&
     can(regex("[A-Z]", var.demo_windows_vm_admin_password)) &&
     can(regex("[a-z]", var.demo_windows_vm_admin_password)) &&
@@ -26,8 +25,7 @@ locals {
 
   runtime_principal_id = local.effective_app_identity.principal_id
 
-  shared_services_cmk_key_id         = var.use_shared_identity_services ? local.shared_identity_outputs.shared_services_cmk_key_id : try(module.shared_services_cmk[0].id, null)
-  demo_windows_vm_effective_password = local.demo_windows_vm_password_valid ? var.demo_windows_vm_admin_password : try(random_password.demo_windows_vm[0].result, null)
+  shared_services_cmk_key_id = var.use_shared_identity_services ? local.shared_identity_outputs.shared_services_cmk_key_id : try(module.shared_services_cmk[0].id, null)
 
   app_subnet_nsg_rules = [
     {

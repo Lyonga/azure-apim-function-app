@@ -335,9 +335,20 @@ variable "demo_windows_vm_admin_username" {
 
 variable "demo_windows_vm_admin_password" {
   type        = string
-  description = "Optional local admin password for the demo Windows VM. If omitted or invalid, Terraform will generate a compliant password and keep it in state."
+  description = "Local admin password for the demo Windows VM. Required when enable_demo_windows_vm is true."
   default     = null
   sensitive   = true
+
+  validation {
+    condition = var.demo_windows_vm_admin_password == null || (
+      length(var.demo_windows_vm_admin_password) >= 14 &&
+      can(regex("[A-Z]", var.demo_windows_vm_admin_password)) &&
+      can(regex("[a-z]", var.demo_windows_vm_admin_password)) &&
+      can(regex("[0-9]", var.demo_windows_vm_admin_password)) &&
+      can(regex("[^A-Za-z0-9]", var.demo_windows_vm_admin_password))
+    )
+    error_message = "demo_windows_vm_admin_password must be at least 14 characters and include upper, lower, numeric, and special characters."
+  }
 }
 
 variable "demo_windows_vm_os_disk_storage_account_type" {
