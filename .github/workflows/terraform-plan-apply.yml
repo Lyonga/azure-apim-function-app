@@ -208,4 +208,4 @@ jobs:
       - name: Terraform Destroy
         if: ${{ inputs.apply == true }}
         working-directory: ${{ inputs.stack_path }}
-        run: terraform Destroy -auto-approve tfplan
+        run: terraform destroy -auto-approve tfplan
