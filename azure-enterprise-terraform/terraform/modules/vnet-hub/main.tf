@@ -1,5 +1,6 @@
 locals {
   subnet_defaults = {
+    address_prefixes                              = []
     service_endpoints                             = []
     private_endpoint_network_policies             = null
     private_endpoint_network_policies_enabled     = true
@@ -11,83 +12,42 @@ locals {
     delegations                                   = []
   }
 
-  default_subnets = {
-    AzureFirewallSubnet = {
-      address_prefixes                              = [var.firewall_subnet_cidr]
-      service_endpoints                             = []
-      private_endpoint_network_policies             = null
-      private_endpoint_network_policies_enabled     = true
-      enforce_private_link_service_network_policies = true
-      private_link_service_network_policies_enabled = true
-      route_table_id                                = null
-      nat_gateway_id                                = null
-      nsg_rules                                     = []
-      delegations                                   = []
-    }
-    AzureBastionSubnet = {
-      address_prefixes                              = [var.bastion_subnet_cidr]
-      service_endpoints                             = []
-      private_endpoint_network_policies             = null
-      private_endpoint_network_policies_enabled     = true
-      enforce_private_link_service_network_policies = true
-      private_link_service_network_policies_enabled = true
-      route_table_id                                = null
-      nat_gateway_id                                = null
-      nsg_rules                                     = []
-      delegations                                   = []
-    }
-    shared-services = {
-      address_prefixes                              = [var.shared_services_subnet_cidr]
-      service_endpoints                             = []
-      private_endpoint_network_policies             = null
-      private_endpoint_network_policies_enabled     = true
-      enforce_private_link_service_network_policies = true
-      private_link_service_network_policies_enabled = true
-      route_table_id                                = null
-      nat_gateway_id                                = null
-      nsg_rules                                     = var.shared_services_nsg_rules
-      delegations                                   = []
-    }
-    private-endpoints = {
-      address_prefixes                              = [var.private_endpoints_subnet_cidr]
-      service_endpoints                             = []
-      private_endpoint_network_policies             = "Disabled"
-      private_endpoint_network_policies_enabled     = false
-      enforce_private_link_service_network_policies = true
-      private_link_service_network_policies_enabled = true
-      route_table_id                                = null
-      nat_gateway_id                                = null
-      nsg_rules                                     = []
-      delegations                                   = []
-    }
-    dns-inbound = {
-      address_prefixes                              = [var.dns_inbound_subnet_cidr]
-      service_endpoints                             = []
-      private_endpoint_network_policies             = null
-      private_endpoint_network_policies_enabled     = true
-      enforce_private_link_service_network_policies = true
-      private_link_service_network_policies_enabled = true
-      route_table_id                                = null
-      nat_gateway_id                                = null
-      nsg_rules                                     = []
-      delegations                                   = []
-    }
-    dns-outbound = {
-      address_prefixes                              = [var.dns_outbound_subnet_cidr]
-      service_endpoints                             = []
-      private_endpoint_network_policies             = null
-      private_endpoint_network_policies_enabled     = true
-      enforce_private_link_service_network_policies = true
-      private_link_service_network_policies_enabled = true
-      route_table_id                                = null
-      nat_gateway_id                                = null
-      nsg_rules                                     = []
-      delegations                                   = []
-    }
-  }
+  default_subnets = tomap({
+    AzureFirewallSubnet = merge(local.subnet_defaults, {
+      address_prefixes = [var.firewall_subnet_cidr]
+    })
+    AzureBastionSubnet = merge(local.subnet_defaults, {
+      address_prefixes = [var.bastion_subnet_cidr]
+    })
+    shared-services = merge(local.subnet_defaults, {
+      address_prefixes = [var.shared_services_subnet_cidr]
+      nsg_rules        = var.shared_services_nsg_rules
+    })
+    private-endpoints = merge(local.subnet_defaults, {
+      address_prefixes                          = [var.private_endpoints_subnet_cidr]
+      private_endpoint_network_policies         = "Disabled"
+      private_endpoint_network_policies_enabled = false
+    })
+    dns-inbound = merge(local.subnet_defaults, {
+      address_prefixes = [var.dns_inbound_subnet_cidr]
+    })
+    dns-outbound = merge(local.subnet_defaults, {
+      address_prefixes = [var.dns_outbound_subnet_cidr]
+    })
+  })
+
+  selected_subnet_names = length(var.subnets) == 0 ? keys(local.default_subnets) : keys(var.subnets)
+
+  selected_subnets = tomap({
+    for subnet_name in local.selected_subnet_names :
+    subnet_name => merge(
+      lookup(local.default_subnets, subnet_name, {}),
+      lookup(var.subnets, subnet_name, {})
+    )
+  })
 
   effective_subnets = tomap({
-    for subnet_name, subnet in(length(var.subnets) == 0 ? local.default_subnets : var.subnets) :
+    for subnet_name, subnet in local.selected_subnets :
     subnet_name => merge(
       local.subnet_defaults,
       subnet,
