@@ -110,6 +110,12 @@ variable "recovery_services_vault_name" {
   description = "Recovery Services Vault name."
 }
 
+variable "enable_diagnostics_storage_insights" {
+  type        = bool
+  description = "Enable Log Analytics Storage Insights for the diagnostics archive. Leave disabled when using keyless storage access."
+  default     = false
+}
+
 variable "business_owner" {
   type        = string
   description = "Business owner tag."

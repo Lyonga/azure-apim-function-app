@@ -33,7 +33,7 @@ variable "cross_region_restore_enabled" {
 
 variable "soft_delete_enabled" {
   type        = bool
-  description = "Enable soft delete."
+  description = "Deprecated. Recovery Services Vault soft delete is left at the Azure platform default to avoid conflicts with Always On vault behavior."
   default     = true
 }
 

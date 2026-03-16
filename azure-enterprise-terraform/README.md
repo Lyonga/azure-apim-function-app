@@ -229,6 +229,39 @@ This is safer than deriving provider targets implicitly from remote state becaus
 
 The active global and dev v2 roots also set `skip_provider_registration = true` in the root `azurerm` provider. That is intentional. In enterprise estates, provider registration is usually handled centrally or pre-registered once by a platform admin, rather than giving every deployment identity permission to register resource providers on demand.
 
+### Resource Provider Registration
+
+Azure Resource Providers are the control-plane namespaces behind services such as networking, Key Vault, App Service, and SQL.
+
+In practice, that means:
+
+- a subscription must be registered for a namespace before Azure will let you create resources from that namespace;
+- with `skip_provider_registration = true`, Terraform will not try to register providers on the fly;
+- if a namespace is missing, apply fails with `MissingSubscriptionRegistration` until a platform admin registers it once for that subscription.
+
+This repo intentionally uses that pattern because it is the better enterprise tradeoff:
+
+- deployments stay predictable and do not mutate subscription-wide settings as a side effect;
+- deployer identities do not need broad `*/register/action` permissions;
+- provider registration can be handled once by platform administrators per subscription.
+
+Common registrations used by the active roots include:
+
+| Stack | Common provider namespaces |
+| --- | --- |
+| `platform-v2/connectivity` | `Microsoft.Network` |
+| `platform-v2/management` | `Microsoft.OperationalInsights`, `microsoft.insights`, `Microsoft.RecoveryServices`, `Microsoft.Storage` |
+| `platform-v2/identity` | `Microsoft.Network`, `Microsoft.KeyVault`, `Microsoft.ManagedIdentity`, `microsoft.insights` |
+| `workload-v2/finserv-api` | `Microsoft.Network`, `Microsoft.Storage`, `Microsoft.KeyVault`, `Microsoft.ManagedIdentity`, `Microsoft.AppConfiguration`, `Microsoft.ServiceBus`, `Microsoft.Sql`, `Microsoft.ContainerRegistry`, `Microsoft.Web`, `Microsoft.ApiManagement`, `Microsoft.OperationalInsights`, `microsoft.insights` |
+
+Register them at subscription scope before first deployment, for example:
+
+```bash
+az provider register --namespace Microsoft.Network --subscription 65ac2b14-e13a-40a0-bb50-93359232816e --wait
+```
+
+Use the Azure Portal path `Subscriptions -> <subscription> -> Resource providers` if you prefer a UI workflow.
+
 ## Ownership Boundaries
 
 Do not apply the same ownership pattern to subscriptions, management groups, and resource groups. They serve different control-plane purposes.

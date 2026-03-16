@@ -46,6 +46,7 @@ module "diagnostics_archive" {
 }
 
 resource "azurerm_log_analytics_storage_insights" "diagnostics_archive" {
+  count                = var.enable_diagnostics_storage_insights ? 1 : 0
   name                 = "insights-diag-${var.environment}-${var.application}"
   resource_group_name  = module.resource_group.name
   workspace_id         = module.workspace.workspace_id

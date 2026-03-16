@@ -5,7 +5,6 @@ resource "azurerm_recovery_services_vault" "this" {
   sku                          = var.sku
   storage_mode_type            = var.storage_mode_type
   cross_region_restore_enabled = var.cross_region_restore_enabled
-  soft_delete_enabled          = var.soft_delete_enabled
   tags                         = var.tags
 
   dynamic "identity" {
