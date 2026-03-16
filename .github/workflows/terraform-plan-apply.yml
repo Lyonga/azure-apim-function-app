@@ -201,9 +201,20 @@ jobs:
 
       - name: Terraform Destroy
         #if: ${{ inputs.apply == true }}
+        shell: bash
         working-directory: ${{ inputs.stack_path }}
         run: |
           set -euo pipefail
+
+          while IFS= read -r address; do
+            [ -n "${address}" ] || continue
+
+            if terraform state show -no-color "${address}" | grep -q 'Microsoft.KeyVault/vaults/keys@'; then
+              echo "Removing non-deletable Key Vault key ARM resource from state: ${address}"
+              terraform state rm "${address}"
+            fi
+          done < <(terraform state list | grep 'azapi_resource' || true)
+
           if [ -n "${{ steps.resolve-inputs.outputs.var_file }}" ]; then
             terraform destroy -auto-approve -var-file="${{ steps.resolve-inputs.outputs.var_file }}"
           else
