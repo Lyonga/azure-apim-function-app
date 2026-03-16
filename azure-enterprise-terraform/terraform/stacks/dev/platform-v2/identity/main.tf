@@ -176,6 +176,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "identity_links" {
   resource_group_name   = data.terraform_remote_state.connectivity.outputs.resource_group_name
   private_dns_zone_name = each.value
   virtual_network_id    = module.identity_network.vnet_id
+  tags                  = module.tags.tags
 }
 
 module "hub_to_identity_peering" {
