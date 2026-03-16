@@ -17,7 +17,7 @@ locals {
 
   runtime_principal_id = local.effective_app_identity.principal_id
 
-  shared_services_cmk_key_id = var.use_shared_identity_services ? local.shared_identity_outputs.shared_services_cmk_key_id : try(azurerm_key_vault_key.shared_services_cmk[0].id, null)
+  shared_services_cmk_key_id = var.use_shared_identity_services ? local.shared_identity_outputs.shared_services_cmk_key_id : try(module.shared_services_cmk[0].id, null)
 
   app_subnet_nsg_rules = [
     {

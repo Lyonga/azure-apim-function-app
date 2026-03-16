@@ -31,7 +31,7 @@ output "shared_services_key_vault_uri" {
 }
 
 output "shared_services_cmk_key_id" {
-  value = azurerm_key_vault_key.shared_services_cmk.id
+  value = module.shared_services_cmk.id
 }
 
 output "shared_identity_names" {

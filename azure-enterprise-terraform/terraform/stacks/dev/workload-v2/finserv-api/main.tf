@@ -110,14 +110,15 @@ module "key_vault" {
   tags                          = module.tags.tags
 }
 
-resource "azurerm_key_vault_key" "shared_services_cmk" {
-  count           = !var.use_shared_identity_services && local.shared_services_cmk_enabled ? 1 : 0
-  name            = "cmk-${var.environment}-${var.application}"
-  key_vault_id    = module.key_vault.id
-  key_type        = "RSA-HSM"
-  key_size        = 2048
-  expiration_date = "2035-01-01T00:00:00Z"
-  key_opts        = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
+module "shared_services_cmk" {
+  count         = !var.use_shared_identity_services && local.shared_services_cmk_enabled ? 1 : 0
+  source        = "../../../../modules/keyvault-key"
+  name          = "cmk-${var.environment}-${var.application}"
+  key_vault_id  = module.key_vault.id
+  key_vault_uri = module.key_vault.vault_uri
+  key_type      = "RSA-HSM"
+  key_size      = 2048
+  key_ops       = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
 }
 
 module "encryption_role_assignments" {
