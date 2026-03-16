@@ -87,7 +87,7 @@ locals {
   }
 
   effective_subnets = tomap({
-    for subnet_name, subnet in (length(var.subnets) == 0 ? local.default_subnets : var.subnets) :
+    for subnet_name, subnet in(length(var.subnets) == 0 ? local.default_subnets : var.subnets) :
     subnet_name => merge(
       local.subnet_defaults,
       subnet,

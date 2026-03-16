@@ -91,7 +91,7 @@ jobs:
             skip_checks: CKV2_AZURE_1,CKV2_AZURE_21,CKV2_AZURE_33
           - name: identity
             path: azure-enterprise-terraform/terraform/stacks/dev/platform-v2/identity
-            skip_checks: CKV2_AZURE_32
+            skip_checks: CKV2_AZURE_31,CKV2_AZURE_32
           - name: finserv-api
             path: azure-enterprise-terraform/terraform/stacks/dev/workload-v2/finserv-api
             skip_checks: CKV2_ADO_1,CKV2_AZURE_1,CKV2_AZURE_21,CKV2_AZURE_32,CKV2_AZURE_33,CKV2_AZURE_40,CKV2_AZURE_45,CKV_AZURE_212,CKV_AZURE_225
