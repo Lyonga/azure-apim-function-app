@@ -289,6 +289,7 @@ variable "data_disks" {
 variable "disk_encryption_set_id" {
   description = "Disk Encryption Set resource ID used for managed data disks."
   type        = string
+  default     = null
 }
 
 variable "tags" {

@@ -21,6 +21,17 @@ module "resource_group" {
   tags     = module.tags.tags
 }
 
+resource "terraform_data" "demo_windows_vm_guard" {
+  count = local.demo_windows_vm_enabled ? 1 : 0
+
+  lifecycle {
+    precondition {
+      condition     = trimspace(coalesce(var.demo_windows_vm_admin_password, "")) != ""
+      error_message = "enable_demo_windows_vm is true but demo_windows_vm_admin_password is empty. Set TF_VAR_demo_windows_vm_admin_password locally or DEMO_WINDOWS_VM_ADMIN_PASSWORD in the GitHub Environment."
+    }
+  }
+}
+
 module "spoke_network" {
   source              = "../../../../modules/vnet-spoke"
   name                = var.spoke_vnet_name
@@ -29,6 +40,25 @@ module "spoke_network" {
   address_space       = var.spoke_address_space
   subnets             = local.spoke_subnets
   tags                = module.tags.tags
+}
+
+module "demo_windows_vm" {
+  count                         = local.demo_windows_vm_enabled ? 1 : 0
+  source                        = "../../../../modules/vm_windows"
+  name                          = coalesce(var.demo_windows_vm_name, "vm-${var.environment}-${var.application}")
+  resource_group_name           = module.resource_group.name
+  location                      = var.location
+  subnet_id                     = module.spoke_network.subnet_ids[var.demo_windows_vm_subnet_key]
+  admin_username                = var.demo_windows_vm_admin_username
+  admin_password                = var.demo_windows_vm_admin_password
+  vm_size                       = var.demo_windows_vm_size
+  identity_type                 = "SystemAssigned"
+  os_disk_storage_account_type  = var.demo_windows_vm_os_disk_storage_account_type
+  enable_accelerated_networking = false
+  encryption_at_host_enabled    = false
+  allow_extension_operations    = true
+  tags                          = module.tags.tags
+  depends_on                    = [terraform_data.demo_windows_vm_guard]
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "spoke_links" {
@@ -205,6 +235,7 @@ module "container_registry" {
 }
 
 module "function_app" {
+  count                                  = var.enable_function_app ? 1 : 0
   source                                 = "../../../../modules/function_app"
   name                                   = var.function_app_name
   resource_group_name                    = module.resource_group.name
@@ -295,13 +326,13 @@ module "sql_private_endpoint" {
 }
 
 module "function_private_endpoint" {
-  count                = var.enable_function_private_endpoint ? 1 : 0
+  count                = var.enable_function_app && var.enable_function_private_endpoint ? 1 : 0
   source               = "../../../../modules/private-endpoint"
   name                 = "pe-fa-${var.environment}-${var.application}"
   resource_group_name  = module.resource_group.name
   location             = var.location
   subnet_id            = module.spoke_network.subnet_ids["private-endpoints"]
-  target_resource_id   = module.function_app.id
+  target_resource_id   = var.enable_function_app ? module.function_app[0].id : null
   subresource_names    = ["sites"]
   private_dns_zone_ids = [local.connectivity_outputs.private_dns_zone_ids["websites"]]
   tags                 = module.tags.tags
@@ -336,8 +367,8 @@ module "api_management" {
   api_display_name                = var.api_display_name
   api_path                        = var.api_path
   api_spec_path                   = local.api_spec_path
-  backend_url                     = "https://${module.function_app.default_hostname}/api/"
-  function_app_name               = module.function_app.name
+  backend_url                     = var.enable_function_app ? "https://${module.function_app[0].default_hostname}/api/" : null
+  function_app_name               = var.enable_function_app ? module.function_app[0].name : null
   function_app_key_lookup_enabled = false
   function_resource_group         = module.resource_group.name
   tags                            = module.tags.tags

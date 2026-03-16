@@ -43,7 +43,7 @@ resource "azurerm_windows_virtual_machine" "this" {
   admin_password             = var.admin_password
   network_interface_ids      = [azurerm_network_interface.this.id]
   provision_vm_agent         = var.provision_vm_agent
-  allow_extension_operations = false
+  allow_extension_operations = var.allow_extension_operations
   enable_automatic_updates   = var.enable_automatic_updates
   patch_mode                 = var.patch_mode
   patch_assessment_mode      = var.patch_assessment_mode

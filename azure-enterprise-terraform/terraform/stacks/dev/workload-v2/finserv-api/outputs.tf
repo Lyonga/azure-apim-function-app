@@ -19,7 +19,23 @@ output "storage_account_name" {
 }
 
 output "function_app_name" {
-  value = module.function_app.name
+  value = try(module.function_app[0].name, null)
+}
+
+output "demo_windows_vm_id" {
+  value = try(module.demo_windows_vm[0].id, null)
+}
+
+output "demo_windows_vm_name" {
+  value = try(module.demo_windows_vm[0].name, null)
+}
+
+output "demo_windows_vm_private_ip" {
+  value = try(module.demo_windows_vm[0].private_ip_address, null)
+}
+
+output "demo_windows_vm_identity_principal_id" {
+  value = try(module.demo_windows_vm[0].identity_principal_id, null)
 }
 
 output "app_configuration_endpoint" {

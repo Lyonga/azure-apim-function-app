@@ -2,6 +2,7 @@ locals {
   api_spec_path               = var.api_spec_path != null ? abspath(var.api_spec_path) : abspath("${path.root}/../../../api-spec.yml")
   shared_services_cmk_enabled = var.enable_app_configuration || var.enable_service_bus
   shared_identity_outputs     = var.use_shared_identity_services ? local.identity_outputs : null
+  demo_windows_vm_enabled     = var.enable_demo_windows_vm
 
   effective_app_identity = var.use_shared_identity_services ? {
     id           = local.shared_identity_outputs.shared_identity_ids[var.shared_identity_workload_identity_key]
@@ -122,6 +123,15 @@ locals {
       integration = {
         address_prefixes = [var.integration_subnet_cidr]
         nsg_rules        = local.integration_subnet_nsg_rules
+        delegations = [
+          {
+            name = "appservice-delegation"
+            service_delegation = {
+              name    = "Microsoft.Web/serverFarms"
+              actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
+            }
+          }
+        ]
       }
       data = {
         address_prefixes = [var.data_subnet_cidr]
@@ -217,8 +227,22 @@ locals {
     }
   }
 
+  demo_windows_vm_role_assignments = local.demo_windows_vm_enabled ? tomap({
+    demo_windows_vm_keyvault_secrets_user = {
+      scope                = module.key_vault.id
+      role_definition_name = "Key Vault Secrets User"
+      principal_id         = module.demo_windows_vm[0].identity_principal_id
+    }
+    demo_windows_vm_storage_blob_contributor = {
+      scope                = module.storage_account.account_id
+      role_definition_name = "Storage Blob Data Contributor"
+      principal_id         = module.demo_windows_vm[0].identity_principal_id
+    }
+  }) : tomap({})
+
   workload_role_assignments = merge(
     local.baseline_workload_role_assignments,
+    local.demo_windows_vm_role_assignments,
     local.additional_workload_role_assignments,
   )
 

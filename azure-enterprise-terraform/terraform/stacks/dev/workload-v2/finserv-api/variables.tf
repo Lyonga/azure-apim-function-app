@@ -136,6 +136,12 @@ variable "function_app_name" {
   description = "Function App name."
 }
 
+variable "enable_function_app" {
+  type        = bool
+  description = "Deploy the Function App and backing App Service plan."
+  default     = true
+}
+
 variable "enable_apim" {
   type        = bool
   description = "Enable API Management."
@@ -290,6 +296,54 @@ variable "assign_storage_queue_data_contributor" {
   type        = bool
   description = "Grant the workload managed identity Storage Queue Data Contributor on the workload storage account."
   default     = false
+}
+
+variable "enable_demo_windows_vm" {
+  type        = bool
+  description = "Deploy a smallest-practical demo Windows VM in the spoke VNet to validate private access and managed identity patterns."
+  default     = false
+}
+
+variable "demo_windows_vm_name" {
+  type        = string
+  description = "Name for the optional demo Windows VM."
+  default     = null
+}
+
+variable "demo_windows_vm_size" {
+  type        = string
+  description = "SKU for the optional demo Windows VM."
+  default     = "Standard_B1ms"
+}
+
+variable "demo_windows_vm_subnet_key" {
+  type        = string
+  description = "Spoke subnet key for the optional demo Windows VM."
+  default     = "app"
+
+  validation {
+    condition     = contains(["app", "integration", "data"], var.demo_windows_vm_subnet_key)
+    error_message = "demo_windows_vm_subnet_key must be one of app, integration, or data."
+  }
+}
+
+variable "demo_windows_vm_admin_username" {
+  type        = string
+  description = "Local admin username for the optional demo Windows VM."
+  default     = "azureadmin"
+}
+
+variable "demo_windows_vm_admin_password" {
+  type        = string
+  description = "Local admin password for the optional demo Windows VM. Set via TF_VAR_demo_windows_vm_admin_password or the DEMO_WINDOWS_VM_ADMIN_PASSWORD GitHub secret."
+  default     = null
+  sensitive   = true
+}
+
+variable "demo_windows_vm_os_disk_storage_account_type" {
+  type        = string
+  description = "OS disk SKU for the optional demo Windows VM."
+  default     = "Standard_LRS"
 }
 
 variable "additional_workload_role_assignments" {

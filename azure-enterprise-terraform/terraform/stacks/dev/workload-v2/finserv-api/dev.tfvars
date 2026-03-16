@@ -50,6 +50,15 @@ service_plan_sku = "S1"
 # subscription. Re-enable for a fuller enterprise-aligned workload shape.
 enable_service_bus       = false
 enable_app_configuration = false
+enable_function_app      = false
+
+# Demo-cost override:
+# Optional private-only Windows VM for validating VNet + NSG + managed identity
+# access to the workload Key Vault and Storage Account. This is not the lowest-cost
+# or best enterprise end-state, but it is a practical demo probe while App Service
+# quota is unavailable. Set DEMO_WINDOWS_VM_ADMIN_PASSWORD in the GitHub Environment
+# before enabling this.
+enable_demo_windows_vm = true
 
 enable_apim               = false
 enable_sql                = false
