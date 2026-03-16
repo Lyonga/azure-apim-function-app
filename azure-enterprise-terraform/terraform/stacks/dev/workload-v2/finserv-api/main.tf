@@ -99,16 +99,15 @@ resource "azurerm_log_analytics_storage_insights" "workload_storage" {
 
 #checkov:skip=CKV2_AZURE_32: The Key Vault private endpoint is provisioned separately in this workload stack.
 module "key_vault" {
-  source                                  = "../../../../modules/keyvault"
-  name                                    = var.key_vault_name
-  resource_group_name                     = module.resource_group.name
-  location                                = var.location
-  tenant_id                               = data.azurerm_client_config.current.tenant_id
-  sku_name                                = var.use_shared_identity_services ? "standard" : local.shared_services_cmk_enabled ? "premium" : "standard"
-  enable_rbac_authorization               = true
-  public_network_access_enabled           = false
-  network_acls_virtual_network_subnet_ids = [module.spoke_network.subnet_ids["private-endpoints"]]
-  tags                                    = module.tags.tags
+  source                        = "../../../../modules/keyvault"
+  name                          = var.key_vault_name
+  resource_group_name           = module.resource_group.name
+  location                      = var.location
+  tenant_id                     = data.azurerm_client_config.current.tenant_id
+  sku_name                      = var.use_shared_identity_services ? "standard" : local.shared_services_cmk_enabled ? "premium" : "standard"
+  enable_rbac_authorization     = true
+  public_network_access_enabled = false
+  tags                          = module.tags.tags
 }
 
 resource "azurerm_key_vault_key" "shared_services_cmk" {
