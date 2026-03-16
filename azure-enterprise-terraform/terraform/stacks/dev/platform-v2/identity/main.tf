@@ -202,6 +202,7 @@ module "key_vault" {
   sku_name                      = "premium"
   enable_rbac_authorization     = true
   public_network_access_enabled = false
+  network_acls_bypass           = "AzureServices"
   tags                          = module.tags.tags
 }
 

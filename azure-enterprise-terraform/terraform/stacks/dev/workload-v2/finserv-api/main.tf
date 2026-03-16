@@ -107,6 +107,7 @@ module "key_vault" {
   sku_name                      = var.use_shared_identity_services ? "standard" : local.shared_services_cmk_enabled ? "premium" : "standard"
   enable_rbac_authorization     = true
   public_network_access_enabled = false
+  network_acls_bypass           = "AzureServices"
   tags                          = module.tags.tags
 }
 
