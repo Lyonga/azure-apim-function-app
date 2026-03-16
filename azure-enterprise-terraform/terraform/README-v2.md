@@ -16,16 +16,16 @@ The v2 model separates the Azure estate by operating model and blast radius:
 - environment-scoped platform services in `platform-v2/*`
 - application landing zones in `workload-v2/*`
 
-That split follows the Azure Landing Zone guidance to organize subscriptions and governance centrally, then let platform and application landing zones consume those controls at lower scope.[1][2][3][4][5]
+That split follows Microsoft guidance to organize subscriptions and governance centrally, then let platform and application landing zones consume those controls at lower scope. See References 1 through 7.
 
 ## Design Principles
 
 The v2 pattern in this repo is built on these principles:
 
-1. Governance first. Management groups, policy, and high-scope RBAC are created before platform and workload resources.[1][5][6]
-2. Platform and workload isolation. Shared platform concerns live outside workload stacks, even in this dev demo where several platform capabilities are intentionally collapsed into one platform subscription.[1][2][4]
-3. Private-by-default services. Networking, storage, Key Vault, App Configuration, Service Bus, and SQL are designed around private endpoints, central Private DNS, and explicit VNet integration.[3][7][8]
-4. Identity over secrets. Managed identities and RBAC are preferred over embedded secrets and long-lived credentials.[2][9]
+1. Governance first. Management groups, policy, and high-scope RBAC are created before platform and workload resources. See References 1, 2, 6, and 7.
+2. Platform and workload isolation. Shared platform concerns live outside workload stacks, even in this dev demo where several platform capabilities are intentionally collapsed into one platform subscription. See References 1, 2, 4, and 5.
+3. Private-by-default services. Networking, storage, Key Vault, App Configuration, Service Bus, and SQL are designed around private endpoints, central Private DNS, and explicit VNet integration. See References 3, 8, 9, and 10.
+4. Identity over secrets. Managed identities and RBAC are preferred over embedded secrets and long-lived credentials. See References 4, 5, and 11.
 5. State by blast radius. Each root has its own backend key and its own deployment workflow boundary.
 6. Explicit subscription targeting. Active roots keep an explicit `subscription_id` and validate it against the central subscription catalog.
 7. Platform-owned prerequisites. Resource provider registration and the shared backend are treated as platform prerequisites, not ad hoc side effects during workload deployment.
@@ -41,8 +41,8 @@ These roots establish tenant-level and management-group-level governance.
 | Stack | Scope | What it owns | Why it exists |
 | --- | --- | --- | --- |
 | [`global/subscriptions`](./global/subscriptions) | catalog and subscription metadata | approved subscription inventory, management-group placement metadata, stack validation inputs | keeps subscription ownership and placement explicit instead of hidden in stack-local variables |
-| [`global/management-groups`](./global/management-groups) | tenant and management-group scope | management-group hierarchy and subscription associations | aligns resource organization with Azure Landing Zone guidance for policy and RBAC inheritance.[1][5] |
-| [`global/policy`](./global/policy) | management-group scope | shared policy definitions, initiatives, and assignments | applies governance from higher scopes and assigns it at the child scopes that consume it.[5][6] |
+| [`global/management-groups`](./global/management-groups) | tenant and management-group scope | management-group hierarchy and subscription associations | aligns resource organization with Azure Landing Zone guidance for policy and RBAC inheritance. See References 1, 2, 6, and 7. |
+| [`global/policy`](./global/policy) | management-group scope | shared policy definitions, initiatives, and assignments | applies governance from higher scopes and assigns it at the child scopes that consume it. See References 6 and 7. |
 | [`global/role-assignments`](./global/role-assignments) | management-group scope | high-scope RBAC for platform administration | keeps tenant and management-group access separate from workload RBAC |
 
 ### 2. Environment-Scoped Platform Services
@@ -79,13 +79,13 @@ In this repo it currently creates:
 Why it exists:
 
 - Workloads and shared services should not each create their own Private DNS estate.
-- Centralizing hub networking and DNS reduces duplication and makes private endpoint name resolution predictable at scale.[3][7]
-- Shared connectivity belongs in a platform boundary, not in an application landing zone.[3]
+- Centralizing hub networking and DNS reduces duplication and makes private endpoint name resolution predictable at scale. See References 3 and 8.
+- Shared connectivity belongs in a platform boundary, not in an application landing zone. See Reference 3.
 
 Best-practice alignment:
 
-- hub/spoke topology is a standard Azure Landing Zone pattern for shared connectivity.[3]
-- private endpoint DNS should be managed consistently and centrally, especially when multiple services share the same zones.[7]
+- hub/spoke topology is a standard Azure Landing Zone pattern for shared connectivity. See Reference 3.
+- private endpoint DNS should be managed consistently and centrally, especially when multiple services share the same zones. See Reference 8.
 
 ### `platform-v2/management`
 
@@ -102,11 +102,11 @@ In this repo it currently creates:
 Why it exists:
 
 - Monitoring, alerting, archive storage, and subscription activity logging are platform capabilities, not app-specific concerns.
-- Workloads should send telemetry into a central management plane rather than each team inventing its own logging model.[4][10]
+- Workloads should send telemetry into a central management plane rather than each team inventing its own logging model. See References 4 and 12.
 
 Best-practice alignment:
 
-- the Azure Landing Zone management guidance treats monitoring and management as foundational platform capabilities.[4][10]
+- the Azure Landing Zone management guidance treats monitoring and management as foundational platform capabilities. See References 4 and 12.
 - separating management services from application landing zones makes retention, alerting, and diagnostics easier to standardize.
 
 ### `platform-v2/identity`
@@ -128,13 +128,13 @@ In this repo it currently creates:
 Why it exists:
 
 - Shared managed identities and shared encryption keys should be owned by a platform identity boundary, then consumed by workloads through RBAC.
-- Identity services are a platform responsibility in Azure Landing Zones, and the identity landing zone is expected to connect back to hub networking.[2]
+- Identity services are a platform responsibility in Azure Landing Zones, and the identity landing zone is expected to connect back to hub networking. See References 4 and 5.
 
 Best-practice alignment:
 
-- Azure Landing Zone guidance explicitly treats identity as a core platform responsibility.[2]
-- use user-assigned managed identities for shared reusable automation and service access patterns; use system-assigned identities for single-resource identities where lifecycle coupling is useful.[9]
-- keep role assignments for application landing zones at subscription or resource-group scope rather than mixing them with policy at management-group scope.[2]
+- Azure Landing Zone guidance explicitly treats identity as a core platform responsibility. See References 4 and 5.
+- use user-assigned managed identities for shared reusable automation and service access patterns; use system-assigned identities for single-resource identities where lifecycle coupling is useful. See Reference 11.
+- keep role assignments for application landing zones at subscription or resource-group scope rather than mixing them with policy at management-group scope. See References 4 and 5.
 
 ### `workload-v2/finserv-api`
 
@@ -161,14 +161,14 @@ In this repo it currently composes:
 
 Why it exists:
 
-- application landing zones should own workload-local resources and consume shared platform services instead of recreating them.[1][2][3]
-- the workload retains autonomy at lower scope while inheriting governance from management groups and policy assignments.[5][6]
+- application landing zones should own workload-local resources and consume shared platform services instead of recreating them. See References 1 through 5.
+- the workload retains autonomy at lower scope while inheriting governance from management groups and policy assignments. See References 6 and 7.
 
 Best-practice alignment:
 
-- the Function App integration subnet is delegated to `Microsoft.Web/serverFarms`, which is required for App Service regional VNet integration.[8][11]
-- private endpoints and central Private DNS are used for storage, Key Vault, Service Bus, App Configuration, and SQL to support private-by-default access.[7]
-- the workload uses managed identity and RBAC to access Key Vault and storage instead of embedding secrets.[2][9]
+- the Function App integration subnet is delegated to `Microsoft.Web/serverFarms`, which is required for App Service regional VNet integration. See References 9 and 10.
+- private endpoints and central Private DNS are used for storage, Key Vault, Service Bus, App Configuration, and SQL to support private-by-default access. See Reference 8.
+- the workload uses managed identity and RBAC to access Key Vault and storage instead of embedding secrets. See References 5 and 11.
 
 ## Why The Layers Are Split This Way
 
@@ -193,15 +193,15 @@ The v2 policy model follows Azure Policy guidance:
 - create reusable definitions and initiatives at a higher scope
 - assign them to the child scope that should inherit them
 
-That is why this repo keeps shared policy definitions in `global/policy` and assigns initiatives at management-group scope rather than burying policy inside each workload stack.[5][6]
+That is why this repo keeps shared policy definitions in `global/policy` and assigns initiatives at management-group scope rather than burying policy inside each workload stack. See References 6 and 7.
 
 ### Shared DNS and peering in the platform plane
 
-Private endpoint DNS only scales cleanly if the DNS zones are shared and linked consistently. Centralizing Private DNS in `platform-v2/connectivity` avoids each workload creating its own disconnected name-resolution island.[7]
+Private endpoint DNS only scales cleanly if the DNS zones are shared and linked consistently. Centralizing Private DNS in `platform-v2/connectivity` avoids each workload creating its own disconnected name-resolution island. See Reference 8.
 
 ### Shared identity and keys in the identity plane
 
-User-assigned managed identities and shared CMKs are long-lived platform assets. Keeping them in `platform-v2/identity` makes their lifecycle independent from any single app and matches the Azure Landing Zone identity operating model.[2][9]
+User-assigned managed identities and shared CMKs are long-lived platform assets. Keeping them in `platform-v2/identity` makes their lifecycle independent from any single app and matches the Azure Landing Zone identity operating model. See References 5 and 11.
 
 ## Deployment Order
 
@@ -228,7 +228,7 @@ Why the order matters:
 
 ### 1. Management groups and policy as code
 
-The v2 model uses management groups, initiatives, and assignments as first-class Terraform roots. That follows Microsoft guidance to organize subscriptions through management groups and manage policy resources as code.[1][5]
+The v2 model uses management groups, initiatives, and assignments as first-class Terraform roots. That follows Microsoft guidance to organize subscriptions through management groups and manage policy resources as code. See References 1, 2, 6, and 7.
 
 ### 2. Subscription isolation by role
 
@@ -237,19 +237,19 @@ The active dev demo uses:
 - one platform subscription for connectivity, management, and identity
 - one separate workload subscription for the application landing zone
 
-That is already better than a monolithic single-subscription demo. The fuller enterprise target is to separate connectivity, management, identity, and workload subscriptions even further when the estate size justifies it.[1][2][3][4]
+That is already better than a monolithic single-subscription demo. The fuller enterprise target is to separate connectivity, management, identity, and workload subscriptions even further when the estate size justifies it. See References 1 through 5.
 
 ### 3. Central monitoring plane
 
-The v2 model routes shared monitoring capabilities through the management stack. That follows Azure Landing Zone guidance to standardize management and monitoring as platform capabilities rather than leaving them entirely to each workload team.[4][10]
+The v2 model routes shared monitoring capabilities through the management stack. That follows Azure Landing Zone guidance to standardize management and monitoring as platform capabilities rather than leaving them entirely to each workload team. See References 4 and 12.
 
 ### 4. Private-by-default service access
 
-The v2 stacks use private endpoints, central Private DNS, and VNet integration where services support it. This is aligned with Microsoft guidance on Private Link DNS integration at scale and App Service networking patterns.[7][8][11]
+The v2 stacks use private endpoints, central Private DNS, and VNet integration where services support it. This is aligned with Microsoft guidance on Private Link DNS integration at scale and App Service networking patterns. See References 8, 9, and 10.
 
 ### 5. Managed identities over application secrets
 
-The v2 pattern uses user-assigned and system-assigned managed identities plus RBAC. That reduces secret sprawl and makes shared access patterns reusable across resources.[2][9]
+The v2 pattern uses user-assigned and system-assigned managed identities plus RBAC. That reduces secret sprawl and makes shared access patterns reusable across resources. See References 5 and 11.
 
 ### 6. Explicit subnet purpose
 
@@ -261,7 +261,7 @@ The workload spoke does not use generic subnets. Instead it separates:
 - `private-endpoints`
 - optional `apim`
 
-This keeps service requirements clear, especially where Azure requires dedicated delegated subnets for App Service integration.[8][11]
+This keeps service requirements clear, especially where Azure requires dedicated delegated subnets for App Service integration. See References 9 and 10.
 
 ### 7. Provider registration as a platform prerequisite
 
@@ -300,4 +300,3 @@ Use these official Microsoft references when reviewing or extending the v2 patte
 10. App Service VNet integration overview: <https://learn.microsoft.com/en-us/azure/app-service/overview-vnet-integration>
 11. Managed identity best-practice recommendations: <https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/managed-identity-best-practice-recommendations>
 12. Landing zone management and monitoring: <https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/design-area/management-monitor>
-
