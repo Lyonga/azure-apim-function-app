@@ -24,6 +24,11 @@ variable "app_service_plan_sku" {
   default = "EP1"
 }
 
+variable "worker_count" {
+  type    = number
+  default = 1
+}
+
 variable "runtime" {
   type    = string
   default = "python"

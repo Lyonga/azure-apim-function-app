@@ -180,7 +180,11 @@ resource "azurerm_private_dns_zone_virtual_network_link" "identity_links" {
 }
 
 module "hub_to_identity_peering" {
-  source                  = "../../../../modules/vnet-peering"
+  source = "../../../../modules/vnet-peering"
+  providers = {
+    azurerm     = azurerm
+    azurerm.hub = azurerm
+  }
   hub_vnet_id             = data.terraform_remote_state.connectivity.outputs.hub_vnet_id
   hub_vnet_name           = data.terraform_remote_state.connectivity.outputs.hub_vnet_name
   hub_rg_name             = data.terraform_remote_state.connectivity.outputs.resource_group_name

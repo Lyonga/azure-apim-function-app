@@ -54,8 +54,20 @@ resource "azurerm_storage_account" "this" {
   }
 }
 
-resource "azurerm_storage_container" "this" {
-  for_each             = var.containers
-  name                 = each.key
-  storage_account_name = azurerm_storage_account.this.name
+resource "azapi_resource" "this" {
+  for_each                  = var.containers
+  type                      = "Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01"
+  name                      = each.key
+  parent_id                 = "${azurerm_storage_account.this.id}/blobServices/default"
+  schema_validation_enabled = false
+
+  body = {
+    properties = {
+      publicAccess = (
+        each.value.access_type == "blob" ? "Blob" :
+        each.value.access_type == "container" ? "Container" :
+        "None"
+      )
+    }
+  }
 }

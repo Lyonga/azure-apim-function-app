@@ -37,10 +37,15 @@ resource "azurerm_private_dns_zone_virtual_network_link" "spoke_links" {
   resource_group_name   = local.connectivity_outputs.resource_group_name
   private_dns_zone_name = each.value
   virtual_network_id    = module.spoke_network.vnet_id
+  tags                  = module.tags.tags
 }
 
 module "hub_to_spoke_peering" {
-  source                  = "../../../../modules/vnet-peering"
+  source = "../../../../modules/vnet-peering"
+  providers = {
+    azurerm     = azurerm
+    azurerm.hub = azurerm.platform
+  }
   hub_vnet_id             = local.connectivity_outputs.hub_vnet_id
   hub_vnet_name           = local.connectivity_outputs.hub_vnet_name
   hub_rg_name             = local.connectivity_outputs.resource_group_name

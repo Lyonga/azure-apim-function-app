@@ -4,8 +4,8 @@ resource "azurerm_service_plan" "this" {
   location               = var.location
   os_type                = "Linux"
   sku_name               = var.app_service_plan_sku
-  worker_count           = 2
-  zone_balancing_enabled = true
+  worker_count           = var.worker_count
+  zone_balancing_enabled = var.worker_count > 1
   tags                   = var.tags
 }
 

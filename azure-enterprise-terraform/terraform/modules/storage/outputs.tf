@@ -20,5 +20,5 @@ output "primary_blob_endpoint" {
 }
 
 output "container_names" {
-  value = keys(azurerm_storage_container.this)
+  value = keys(azapi_resource.this)
 }

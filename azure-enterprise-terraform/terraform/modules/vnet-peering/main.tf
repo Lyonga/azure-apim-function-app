@@ -1,4 +1,5 @@
 resource "azurerm_virtual_network_peering" "hub_to_spoke" {
+  provider                  = azurerm.hub
   name                      = "peer-hub-to-spoke"
   resource_group_name       = var.hub_rg_name
   virtual_network_name      = var.hub_vnet_name
