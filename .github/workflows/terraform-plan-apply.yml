@@ -205,7 +205,7 @@ jobs:
           name: tfplan-${{ github.run_id }}
           path: ${{ inputs.stack_path }}/tfplan
 
-      - name: Terraform Apply
+      - name: Terraform Destroy
         if: ${{ inputs.apply == true }}
         working-directory: ${{ inputs.stack_path }}
-        run: terraform apply -auto-approve tfplan
+        run: terraform Destroy -auto-approve tfplan
