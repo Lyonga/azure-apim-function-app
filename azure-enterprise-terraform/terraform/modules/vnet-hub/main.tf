@@ -1,29 +1,76 @@
 locals {
   default_subnets = {
     AzureFirewallSubnet = {
-      address_prefixes = [var.firewall_subnet_cidr]
-      nsg_rules        = []
+      address_prefixes                              = [var.firewall_subnet_cidr]
+      service_endpoints                             = []
+      private_endpoint_network_policies             = null
+      private_endpoint_network_policies_enabled     = true
+      enforce_private_link_service_network_policies = true
+      private_link_service_network_policies_enabled = true
+      route_table_id                                = null
+      nat_gateway_id                                = null
+      nsg_rules                                     = []
+      delegations                                   = []
     }
     AzureBastionSubnet = {
-      address_prefixes = [var.bastion_subnet_cidr]
-      nsg_rules        = []
+      address_prefixes                              = [var.bastion_subnet_cidr]
+      service_endpoints                             = []
+      private_endpoint_network_policies             = null
+      private_endpoint_network_policies_enabled     = true
+      enforce_private_link_service_network_policies = true
+      private_link_service_network_policies_enabled = true
+      route_table_id                                = null
+      nat_gateway_id                                = null
+      nsg_rules                                     = []
+      delegations                                   = []
     }
     shared-services = {
-      address_prefixes = [var.shared_services_subnet_cidr]
-      nsg_rules        = var.shared_services_nsg_rules
+      address_prefixes                              = [var.shared_services_subnet_cidr]
+      service_endpoints                             = []
+      private_endpoint_network_policies             = null
+      private_endpoint_network_policies_enabled     = true
+      enforce_private_link_service_network_policies = true
+      private_link_service_network_policies_enabled = true
+      route_table_id                                = null
+      nat_gateway_id                                = null
+      nsg_rules                                     = var.shared_services_nsg_rules
+      delegations                                   = []
     }
     private-endpoints = {
-      address_prefixes                  = [var.private_endpoints_subnet_cidr]
-      private_endpoint_network_policies = "Disabled"
-      nsg_rules                         = []
+      address_prefixes                              = [var.private_endpoints_subnet_cidr]
+      service_endpoints                             = []
+      private_endpoint_network_policies             = "Disabled"
+      private_endpoint_network_policies_enabled     = false
+      enforce_private_link_service_network_policies = true
+      private_link_service_network_policies_enabled = true
+      route_table_id                                = null
+      nat_gateway_id                                = null
+      nsg_rules                                     = []
+      delegations                                   = []
     }
     dns-inbound = {
-      address_prefixes = [var.dns_inbound_subnet_cidr]
-      nsg_rules        = []
+      address_prefixes                              = [var.dns_inbound_subnet_cidr]
+      service_endpoints                             = []
+      private_endpoint_network_policies             = null
+      private_endpoint_network_policies_enabled     = true
+      enforce_private_link_service_network_policies = true
+      private_link_service_network_policies_enabled = true
+      route_table_id                                = null
+      nat_gateway_id                                = null
+      nsg_rules                                     = []
+      delegations                                   = []
     }
     dns-outbound = {
-      address_prefixes = [var.dns_outbound_subnet_cidr]
-      nsg_rules        = []
+      address_prefixes                              = [var.dns_outbound_subnet_cidr]
+      service_endpoints                             = []
+      private_endpoint_network_policies             = null
+      private_endpoint_network_policies_enabled     = true
+      enforce_private_link_service_network_policies = true
+      private_link_service_network_policies_enabled = true
+      route_table_id                                = null
+      nat_gateway_id                                = null
+      nsg_rules                                     = []
+      delegations                                   = []
     }
   }
 }
@@ -36,7 +83,7 @@ module "network" {
   address_space           = var.address_space
   dns_servers             = var.dns_servers
   ddos_protection_plan_id = var.ddos_protection_plan_id
-  subnets                 = var.subnets == null ? local.default_subnets : var.subnets
+  subnets                 = length(var.subnets) == 0 ? local.default_subnets : var.subnets
   tags                    = var.tags
 }
 
