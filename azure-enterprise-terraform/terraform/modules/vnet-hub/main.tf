@@ -36,15 +36,7 @@ locals {
     })
   })
 
-  selected_subnet_names = length(var.subnets) == 0 ? keys(local.default_subnets) : keys(var.subnets)
-
-  selected_subnets = tomap({
-    for subnet_name in local.selected_subnet_names :
-    subnet_name => merge(
-      lookup(local.default_subnets, subnet_name, local.subnet_defaults),
-      lookup(var.subnets, subnet_name, local.subnet_defaults)
-    )
-  })
+  selected_subnets = length(var.subnets) == 0 ? local.default_subnets : tomap(var.subnets)
 
   effective_subnets = tomap({
     for subnet_name, subnet in local.selected_subnets :
