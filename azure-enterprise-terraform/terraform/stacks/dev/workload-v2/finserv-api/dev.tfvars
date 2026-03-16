@@ -39,6 +39,18 @@ connectivity_state_subscription_id  = "65ac2b14-e13a-40a0-bb50-93359232816e"
 management_state_subscription_id    = "65ac2b14-e13a-40a0-bb50-93359232816e"
 identity_state_subscription_id      = "65ac2b14-e13a-40a0-bb50-93359232816e"
 
+# Demo-cost override:
+# S1 is a lower-cost App Service plan choice than EP1 while keeping the
+# current dedicated-plan deployment model. For a stricter enterprise shape,
+# move this back to an Elastic Premium SKU later.
+service_plan_sku = "S1"
+
+# Demo-cost override:
+# Disable the more expensive optional services in the personal test
+# subscription. Re-enable for a fuller enterprise-aligned workload shape.
+enable_service_bus       = false
+enable_app_configuration = false
+
 enable_apim               = false
 enable_sql                = false
 enable_container_registry = false
