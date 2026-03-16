@@ -4,6 +4,8 @@ This directory is the authoritative infrastructure entry point for the repo. It 
 
 For the assessment framework, remediation-vs-rebuild guidance, official Azure and Terraform references, and a review of how this repo currently aligns with those patterns, see [`RECOMMENDATIONS.md`](./RECOMMENDATIONS.md).
 
+For a stack-by-stack explanation of the active v2 enterprise pattern, see [`terraform/README-v2.md`](./terraform/README-v2.md).
+
 ## Goals
 
 - Split infrastructure by blast radius and operating model, not by convenience.
