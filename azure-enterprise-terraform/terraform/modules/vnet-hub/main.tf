@@ -41,8 +41,8 @@ locals {
   selected_subnets = tomap({
     for subnet_name in local.selected_subnet_names :
     subnet_name => merge(
-      lookup(local.default_subnets, subnet_name, {}),
-      lookup(var.subnets, subnet_name, {})
+      lookup(local.default_subnets, subnet_name, local.subnet_defaults),
+      lookup(var.subnets, subnet_name, local.subnet_defaults)
     )
   })
 
