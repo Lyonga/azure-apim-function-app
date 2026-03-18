@@ -2,86 +2,110 @@
 
 ## Purpose
 
-This root owns the shared Azure Policy definitions, policy initiatives, and
-management group assignments for the landing zone.
+This stack defines and assigns the shared Azure Policy controls for the landing
+zone pattern.
 
-It is the main governance enforcement layer in the repo. The other stacks do
-not recreate these rules locally; they inherit them through management group
-scope.
+It is the main governance enforcement layer in the repository.
 
 For the broader design rationale, see `terraform/README-v2.md`.
 
+## Why This Stack Exists
+
+- Governance rules should be defined once and applied consistently.
+- Platform and workload stacks should inherit guardrails instead of trying to
+  rebuild them locally.
+- Central policy assignments make the enterprise pattern easier to scale across
+  more subscriptions and landing zones.
+
+## What This Stack Owns
+
+- custom policy definitions
+- policy set definitions (initiatives)
+- management-group policy assignments
+
+Its real output is governance behavior, not just Terraform outputs.
+
+## What It Reads From
+
+- `global/management-groups` remote state
+  - Uses management group IDs so it can assign policy at the correct scope.
+- direct governance inputs
+  - Used for settings like allowed locations, required tags, and organization
+    naming.
+
+## Main Inputs
+
+- `allowed_locations`
+  - Controls where teams are allowed to deploy resources.
+  - This is one of the simplest and most effective guardrails to scale
+    centrally.
+- `required_tags`
+  - Forces a minimum metadata standard across subscriptions and resource groups.
+  - This supports cost reporting, ownership, and operational support.
+- management group IDs
+  - Tell the stack which branch should receive each initiative.
+
 ## What This Stack Does
 
-- reads management group IDs from `global/management-groups` remote state
-- validates that required management group branches exist before planning
-- creates reusable custom policy definitions, including:
-  - allowed locations
-  - required tags
-  - deny public IPs
-  - deny public network access for storage, Key Vault, Service Bus, App
-    Configuration, SQL, and App Service workloads
-- composes policy set definitions for:
-  - platform foundation
-  - landing zone baseline
-- assigns those initiatives at the correct management group scope:
-  - platform
-  - prod
-  - nonprod
+- reads management group IDs from `global/management-groups`
+- validates that the expected hierarchy exists
+- defines reusable custom policies
+- groups those policies into initiatives
+- assigns initiatives to the correct management group branches
 
-## What It Consumes
+Examples of controls in this stack include:
 
-- `management_group_ids` from `global/management-groups`
-- `root_management_group_id`
-- policy-specific variables such as:
-  - `allowed_locations`
-  - `required_tags`
-  - organization naming prefixes
+- allowed locations
+- required tags
+- private networking enforcement
+- public IP restrictions
+- service-specific network guardrails
 
-## Child Modules And Resources
+## What Other Stacks Use From It
 
-This root mainly uses direct AzureRM policy resources:
+Every platform and workload stack uses this stack indirectly through policy
+inheritance.
+
+In practice this means:
+
+- platform stacks are evaluated against platform guardrails
+- workload stacks are evaluated against landing-zone guardrails
+- engineers can trust that common controls are already in place before they
+  extend the pattern
+
+## Main Building Blocks
 
 - `azurerm_policy_definition`
+  - Defines reusable custom policies.
 - `azurerm_policy_set_definition`
+  - Groups policies into initiatives that are easier to assign and manage.
 - `azurerm_management_group_policy_assignment`
+  - Applies the initiatives at the correct management group scope.
 - `terraform_data.dependency_guard`
-
-There is no child module abstraction here because the policy resources
-themselves are the main asset being authored.
-
-## What It Serves To Other Stacks
-
-This root does not usually serve downstream stacks through a large output
-surface. Its main effect is governance inheritance.
-
-It exposes:
-
-- `policy_set_ids`
-  - useful if other stacks or reporting tools need to reference the initiative
-    IDs
-- `management_group_ids`
-  - echoed from the consumed remote state for convenience
-
-Its real value is that all platform and workload stacks are evaluated against
-these assignments at deploy time.
+  - Prevents plans when prerequisite management groups do not exist yet.
 
 ## Code Map
 
-- `main.tf`: definitions, initiatives, assignments, dependency guard
-- `outputs.tf`: initiative IDs and referenced management group IDs
-- `global.auto.tfvars`: governance parameter values for the tenant
+- `main.tf`
+  - Defines policy resources and assignments.
+- `outputs.tf`
+  - Publishes initiative IDs and referenced management group IDs.
+- `global.auto.tfvars`
+  - Supplies governance settings such as locations and required tags.
 
 ## How To Extend It
 
-- add new policy definitions at the landing-zone or root scope depending on
-  where reuse is needed
-- add new initiative members instead of scattering one-off assignments
-- keep definitions and assignments in the same root only when their lifecycle is
-  intentionally coupled
+- Add new policy definitions when you introduce new enterprise controls.
+- Prefer adding policies to initiatives instead of scattering one-off
+  assignments.
+- Keep tenant-wide and management-group-wide enforcement here, not in workload
+  stacks.
 
-## Best-Practice Context
+## Best-Practice Notes
 
-This root follows the standard pattern of defining reusable governance controls
-at higher scope and assigning them to the child scopes that should inherit them.
-That is stronger than embedding enforcement logic inside workload stacks.
+This is the right enterprise pattern because policy should be owned centrally
+and inherited downward.
+
+When policy logic is embedded inside workload stacks, governance becomes
+inconsistent and much harder to review. This stack avoids that by making policy
+part of the shared control plane.

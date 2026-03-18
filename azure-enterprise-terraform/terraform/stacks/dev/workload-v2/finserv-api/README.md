@@ -2,137 +2,166 @@
 
 ## Purpose
 
-This stack is the application landing zone for the sample FinServ API workload.
+This stack is the reference workload landing zone for the `finserv-api`
+application.
 
-It is the main example of how a workload stack consumes global governance and
-platform-v2 shared services while still owning its workload-local resources.
+It shows how a workload should consume global governance and shared platform
+services while still owning its own workload-local resources.
 
 For the broader design rationale, see `terraform/README-v2.md`.
 
-## What This Stack Does
+## Why This Stack Exists
 
-- optionally validates its workload subscription against the global
-  subscriptions catalog
-- reads connectivity state for hub VNet and private DNS information
-- reads management state for the shared Log Analytics workspace
-- optionally reads identity state for shared identities and the shared CMK
-- creates the workload resource group
-- creates the spoke VNet and workload subnets
-- peers the spoke back to the platform hub
-- links the spoke to the central private DNS zones
-- creates Application Insights on top of the shared workspace
-- creates the workload storage account
-- creates the workload Key Vault
-- optionally creates App Configuration, Service Bus, SQL, ACR, Function App,
-  APIM, and Azure DevOps resources
-- creates private endpoints for the services that need them
-- optionally creates a low-cost demo Windows VM for validating private access
-  and managed identity patterns
+- Workload teams need a clear example of how to build a new landing zone on top
+  of the platform pattern.
+- Applications should own their own resource group, spoke network, and
+  workload-local services.
+- Shared services such as hub connectivity, monitoring, and shared identities
+  should be consumed, not recreated.
 
-## What It Consumes
+## What This Stack Owns
+
+- the workload resource group
+- the workload spoke VNet and subnets
+- workload-local NSGs and peering
+- workload-local application services such as storage, Key Vault, and optional
+  service modules
+- private endpoints for workload services
+- workload-local RBAC and diagnostics wiring
+
+## What It Reads From
 
 - `platform-v2/connectivity` remote state
-  - connectivity RG name
-  - hub VNet ID and name
-  - private DNS zone IDs and names
+  - Uses hub VNet and Private DNS information.
 - `platform-v2/management` remote state
-  - management RG name
-  - shared Log Analytics workspace ID
+  - Uses the shared Log Analytics workspace.
 - optional `platform-v2/identity` remote state
-  - shared identity IDs
-  - shared identity client IDs
-  - shared identity principal IDs
-  - shared services CMK key ID
+  - Uses shared identities and the shared CMK when enabled.
 - optional `global/subscriptions` remote state
-  - subscription catalog validation
+  - Used for subscription validation.
 
-## Child Modules And Resources
+## Main Inputs
 
-Core composition:
-
-- `module "tags"`
-- `module "resource_group"`
-- `module "spoke_network"`
-- `module "hub_to_spoke_peering"`
-- `azurerm_private_dns_zone_virtual_network_link.spoke_links`
-- `azurerm_application_insights.this`
-- `module "storage_account"`
-- `module "key_vault"`
-- `module "role_assignments"`
-
-Optional workload services:
-
-- `module "app_identity"`
-- `module "shared_services_cmk"`
-- `module "app_configuration"`
-- `module "service_bus"`
-- `module "sql_database"`
-- `module "container_registry"`
-- `module "function_app"`
-- `module "api_management"`
-
-Private connectivity helpers:
-
-- `module "storage_private_endpoints"`
-- `module "key_vault_private_endpoint"`
-- `module "app_configuration_private_endpoint"`
-- `module "service_bus_private_endpoint"`
-- `module "sql_private_endpoint"`
-- `module "function_private_endpoint"`
-
-Validation/demo helpers:
-
-- `terraform_data.dependency_guard`
-- `terraform_data.demo_windows_vm_password_guard`
-- `module "demo_windows_vm"`
-
-## What It Serves To Other Stacks
-
-This stack is usually the consumer edge of the platform rather than a shared
-provider, but it does publish useful outputs for app delivery and operations:
-
-- `resource_group_name`
 - `subscription_id`
-- `spoke_vnet_id`
-- `key_vault_uri`
-- `storage_account_name`
-- `function_app_name`
-- `app_configuration_endpoint`
-- `service_bus_namespace`
-- `sql_server_name`
-- `api_management_name`
-- effective workload identity IDs and principals
-- optional demo VM details
+  - Makes the workload subscription explicit and auditable.
+- `location`
+  - Defines where the workload landing zone lives.
+- `workload_resource_group_name`
+  - Gives the workload its own clear resource boundary.
+- `spoke_vnet_name` and `spoke_address_space`
+  - Define the spoke network that connects the app to the platform hub.
+- service-name inputs
+  - Keep storage, Key Vault, SQL, APIM, and other workload resources consistent
+    and readable.
+- feature toggles such as `enable_service_bus`, `enable_sql`, `enable_function_app`
+  - Let the team grow the landing zone gradually without forcing every service
+    to be deployed at once.
+- remote-state backend settings
+  - Tell the stack where to find shared platform outputs.
 
-Typical downstream consumers:
+## What This Stack Does
 
-- deployment pipelines
-- application configuration or deployment automation
-- ad hoc validation or operator scripts
+- validates the workload subscription against the central catalog when enabled
+- reads shared platform state
+- creates the workload resource group
+- creates the spoke VNet and workload subnets
+- peers the spoke back to the hub
+- links the spoke to the shared Private DNS zones
+- creates Application Insights on top of the shared workspace
+- creates the workload storage account and Key Vault
+- optionally creates App Configuration, Service Bus, SQL, ACR, Function App,
+  APIM, and Azure DevOps resources
+- creates private endpoints for services that require private access
+- optionally creates a low-cost Windows validation VM for testing private
+  networking and managed identity access
+
+## What Other Stacks Use From It
+
+This stack is usually the consumer edge of the pattern rather than a shared
+provider, but its outputs are still useful.
+
+Typical consumers include:
+
+- application deployment pipelines
+- release automation
+- operator and validation scripts
+
+Common outputs from this stack include:
+
+- resource group name
+- spoke VNet ID
+- workload Key Vault URI
+- storage account name
+- optional service names such as Function App, Service Bus, SQL, or APIM
+
+## Main Building Blocks
+
+Core platform-consumption blocks:
+
+- tags
+- resource group
+- spoke network
+- hub peering
+- shared Private DNS links
+- Application Insights
+- storage account
+- Key Vault
+- role assignments
+
+Optional workload service blocks:
+
+- App Configuration
+- Service Bus
+- SQL
+- container registry
+- Function App
+- API Management
+- Azure DevOps helpers
+
+Private connectivity blocks:
+
+- storage private endpoints
+- Key Vault private endpoint
+- service-specific private endpoints for optional services
+
+Validation helpers:
+
+- dependency guards
+- optional Windows validation VM
 
 ## Code Map
 
-- `data.tf`: remote-state consumption and dependency guards
-- `locals.tf`: subnet model, role-assignment maps, effective identity logic
-- `main.tf`: workload composition
-- `outputs.tf`: app-facing and operator-facing outputs
-- `dev.tfvars`: the concrete dev landing zone configuration
+- `data.tf`
+  - Reads shared platform state and enforces dependency checks.
+- `locals.tf`
+  - Defines subnet layout, role-assignment maps, and effective identity logic.
+- `main.tf`
+  - Composes the workload landing zone.
+- `outputs.tf`
+  - Publishes outputs used by deployment automation and operators.
+- `dev.tfvars`
+  - Holds the current reference configuration for this environment.
 
 ## How To Extend It
 
-- add more workload service modules behind clear feature flags
-- publish any new shared dependency requirements through platform stack outputs
-  instead of hardcoding platform resource IDs here
-- keep shared services in platform-v2 roots and keep app-local resources here
-- prefer managed identities and private endpoints over embedded secrets and
-  public networking
+- Use this stack as the pattern for new workload roots.
+- Add new workload service modules behind clear feature flags.
+- Keep shared services in platform stacks unless they are truly workload-local.
+- Publish new shared dependencies from platform stacks instead of hardcoding
+  platform resource IDs here.
+- Prefer managed identities and private networking over public access and
+  embedded secrets.
 
-## Best-Practice Context
+## Best-Practice Notes
 
-This stack shows the intended v2 workload model:
+This stack is the clearest example of how teams should grow the pattern across
+the organization.
 
-- the workload owns its own RG and spoke
-- shared connectivity comes from the platform connectivity plane
-- shared observability comes from the management plane
-- shared identities and CMKs come from the identity plane
-- governance is inherited from the global layer rather than recreated here
+The key idea is simple:
+
+- governance is inherited from the global layer
+- shared services come from the platform layer
+- workload-specific resources stay in the workload layer
+
+That split keeps ownership clear and makes it much easier for onboarded
+engineers to know where new code should go.

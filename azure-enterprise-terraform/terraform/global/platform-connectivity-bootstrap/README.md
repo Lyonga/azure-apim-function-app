@@ -2,34 +2,41 @@
 
 ## Purpose
 
-This directory is reserved for a future global connectivity bootstrap layer
-above the environment-scoped `platform-v2/connectivity` stacks.
+This directory is reserved for a future connectivity bootstrap layer above the
+environment-scoped `platform-v2/connectivity` stacks.
 
-It is the place to put shared corporate network constructs when multiple
-environments or landing zones consume the same upper-tier connectivity plane.
+Use it only when network services are shared above the environment level.
 
 ## Current State
 
-- documentation-only
-- no active Terraform root in this directory today
+- documentation only
+- no active Terraform root today
 
-## Intended Responsibilities
+## Why This Layer Would Exist
 
-If activated, this root would typically own services such as:
+- Some organizations have a corporate network plane that many environments
+  consume.
+- Shared edge, transit, or top-level DNS services may need their own lifecycle.
+- Keeping those constructs here prevents environment connectivity stacks from
+  owning resources that are larger than their scope.
 
+## What It Would Own
+
+Examples of good candidates:
+
+- top-level routing or transit constructs
 - globally shared DNS forwarding foundations
-- corporate edge or transit connectivity constructs
-- shared virtual WAN shells or top-level routing assets
-- early bootstrap network resources that multiple environment hubs depend on
+- shared virtual WAN shells
+- early bootstrap network resources required by many environment hubs
 
-## Relationship To Other Stacks
+## What Would Use It
 
-- would serve environment `platform-v2/connectivity` stacks
-- would sit below `global/*` governance and above environment platform stacks
-- should not own workload spokes directly
+- `platform-v2/connectivity` stacks in each environment
+- any future shared network-control stacks above a single environment
 
-## Best-Practice Context
+## When Not To Use It
 
-Only use this layer if connectivity is truly shared above environment scope.
-Otherwise keep hub networking inside the environment platform boundary so
-ownership and routing changes remain easier to reason about.
+Do not use this layer for ordinary hub networking or workload spokes.
+
+If the resource is mainly serving one environment platform, it should stay in
+that environment’s `platform-v2/connectivity` stack.

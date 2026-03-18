@@ -1,10 +1,28 @@
-# Test Connectivity Placeholder
+# Test Platform V2 Connectivity Placeholder
 
-Future home of the `test` hub/connectivity root.
+## Purpose
 
-Expected subscription role:
+This folder is the future test shared connectivity stack.
 
-- platform or dedicated connectivity subscription: `<replace-with-test-platform-or-connectivity-subscription-id>`
+When activated, it should own the test hub network and the test shared Private
+DNS foundation.
 
-Promote from `stacks/dev/platform-v2/connectivity` when test networking is
-ready.
+## Current State
+
+- placeholder only
+- no active Terraform root yet
+
+## What It Will Serve
+
+- test identity stack
+- test workload stacks
+
+## Expected Subscription Role
+
+- platform or dedicated connectivity subscription:
+  `<replace-with-test-platform-or-connectivity-subscription-id>`
+
+## Promotion Guidance
+
+Promote from `stacks/dev/platform-v2/connectivity` when the test environment is
+ready. Keep the same shared connectivity model.

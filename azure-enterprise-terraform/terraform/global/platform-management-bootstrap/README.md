@@ -2,35 +2,44 @@
 
 ## Purpose
 
-This directory is reserved for a future global management bootstrap layer above
-the environment-scoped `platform-v2/management` stacks.
+This directory is reserved for a future management bootstrap layer above the
+environment-scoped `platform-v2/management` stacks.
 
-It is the place to put truly shared corporate management services when they are
-not owned by one environment platform subscription.
+Use it only when management services are shared across multiple environments or
+multiple platform subscriptions.
 
 ## Current State
 
-- documentation-only
-- no active Terraform root in this directory today
+- documentation only
+- no active Terraform root today
 
-## Intended Responsibilities
+## Why This Layer Would Exist
 
-If activated, this root would typically own services such as:
+- Some organizations need a higher-level management plane above individual
+  environment platforms.
+- Shared monitoring, automation, or diagnostic export services may need their
+  own lifecycle.
+- Keeping those services here avoids overloading an environment-specific
+  management stack.
 
-- centrally shared Log Analytics or SIEM ingestion foundations
+## What It Would Own
+
+Examples of good candidates:
+
+- shared Log Analytics or SIEM ingestion foundations
 - cross-environment action groups
-- tenant-wide diagnostic export patterns
-- shared automation, update, or monitoring primitives that sit above a single
-  environment
+- shared diagnostic export paths
+- tenant-wide or cross-environment automation primitives
 
-## Relationship To Other Stacks
+## What Would Use It
 
-- would serve environment `platform-v2/management` stacks
-- would sit below `global/*` governance and above environment platform stacks
-- should not own app-specific diagnostics or workload-local alerting
+- `platform-v2/management` stacks in each environment
+- any future shared operations stacks that sit above a single environment
 
-## Best-Practice Context
+## When Not To Use It
 
-Use this only when the management plane is genuinely shared above environment
-scope. Otherwise keep management services in the environment platform boundary
-where blast radius and ownership stay clearer.
+Do not move services here just because they are important.
+
+If a capability clearly belongs to one environment platform, keep it in that
+environment’s `platform-v2/management` stack. This layer should stay small and
+only hold truly shared management services.

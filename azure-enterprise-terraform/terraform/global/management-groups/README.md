@@ -2,71 +2,104 @@
 
 ## Purpose
 
-This root owns the Azure management group hierarchy for the landing zone.
+This stack creates the Azure management group hierarchy for the landing zone
+pattern.
 
-It sits above every environment and workload stack and gives policy and RBAC a
-stable inheritance structure. In this repo, it is the bridge between the
-logical subscription catalog in `global/subscriptions` and the real management
-group layout used by downstream governance stacks.
+It is the structure that governance stacks use to apply policy and RBAC at the
+right scope.
 
 For the broader design rationale, see `terraform/README-v2.md`.
 
+## Why This Stack Exists
+
+- Azure Policy and high-scope RBAC work best when subscriptions are organized
+  under a clear management group tree.
+- Platform and workload subscriptions should inherit governance from a shared
+  structure instead of being configured one by one.
+- A stable management group hierarchy gives the rest of the project a common
+  operating model.
+
+## What This Stack Owns
+
+- the management group hierarchy
+- subscription-to-management-group associations
+
+This is a tenant-level governance stack. It is not an environment stack.
+
+## What It Reads From
+
+- `global/subscriptions` remote state
+  - Uses the central subscription catalog to determine which subscriptions
+    belong in which management group.
+- direct variables
+  - Used for organization naming and root management group settings.
+
+## Main Inputs
+
+- `root_management_group_id`
+  - The tenant root or parent management group under which this hierarchy is
+    created.
+- `organization_prefix`
+  - Keeps management group names consistent across the estate.
+- `organization_display_name`
+  - Makes the hierarchy readable in Azure.
+- `use_subscriptions_state`
+  - Controls whether the stack should trust the remote catalog from
+    `global/subscriptions`.
+- `subscriptions_by_group`
+  - Optional direct input for subscription placement if remote state is not
+    used.
+
 ## What This Stack Does
 
-- reads subscription placement metadata from `global/subscriptions` remote state
-- merges that state with any directly supplied `subscriptions_by_group` values
-- validates that the subscriptions catalog has already been applied
-- creates the management group hierarchy through the shared
+- reads the subscription placement model from `global/subscriptions`
+- validates that the subscription catalog exists before planning
+- creates the management group tree through the shared
   `modules/management_groups` module
-- associates existing subscription IDs to the correct management groups
+- attaches existing subscriptions to the correct management groups
 
-In the active demo, this hierarchy includes the shared platform and landing-zone
-branches, while connectivity, management, and identity still deploy into the
-same platform subscription.
+## What Other Stacks Use From It
 
-## What It Consumes
+- `global/policy`
+  - Uses management group IDs to assign policy at the correct branches.
+- `global/role-assignments`
+  - Uses management group IDs to apply high-scope RBAC.
+- future governance stacks
+  - Can target the same hierarchy without rebuilding it.
 
-- `var.root_management_group_id`
-- `var.organization_prefix`
-- `var.organization_display_name`
-- `var.use_subscriptions_state`
-- the `subscriptions_by_group` output from `global/subscriptions`
+This stack is one of the main foundations for the rest of the governance layer.
 
-## Child Modules And Resources
+## Main Building Blocks
 
 - `module "management_groups"`
-  - creates the management group tree
-  - attaches subscriptions to their target management groups
+  - Creates the hierarchy and attaches subscriptions.
 - `terraform_data.dependency_guard`
-  - stops plans if the subscriptions catalog has not been applied yet
-
-## What It Serves To Other Stacks
-
-This root exposes:
-
-- `management_group_ids`
-  - consumed by `global/policy`
-  - consumed by `global/role-assignments`
-- `root_management_group_id`
-  - reused by `global/policy`
-- `subscriptions_by_group`
-  - records the effective placement used for the hierarchy
+  - Stops plans if the subscription catalog has not been applied yet.
 
 ## Code Map
 
-- `main.tf`: reads remote state, validates dependencies, creates the hierarchy
-- `outputs.tf`: publishes management group IDs and effective placement
-- `global.auto.tfvars`: supplies tenant and organization-specific settings
+- `main.tf`
+  - Reads the subscription catalog and creates the hierarchy.
+- `outputs.tf`
+  - Publishes management group IDs for downstream governance stacks.
+- `global.auto.tfvars`
+  - Supplies organization-specific hierarchy settings.
 
 ## How To Extend It
 
-- add new landing-zone branches in `modules/management_groups`
-- add new logical subscription roles in `global/subscriptions`
-- keep policy and RBAC aligned with any new management group keys you introduce
+- Add new branches when the organization needs new landing-zone types.
+- Keep management group keys aligned with the keys defined in
+  `global/subscriptions`.
+- When you add new branches, update policy and RBAC stacks so they use the new
+  structure.
 
-## Best-Practice Context
+## Best-Practice Notes
 
-This is the correct place for management group structure because management
-groups are tenant-scoped governance primitives, not environment resources.
-Centralizing them here matches the Azure Landing Zone guidance followed by the
-v2 pattern.
+This is the correct place for management groups because they are tenant-scoped
+governance primitives.
+
+Keeping management groups in a separate global stack makes it much easier to:
+
+- review governance changes separately from workload releases
+- apply policy and RBAC consistently
+- onboard new engineers who need to understand the control-plane model first

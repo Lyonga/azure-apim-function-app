@@ -1,10 +1,31 @@
-# Prod FinServ API Placeholder
+# Prod Workload V2 FinServ API Placeholder
 
-Future home of the `prod` workload deployment for `finserv-api`.
+## Purpose
 
-Expected subscription role:
+This folder is the future production workload landing zone for `finserv-api`.
 
-- prod workload subscription: `<replace-with-prod-workload-subscription-id>`
+When activated, it should follow the same workload-v2 pattern proven in `dev`,
+but with production subscriptions, naming, approvals, and service settings.
 
-Promote from `stacks/dev/workload-v2/finserv-api` when production shared-platform
-state is available.
+## Current State
+
+- placeholder only
+- no active Terraform root yet
+
+## What It Will Consume
+
+- production connectivity outputs
+- production management outputs
+- production identity outputs
+- shared global governance
+
+## Expected Subscription Role
+
+- production workload subscription:
+  `<replace-with-prod-workload-subscription-id>`
+
+## Promotion Guidance
+
+Promote from `stacks/dev/workload-v2/finserv-api` once the production platform
+stacks are active. Keep the same stack boundaries and only replace
+environment-specific values.

@@ -2,107 +2,123 @@
 
 ## Purpose
 
-This stack is the shared identity-services landing zone for the dev platform
+This stack is the shared identity-services landing zone for the `dev` platform
 plane.
 
-It owns reusable managed identities, the shared platform Key Vault, the shared
-customer-managed key, and the identity spoke networking that supports those
+It owns reusable managed identities, the shared Key Vault, the shared
+customer-managed key, and the identity spoke network that supports those
 services.
 
 For the broader design rationale, see `terraform/README-v2.md`.
 
+## Why This Stack Exists
+
+- Shared identities should not be recreated in every workload stack.
+- Shared keys and shared secrets need a lifecycle separate from any one
+  application.
+- Identity services often need private network access and should be treated as
+  platform assets.
+
+## What This Stack Owns
+
+- the identity resource group
+- the identity spoke VNet and subnets
+- shared Private DNS links into the platform connectivity plane
+- the shared Key Vault
+- reusable user-assigned managed identities
+- the shared customer-managed key
+- Key Vault private connectivity and diagnostics
+
+## What It Reads From
+
+- `platform-v2/connectivity` remote state
+  - Uses hub networking and Private DNS information.
+- `platform-v2/management` remote state
+  - Uses the shared Log Analytics workspace for diagnostics.
+- optional `global/subscriptions` remote state
+  - Used for subscription validation.
+
+## Main Inputs
+
+- `subscription_id`
+  - Makes the target subscription explicit and auditable.
+- `location`
+  - Defines where the shared identity services live.
+- `resource_group_name`
+  - Gives the identity plane a stable, separate resource boundary.
+- VNet and subnet inputs
+  - Define the identity spoke network that supports private access.
+- `key_vault_name`
+  - Names the shared Key Vault used by platform and workload consumers.
+- shared identity name inputs
+  - Define the reusable identities that downstream stacks can adopt.
+
 ## What This Stack Does
 
-- reads connectivity remote state to discover the hub VNet and shared private
-  DNS zones
-- reads management remote state to discover the shared Log Analytics workspace
-- optionally validates its explicit `subscription_id` against the central
-  subscription catalog
 - creates the identity resource group
-- creates the identity spoke VNet and its subnets
-- links that VNet into the shared private DNS zones
+- creates the identity spoke VNet
+- links that VNet into the central Private DNS zones
 - peers the identity spoke back to the hub
 - creates the shared Key Vault
 - creates reusable user-assigned managed identities
-- creates the shared CMK used by downstream services
-- assigns the Key Vault crypto role to those managed identities
+- creates the shared CMK
+- grants the required crypto permissions
 - creates the Key Vault private endpoint
-- sends Key Vault diagnostics to the management workspace
+- sends Key Vault diagnostics to the shared workspace
 
-## What It Consumes
+## What Other Stacks Use From It
 
-- `platform-v2/connectivity` remote state
-  - hub VNet IDs and names
-  - private DNS zone IDs and names
-  - connectivity resource group name
-- `platform-v2/management` remote state
-  - Log Analytics workspace ID
-  - management resource group name
-- optional `global/subscriptions` remote state for subscription validation
+- workload stacks
+  - Consume shared identities, the shared Key Vault, and the shared CMK.
+- platform automation
+  - Can use the shared identities and Key Vault for reusable platform tasks.
 
-## Child Modules And Resources
+This stack is the shared identity provider for the rest of the platform.
+
+## Main Building Blocks
 
 - `module "tags"`
 - `module "resource_group"`
 - `module "identity_network"`
-  - creates the identity spoke VNet through the shared spoke module
+  - Creates the spoke VNet for shared identity services.
 - `azurerm_private_dns_zone_virtual_network_link.identity_links`
-  - links the identity VNet into the shared private DNS zones
+  - Connects the identity VNet to the shared Private DNS zones.
 - `module "hub_to_identity_peering"`
-  - peers the identity spoke to the hub
+  - Connects the identity spoke back to the hub.
 - `module "key_vault"`
-  - shared private-by-default Key Vault
+  - Creates the shared private-by-default Key Vault.
 - `module "shared_identities"`
-  - reusable user-assigned managed identities
+  - Creates reusable user-assigned managed identities.
 - `module "shared_services_cmk"`
-  - creates the shared customer-managed key
+  - Creates the shared customer-managed key.
 - `module "role_assignments"`
-  - grants crypto access on the shared Key Vault
+  - Grants the required access to use the shared key.
 - `module "key_vault_private_endpoint"`
 - `module "key_vault_diagnostics"`
 
-## What It Serves To Other Stacks
-
-This stack is a provider of shared identity assets.
-
-It publishes:
-
-- `resource_group_name`
-- `vnet_id`
-- `vnet_name`
-- `subnet_ids`
-- `shared_services_key_vault_id`
-- `shared_services_key_vault_name`
-- `shared_services_key_vault_uri`
-- `shared_services_cmk_key_id`
-- `shared_identity_names`
-- `shared_identity_ids`
-- `shared_identity_client_ids`
-- `shared_identity_principal_ids`
-- `workload_runtime_identity_id`
-
-Primary consumer:
-
-- `workload-v2/finserv-api`
-
 ## Code Map
 
-- `catalog-validation.tf`: optional subscription-catalog validation
-- `main.tf`: identity networking, Key Vault, identities, CMK, diagnostics
-- `outputs.tf`: shared identity and key outputs
-- `dev.tfvars`: naming, address space, shared identity names
+- `catalog-validation.tf`
+  - Optional subscription catalog validation.
+- `main.tf`
+  - Creates the identity network, shared identities, Key Vault, and CMK.
+- `outputs.tf`
+  - Publishes shared identity and key outputs for downstream use.
+- `dev.tfvars`
+  - Supplies naming and address space choices for the environment.
 
 ## How To Extend It
 
-- add more reusable shared identities when multiple workloads need the same
-  access pattern
-- publish new shared secrets, keys, or certificates through the platform
-  Key Vault rather than duplicating them in workloads
-- keep app-specific identities inside the workload stack unless they are truly
-  shared
+- Add more shared identities when multiple workloads need the same access
+  pattern.
+- Keep app-specific identities in workload stacks unless they are truly shared.
+- Publish reusable keys, secrets, and certificates through this platform
+  Key Vault instead of duplicating them across workloads.
 
-## Best-Practice Context
+## Best-Practice Notes
 
-This is the right boundary for long-lived reusable identities and shared CMKs.
-Keeping them in a platform identity stack makes their lifecycle independent from
-any one workload and keeps RBAC cleaner.
+This is the right boundary for long-lived reusable identity assets.
+
+New engineers should think of this stack as the shared identity service layer
+for the environment, not as an application stack. That makes it much easier to
+decide what belongs here and what should stay workload-local.

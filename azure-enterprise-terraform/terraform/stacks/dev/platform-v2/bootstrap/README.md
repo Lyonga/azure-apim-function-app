@@ -2,35 +2,44 @@
 
 ## Purpose
 
-This directory is reserved for an optional environment bootstrap root that
-would run before the active `connectivity`, `management`, and `identity`
-stacks.
+This directory is reserved for an optional bootstrap layer that would run
+before the active `connectivity`, `management`, and `identity` stacks in the
+`dev` environment.
 
-It is where you would place environment-scoped prerequisites that are too early
-or too foundational to live naturally in one of the platform service stacks.
+It is for environment prerequisites that do not clearly belong to one platform
+stack yet.
 
 ## Current State
 
-- placeholder directory
-- no active Terraform root in this directory today
+- placeholder only
+- no active Terraform root today
 
-## Intended Responsibilities
+## Why This Layer Would Exist
 
-If you choose to activate this layer later, good candidates include:
+- Some prerequisites are shared by multiple platform stacks.
+- Keeping those prerequisites here can simplify dependency ordering.
+- It prevents early environment setup from being scattered across several
+  stacks.
+
+## What It Would Own
+
+Good candidates include:
 
 - provider-registration or subscription-readiness checks
 - precreated platform resource groups
-- environment-shared bootstrap storage or secrets handoff
-- early objects that multiple platform-v2 roots depend on at once
+- shared bootstrap storage
+- early environment-wide prerequisites used by multiple platform stacks
 
-## Relationship To Other Stacks
+## What Would Use It
 
-- would run before `platform-v2/connectivity`
-- would run before `platform-v2/management`
-- would run before `platform-v2/identity`
+- `platform-v2/connectivity`
+- `platform-v2/management`
+- `platform-v2/identity`
 
-## Best-Practice Context
+## When Not To Use It
 
-Keep this layer small. If a capability is clearly networking, management, or
-identity, it should usually live in the corresponding platform-v2 stack instead
-of being promoted into bootstrap.
+If a capability clearly belongs to networking, management, or identity, it
+should usually stay in that stack.
+
+This layer should remain small so it does not become a catch-all bucket for
+unrelated resources.

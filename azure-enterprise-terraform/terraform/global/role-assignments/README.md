@@ -2,70 +2,98 @@
 
 ## Purpose
 
-This root seeds high-scope Azure RBAC assignments for the landing zone.
+This stack seeds the high-scope Azure RBAC assignments for the landing zone
+pattern.
 
-It is for management group-scoped or other centrally managed access, not for
-application-local role bindings. Workload stacks should still create their own
-resource-group and resource-scoped RBAC where needed.
+It is for central platform and governance access, not for application-local
+permissions.
 
 For the broader design rationale, see `terraform/README-v2.md`.
 
+## Why This Stack Exists
+
+- High-scope roles should be managed separately from workload-local RBAC.
+- Platform teams need access before environment and workload stacks can run.
+- Central RBAC is easier to audit when it is kept in one place.
+
+## What This Stack Owns
+
+- management-group and other centrally scoped role assignments
+- the mapping between platform personas and Azure roles at high scope
+
+## What It Reads From
+
+- `global/management-groups` remote state
+  - Uses management group IDs for assignment scope.
+- direct principal ID inputs
+  - Used to tell the stack which Entra groups, service principals, or managed
+    identities should receive which roles.
+
+## Main Inputs
+
+- management group IDs
+  - Define where each assignment should land.
+- principal IDs
+  - Identify the groups or identities that need central access.
+- role mapping inputs
+  - Tell the stack which personas should get contributor, reader, or admin
+    rights.
+
 ## What This Stack Does
 
-- reads management group IDs from `global/management-groups` remote state
-- validates that the expected hierarchy exists
-- builds a normalized assignment map from the supplied principal IDs
-- creates RBAC assignments for roles such as:
-  - platform deployer contributor and user access administrator
-  - security reader
-  - nonprod workload deployer contributor
-  - prod workload reader
+- reads the management group hierarchy
+- validates that prerequisite branches exist
+- builds a normalized assignment map
+- creates the requested RBAC assignments only when the matching principal ID is
+  supplied
 
-Assignments are only created when the corresponding principal ID is supplied.
+Typical assignments in this stack are:
 
-## What It Consumes
+- platform deployer roles
+- security reader roles
+- shared nonprod workload operator roles
+- shared prod reader roles
 
-- `management_group_ids` from `global/management-groups`
-- principal IDs supplied through variables for platform and workload operator
-  personas
+## What Other Stacks Use From It
 
-## Child Modules And Resources
-
-- `module "role_assignments"`
-  - consumes the computed assignment map
-  - creates the RBAC resources
-- `terraform_data.dependency_guard`
-  - blocks plans when management group prerequisites are missing
-
-## What It Serves To Other Stacks
-
-This root mainly serves the estate operationally rather than through data
+This stack mostly serves the estate operationally rather than through data
 outputs.
 
-It exposes:
+Its main effect is that:
 
-- `assignment_ids`
-  - useful for auditability and troubleshooting
+- central deployers already have access before running platform stacks
+- central readers already have visibility across the estate
+- workload stacks do not need to bootstrap tenant-wide or management-group-wide
+  access themselves
 
-Its main runtime effect is that deployers and readers already have the required
-high-scope access before environment or workload stacks run.
+## Main Building Blocks
+
+- `module "role_assignments"`
+  - Creates the RBAC assignments from the computed map.
+- `terraform_data.dependency_guard`
+  - Stops planning if management group prerequisites are missing.
 
 ## Code Map
 
-- `main.tf`: remote state, dependency checks, assignment map construction
-- `outputs.tf`: assignment IDs
-- `global.auto.tfvars`: principal IDs and assignment inputs
+- `main.tf`
+  - Reads management group state and builds the assignment map.
+- `outputs.tf`
+  - Publishes assignment IDs for audit and troubleshooting.
+- `global.auto.tfvars`
+  - Supplies principal IDs and assignment settings.
 
 ## How To Extend It
 
-- add new centrally managed personas here
-- keep workload-specific access out of this root unless the scope is truly
-  global or management-group-wide
-- prefer management-group scope here and resource-group scope inside workload
-  stacks
+- Add new central personas here when the scope is truly management-group-wide
+  or broader.
+- Keep resource-group and resource-level RBAC in platform or workload stacks
+  unless the access must be shared centrally.
+- Review new assignments carefully because this stack has a large blast radius.
 
-## Best-Practice Context
+## Best-Practice Notes
 
-Separating high-scope RBAC from workload RBAC reduces blast radius and keeps
-privileged access management clearer. This is the right root for enterprise
-bootstrap identities and central reader roles.
+This separation is important.
+
+If high-scope RBAC and workload-local RBAC are mixed together, engineers have a
+hard time understanding who owns access and why. Keeping central assignments in
+this stack makes the access model much easier to explain and scale.

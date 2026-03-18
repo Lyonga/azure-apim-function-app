@@ -2,83 +2,109 @@
 
 ## Purpose
 
-This stack is the shared monitoring and operations layer for the dev platform
-plane.
+This stack is the shared monitoring and operations layer for the `dev`
+platform plane.
 
-It creates the common observability and recovery services that platform and
-workload stacks send telemetry into.
+It creates the common observability and recovery services that other platform
+and workload stacks send telemetry into.
 
 For the broader design rationale, see `terraform/README-v2.md`.
 
+## Why This Stack Exists
+
+- Monitoring and diagnostics should be consistent across the estate.
+- Platform teams need a standard place for logs, alerts, and recovery services.
+- Workload teams should not each invent their own management plane.
+
+## What This Stack Owns
+
+- the management resource group
+- the shared Log Analytics workspace
+- the diagnostics archive storage account
+- the operations action group
+- the Recovery Services vault
+- the subscription monitoring baseline
+
+## What It Reads From
+
+- direct environment inputs such as names, retention, and location
+- optional `global/subscriptions` remote state for subscription validation
+
+This stack does not need connectivity or identity state to stand up its core
+services.
+
+## Main Inputs
+
+- `subscription_id`
+  - Makes the management subscription explicit and supports validation.
+- `location`
+  - Defines where the shared management services live.
+- naming inputs
+  - Keep the workspace, storage, and action-group naming consistent.
+- retention and archive settings
+  - Control how long telemetry is kept and where it is stored.
+
 ## What This Stack Does
 
-- optionally validates its `subscription_id` against the central subscriptions
-  catalog
 - creates the management resource group
 - creates the shared Log Analytics workspace
 - creates the diagnostics archive storage account
-- optionally creates a Log Analytics storage insights connection
+- optionally creates a Log Analytics storage-insights connection
 - creates the operations action group
 - creates the Recovery Services vault
 - enables a monitoring baseline for subscription activity logs
 
-## What It Consumes
+## What Other Stacks Use From It
 
-- explicit naming, region, and tagging inputs
-- optional `global/subscriptions` remote state for subscription validation
+- `platform-v2/identity`
+  - Sends Key Vault diagnostics into the shared workspace.
+- `workload-v2/*`
+  - Send platform and workload telemetry into the shared management plane.
 
-This stack does not require connectivity or identity state to stand up its core
-services.
+This stack is the main shared destination for monitoring data in the
+environment.
 
-## Child Modules And Resources
+## Main Building Blocks
 
 - `module "tags"`
 - `module "resource_group"`
 - `module "workspace"`
-  - shared Log Analytics workspace
+  - Creates the shared Log Analytics workspace.
 - `module "diagnostics_archive"`
-  - private diagnostics storage account
+  - Creates archive storage for diagnostics.
 - `azurerm_log_analytics_storage_insights.diagnostics_archive`
-  - optional archive insight wiring
+  - Optionally connects the workspace to archive storage.
 - `module "action_group"`
-  - alert notification target
+  - Creates the shared alert target.
 - `module "recovery_services_vault"`
 - `module "monitoring_baseline"`
-  - subscription activity log baseline
-
-## What It Serves To Other Stacks
-
-This stack publishes shared management-plane values:
-
-- `resource_group_name`
-- `workspace_id`
-- `workspace_name`
-- `diagnostics_storage_account_id`
-- `action_group_id`
-- `recovery_services_vault_id`
-
-Consumers:
-
-- `platform-v2/identity`
-- `workload-v2/finserv-api`
+  - Enables the subscription activity-log baseline.
 
 ## Code Map
 
-- `data.tf`: optional subscription-catalog validation
-- `main.tf`: workspace, archive, alerts, recovery, monitoring baseline
-- `outputs.tf`: management-plane outputs for downstream stacks
-- `dev.tfvars`: management naming and retention choices
+- `data.tf`
+  - Optional subscription catalog validation.
+- `main.tf`
+  - Creates the shared management services.
+- `outputs.tf`
+  - Publishes workspace, storage, and alerting outputs.
+- `dev.tfvars`
+  - Supplies environment-specific settings such as names and retention.
 
 ## How To Extend It
 
-- add more shared diagnostics baselines here rather than scattering them across
-  workloads
-- add platform-wide action groups or alert rules that multiple stacks use
-- keep workload-local alerts inside the workload stack unless they are meant to
-  standardize across the estate
+- Add shared alert rules or diagnostics standards here if they apply to many
+  stacks.
+- Keep workload-specific alerts in workload stacks unless the organization
+  wants a standard rule for every landing zone.
+- Publish any shared management destination as an output so downstream stacks
+  can consume it cleanly.
 
-## Best-Practice Context
+## Best-Practice Notes
 
-This is the right place for environment-shared monitoring and diagnostics. It
-gives workloads one known management destination instead of many ad hoc
-workspaces and alerting models.
+This is the right place for environment-shared monitoring and operations
+services.
+
+It gives engineers one clear answer to an important onboarding question:
+"Where should platform and workload telemetry go?" In this pattern, it comes
+here.

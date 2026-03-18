@@ -2,73 +2,148 @@
 
 ## Purpose
 
-This root is the subscription catalog for the landing zone.
+This stack is the central subscription catalog for the landing zone pattern.
 
-It does not currently create subscriptions. Instead, it normalizes the logical
-subscription inventory, records where each subscription belongs in the
-management group tree, and exposes that catalog to other stacks through remote
-state.
+It does not currently create Azure subscriptions. Its job is to describe which
+subscriptions exist, what role each one plays, and which management group each
+subscription should live under.
 
 For the broader design rationale, see `terraform/README-v2.md`.
 
-## What This Stack Does
+## Why This Stack Exists
 
-- accepts `var.target_subscriptions` as the source of truth
-- normalizes each entry into a predictable object shape
-- trims whitespace from `existing_subscription_id`
-- defaults `subscription_display_name` to the map key when not provided
-- builds `subscription_catalog` as the normalized inventory
-- builds `subscriptions_by_group` as a reverse index of
-  `management_group_key => list(subscription_ids)`
+- It gives the project one source of truth for subscription IDs.
+- It keeps management group placement out of individual platform and workload
+  stacks.
+- It lets governance stacks target subscriptions consistently instead of
+  relying on hardcoded IDs in many places.
+- It gives new engineers one place to understand the subscription model before
+  reading the rest of the code.
 
-That reverse index is what downstream stacks use when they need to operate per
-management group instead of per individual subscription entry.
+## What This Stack Owns
 
-## What It Consumes
+This stack owns the subscription inventory only.
+
+It does not create Azure resources. It creates normalized locals and outputs
+that other stacks read through remote state.
+
+## What It Reads From
 
 - `var.target_subscriptions`
-  - one entry per logical landing-zone role
-  - each entry includes the target `management_group_key`
-  - each entry includes an existing subscription ID, or an empty placeholder
+  - This is the main input to the stack.
+  - Each entry describes one logical subscription role in the pattern.
+  - Each entry tells the stack which management group that subscription should
+    belong to.
 
-## Child Modules And Resources
+## Main Inputs
 
-This root is intentionally simple:
+- `target_subscriptions`
+  - The source of truth for the subscription catalog.
+  - Use this to add a new platform, workload, sandbox, or retired subscription
+    role.
+- `management_group_key`
+  - Tells downstream governance stacks where the subscription belongs in the
+    management group hierarchy.
+- `existing_subscription_id`
+  - The actual Azure subscription ID to attach.
+  - It is trimmed to avoid failures caused by accidental whitespace.
+- `subscription_display_name`
+  - Optional friendly name.
+  - If not supplied, the stack falls back to the map key so downstream code
+    still has a readable value.
 
-- no child modules
-- no Azure resources
-- locals plus outputs only
+## How The Locals Work
 
-That makes it safe to apply early and frequently.
+### `normalized_subscriptions`
 
-## What It Serves To Other Stacks
+This local cleans and standardizes the raw input.
 
-This root exposes:
+It makes sure downstream code can always expect:
 
-- `subscription_catalog`
-  - consumed by environment platform and workload stacks to validate that their
-    explicit `subscription_id` matches the central catalog
-- `subscriptions_by_group`
-  - consumed by `global/management-groups` to attach subscriptions to the right
-    management groups
+- a `management_group_key`
+- a trimmed `existing_subscription_id`
+- a `subscription_display_name`
+
+Why this matters:
+
+- governance and platform stacks should not have to re-validate subscription
+  input shape
+- small input issues, like trailing spaces, should be fixed once in a central
+  place
+
+### `subscription_catalog`
+
+This local is the normalized inventory that other stacks consume.
+
+Right now it mirrors `normalized_subscriptions`, but keeping it separate makes
+future extension easier. For example, you can later enrich the catalog with:
+
+- environment
+- cost center
+- owner
+- support team
+- business unit
+
+without changing the earlier normalization step.
+
+### `subscriptions_by_group`
+
+This local builds the reverse index that governance stacks need:
+
+- `management_group_key => list(subscription_ids)`
+
+Why this matters:
+
+- management groups attach subscriptions by group, not by arbitrary catalog key
+- policy and RBAC are often applied by management group branch
+- this makes it easy to loop per management group instead of manually building
+  lists in many places
+
+## What Other Stacks Use From It
+
+- `global/management-groups`
+  - Uses `subscriptions_by_group` to attach subscriptions to the correct
+    management groups.
+- `global/policy`
+  - Indirectly depends on this stack because policy assignments follow the
+    management group structure built from this catalog.
+- `global/role-assignments`
+  - Indirectly depends on this stack for the same reason.
+- `platform-v2/*` and `workload-v2/*`
+  - Can validate that their explicit `subscription_id` matches the central
+    subscription catalog.
+
+## Main Building Blocks
+
+- `locals`
+  - Normalize, enrich, and group subscription metadata.
+- `outputs`
+  - Publish the catalog and group index to downstream stacks.
+
+This stack is intentionally simple because it should be safe to apply early and
+often.
 
 ## Code Map
 
-- `main.tf`: normalization and grouping logic
-- `outputs.tf`: catalog and group-index outputs
-- `global.auto.tfvars`: defines the active subscription inventory
+- `main.tf`
+  - Builds the normalized catalog and management-group index.
+- `outputs.tf`
+  - Publishes the catalog for downstream stacks.
+- `global.auto.tfvars`
+  - Defines the active subscription inventory for the project.
 
 ## How To Extend It
 
-- add more metadata to each catalog entry, such as environment, cost center, or
-  owner
-- keep normalization separate from enrichment so downstream stacks continue to
-  receive a stable shape
-- if you later automate subscription creation, feed the created subscription IDs
-  back into this catalog before management group attachment
+- Add more metadata to each subscription entry when the organization grows.
+- Keep this stack focused on subscription inventory and placement.
+- If you later automate subscription creation, write the created subscription
+  IDs back into this catalog before attaching them to management groups.
 
-## Best-Practice Context
+## Best-Practice Notes
 
-This stack is effectively the inventory and placement layer for the estate. It
-keeps subscription targeting explicit and auditable instead of hiding those
-relationships in individual stack tfvars files.
+This is a strong enterprise pattern because subscription ownership and
+placement are explicit and auditable.
+
+Without this stack, subscription IDs tend to get scattered across platform and
+workload roots. That makes governance harder to scale and much harder for new
+engineers to understand.
