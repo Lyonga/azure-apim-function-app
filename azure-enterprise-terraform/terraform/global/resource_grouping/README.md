@@ -87,5 +87,31 @@ This is still an acceptable enterprise pattern when central RG ownership is the
 goal.
 
 The newer v2 pattern is usually better because it makes workload ownership more
-explicit. This stack is best understood as a legacy reference, not the default
-path for new landing zones.
+explicit.
+
+### Why The V2 "Stack Owns Its Resource Group" Pattern Is Usually Best
+
+- ownership is clearer
+- state and lifecycle stay together
+- there are fewer hidden dependencies between stacks
+- teams can add or remove landing zones without touching a central resource
+  group stack
+- blast radius is easier to reason about
+
+### When Centralizing Resource Group Creation Can Still Be The Better Choice
+
+- a central platform team must own all resource group lifecycle
+- resource groups need pre-applied locks, budgets, or special RBAC before any
+  workload code runs
+- the organization wants very strict centralized control over naming and
+  placement
+
+### Practical Recommendation
+
+- use the v2 pattern as the default for new platform and workload stacks
+- centralize standards through shared modules, tags, policy, and naming rules
+- only centralize resource group creation if the operating model explicitly
+  requires central ownership of resource group lifecycle
+
+This stack is best understood as a legacy reference, not the default path for
+new landing zones.

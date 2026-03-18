@@ -246,6 +246,21 @@ features.
 Keeping them in platform stacks gives every application team the same shared
 foundation and keeps app stacks focused on app concerns.
 
+### Hubs do not need to be global
+
+In this pattern, the hub network is treated as an environment platform asset.
+
+That means:
+
+- a shared hub per environment is a valid and strong enterprise pattern
+- one single global hub for every environment is not required
+- as the organization grows, hubs are often split further by region or security
+  boundary
+
+This is usually easier to operate than forcing all spokes in every environment
+through one global hub, especially in regulated environments where prod and
+nonprod often need different controls.
+
 ### Workloads own workload-local resources
 
 The workload layer should own:

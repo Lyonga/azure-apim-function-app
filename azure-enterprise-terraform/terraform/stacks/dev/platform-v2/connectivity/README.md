@@ -103,3 +103,34 @@ Keeping connectivity centralized makes it much easier for new engineers to see:
 - where shared routing lives
 - where private endpoint DNS is managed
 - which outputs workload stacks should depend on
+
+### Should The Hub VNet Be Global Or Per Environment?
+
+This pattern treats the hub as an environment platform asset, not as one
+single global hub for the entire company.
+
+That is a good enterprise pattern.
+
+Why this is usually the better default:
+
+- prod and nonprod often need different routing, inspection, and change
+  controls
+- different environments usually have different blast-radius requirements
+- teams can evolve one environment platform without changing every other
+  environment at the same time
+- hub resources are regional by nature, so organizations often end up with
+  multiple hubs anyway
+
+### Practical Recommendation
+
+- use a shared hub for each environment platform boundary
+- let workload spokes attach to the correct environment hub
+- split hubs further by region or security boundary when the organization grows
+- only use one very high-level shared global network plane when the operating
+  model truly requires shared transit or shared corporate edge services
+
+In other words:
+
+- one global hub for everything is not required
+- one shared hub per environment is a strong default
+- multiple hubs by region or security boundary is a common enterprise evolution
