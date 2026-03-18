@@ -134,3 +134,79 @@ In other words:
 - one global hub for everything is not required
 - one shared hub per environment is a strong default
 - multiple hubs by region or security boundary is a common enterprise evolution
+
+### On-Prem Connectivity Patterns
+
+When a company needs VPN or ExpressRoute connectivity from on-premises into
+Azure, the important design choice is the transit model.
+
+The company does not automatically need a different physical VPN or
+ExpressRoute design for every landing zone. The right answer depends on how
+the hubs are organized.
+
+#### Pattern 1. One Shared Connectivity Hub
+
+- on-prem connects once to a shared Azure hub
+- prod and nonprod spokes both use that hub gateway through peering and gateway
+  transit
+- this is the simplest model
+
+Why teams choose it:
+
+- less Azure gateway sprawl
+- simpler to understand
+- lower operational overhead
+
+Tradeoff:
+
+- prod and nonprod share more network blast radius
+
+#### Pattern 2. Separate Hubs For Prod And Nonprod
+
+- prod has its own hub and gateway path
+- nonprod has its own hub and gateway path
+- spokes attach only to the correct environment hub
+
+Why teams choose it:
+
+- stronger isolation
+- easier separation of routing, inspection, and change control
+- better fit for regulated environments
+
+Tradeoff:
+
+- more Azure gateway cost
+- more network operations complexity
+
+#### Pattern 3. Multiple Hubs With Shared Transit
+
+- each environment or region can still have its own hub
+- on-prem connectivity is handled through a higher shared transit design
+- in Azure, this is commonly done with Virtual WAN
+
+Why teams choose it:
+
+- supports large multi-region estates
+- avoids treating each environment as a totally separate one-off network edge
+- keeps hub separation while still providing enterprise transit
+
+Tradeoff:
+
+- more architecture and operations complexity than a single shared hub
+
+### Practical Recommendation For Financial Companies
+
+- small to mid-size estate:
+  - one shared connectivity hub can be acceptable if the security model allows
+    it
+- regulated prod and nonprod separation:
+  - separate prod and nonprod hubs is usually the safer choice
+- large multi-region estate:
+  - multiple hubs with a shared transit model is often the best answer
+
+So if the company does not want "a different VPN per environment", the usual
+enterprise answer is not to force every environment into one hub. The better
+answer is often:
+
+- one shared connectivity hub for simpler estates, or
+- multiple hubs with centralized transit for larger estates
