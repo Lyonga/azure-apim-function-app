@@ -1,0 +1,7 @@
+---
+validation_expected_linux_services:
+  - rsyslog
+  - chronyd
+validation_expected_windows_services:
+  - W32Time
+  - WinDefend

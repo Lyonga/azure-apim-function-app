@@ -1,0 +1,4 @@
+---
+- name: refresh linux environment proxy
+  ansible.builtin.debug:
+    msg: Linux proxy settings updated.

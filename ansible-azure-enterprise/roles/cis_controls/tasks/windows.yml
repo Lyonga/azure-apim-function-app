@@ -1,0 +1,11 @@
+---
+- name: Disable SMBv1 feature
+  ansible.windows.win_feature:
+    name: FS-SMB1
+    state: absent
+  when: cis_windows_disable_smb1
+
+- name: Ensure Guest account is disabled
+  ansible.windows.win_user:
+    name: Guest
+    account_disabled: true

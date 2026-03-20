@@ -1,0 +1,3 @@
+---
+java_package_linux: java-17-openjdk-headless
+java_home_linux: /usr/lib/jvm/jre

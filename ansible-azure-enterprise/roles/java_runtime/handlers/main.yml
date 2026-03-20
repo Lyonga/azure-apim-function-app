@@ -1,0 +1,4 @@
+---
+- name: java runtime installed
+  ansible.builtin.debug:
+    msg: Java runtime role completed.

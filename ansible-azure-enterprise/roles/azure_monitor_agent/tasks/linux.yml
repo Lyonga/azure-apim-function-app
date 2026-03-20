@@ -1,0 +1,14 @@
+---
+- name: Download Azure Monitor Agent package
+  ansible.builtin.get_url:
+    url: "{{ ama_linux_package_url }}"
+    dest: "{{ ama_installer_download_dir_linux }}/azuremonitoragent.rpm"
+    mode: '0644'
+
+- name: Install Azure Monitor Agent on RedHat family
+  ansible.builtin.yum:
+    name: "{{ ama_installer_download_dir_linux }}/azuremonitoragent.rpm"
+    state: present
+    disable_gpg_check: true
+  when: ansible_os_family == 'RedHat'
+  notify: restart ama linux

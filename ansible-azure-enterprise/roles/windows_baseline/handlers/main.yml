@@ -1,0 +1,5 @@
+---
+- name: restart windows time
+  ansible.windows.win_service:
+    name: W32Time
+    state: restarted

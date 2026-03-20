@@ -1,0 +1,34 @@
+---
+- name: Bootstrap Windows hosts
+  hosts: windows
+  gather_facts: true
+  vars_files:
+    - ../vars/global.yml
+    - ../vars/compliance.yml
+  roles:
+    - common_baseline
+    - cert_trust
+    - domain_join
+    - windows_baseline
+    - windows_hardening
+    - endpoint_proxy
+    - audit_logging
+    - azure_monitor_agent
+    - defender_for_endpoint
+    - backup_agent
+    - vulnerability_scanner
+    - service_accounts
+    - cis_controls
+    - dotnet_runtime
+    - sql_client_tools
+    - iis_baseline
+    - validation
+
+- name: Build Active Directory foundation on domain controller hosts
+  hosts: "windows:&role_domaincontroller"
+  gather_facts: true
+  vars_files:
+    - ../vars/global.yml
+    - ../vars/compliance.yml
+  roles:
+    - ad_foundation

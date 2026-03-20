@@ -1,0 +1,12 @@
+---
+- name: Ensure telnet server package is absent
+  ansible.builtin.package:
+    name: telnet-server
+    state: absent
+  when: cis_linux_remove_telnet_server
+
+- name: Ensure no world-writable files exist under /etc/cron.d
+  ansible.builtin.file:
+    path: /etc/cron.d
+    mode: '0700'
+    recurse: false

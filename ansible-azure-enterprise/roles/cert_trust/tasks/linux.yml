@@ -1,0 +1,14 @@
+---
+- name: Install corporate root CA on Linux
+  ansible.builtin.copy:
+    src: fincorp-root-ca.cer
+    dest: "{{ corp_root_ca_linux_dest }}"
+    mode: '0644'
+  notify: update ca trust linux
+
+- name: Install corporate intermediate CA on Linux
+  ansible.builtin.copy:
+    src: fincorp-intermediate-ca.cer
+    dest: "{{ corp_intermediate_ca_linux_dest }}"
+    mode: '0644'
+  notify: update ca trust linux

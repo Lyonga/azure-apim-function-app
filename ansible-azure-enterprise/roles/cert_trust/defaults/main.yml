@@ -1,0 +1,3 @@
+---
+cert_trust_manage_linux: true
+cert_trust_manage_windows: true

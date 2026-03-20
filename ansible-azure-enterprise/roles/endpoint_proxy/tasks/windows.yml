@@ -1,0 +1,5 @@
+---
+- name: Configure system proxy on Windows
+  ansible.windows.win_shell: |
+    netsh winhttp set proxy {{ proxy_url }} "{{ no_proxy_list | join(';') }}"
+  changed_when: false

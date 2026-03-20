@@ -1,0 +1,4 @@
+---
+nginx_listen_port: 443
+nginx_backend_upstream: 127.0.0.1:8080
+nginx_server_name: app.fincorp.local

@@ -1,0 +1,5 @@
+---
+- name: update ca trust linux
+  ansible.builtin.command: update-ca-trust extract
+  changed_when: true
+  when: ansible_os_family == 'RedHat'

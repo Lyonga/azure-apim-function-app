@@ -1,0 +1,11 @@
+---
+- name: Download Azure Monitor Agent MSI
+  ansible.windows.win_get_url:
+    url: '{{ ama_windows_package_url }}'
+    dest: '{{ ama_installer_download_dir_windows }}\AzureMonitorAgent.msi'
+
+- name: Install Azure Monitor Agent MSI
+  ansible.windows.win_package:
+    path: '{{ ama_installer_download_dir_windows }}\AzureMonitorAgent.msi'
+    state: present
+  notify: restart ama windows

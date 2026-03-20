@@ -1,0 +1,17 @@
+---
+- name: Install Java runtime on Linux
+  ansible.builtin.package:
+    name: "{{ java_package_linux }}"
+    state: present
+  when:
+    - linux_java_required | bool
+    - ansible_system == 'Linux'
+
+- name: Configure JAVA_HOME profile script
+  ansible.builtin.copy:
+    dest: /etc/profile.d/java.sh
+    mode: '0644'
+    content: 'export JAVA_HOME={{ java_home_linux }}'
+  when:
+    - linux_java_required | bool
+    - ansible_system == 'Linux'

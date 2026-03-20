@@ -1,0 +1,26 @@
+---
+- name: Create Linux service accounts
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    group: "{{ item.group | default(linux_admin_group) }}"
+    shell: "{{ item.shell | default('/sbin/nologin') }}"
+    password: "{{ service_account_passwords[item.name] | default(omit) }}"
+    create_home: false
+    state: present
+  loop: "{{ linux_service_accounts }}"
+  when:
+    - service_accounts_enabled
+    - ansible_system == 'Linux'
+
+- name: Create Windows local service accounts
+  ansible.windows.win_user:
+    name: "{{ item.name }}"
+    password: "{{ service_account_passwords[item.name] | default(windows_local_admin_password) }}"
+    groups: "{{ item.groups | default([windows_local_admin_group]) }}"
+    state: present
+    password_never_expires: true
+    user_cannot_change_password: true
+  loop: "{{ windows_service_accounts }}"
+  when:
+    - service_accounts_enabled
+    - ansible_os_family == 'Windows'

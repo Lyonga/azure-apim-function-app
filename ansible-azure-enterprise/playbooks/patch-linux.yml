@@ -1,0 +1,23 @@
+---
+- name: Patch Linux systems
+  hosts: linux
+  become: true
+  serial: 5
+  gather_facts: true
+  tasks:
+    - name: Update all packages on RedHat systems
+      ansible.builtin.yum:
+        name: "*"
+        state: latest
+      when: ansible_os_family == 'RedHat'
+
+    - name: Update all packages on Debian systems
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: dist
+      when: ansible_os_family == 'Debian'
+
+    - name: Reboot Linux host if required
+      ansible.builtin.reboot:
+        reboot_timeout: 1800
+      when: linux_reboot_after_patch | default(true)

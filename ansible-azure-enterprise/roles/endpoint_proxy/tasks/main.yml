@@ -1,0 +1,12 @@
+---
+- name: Include Linux proxy tasks
+  ansible.builtin.include_tasks: linux.yml
+  when:
+    - proxy_enabled
+    - ansible_system == 'Linux'
+
+- name: Include Windows proxy tasks
+  ansible.builtin.include_tasks: windows.yml
+  when:
+    - proxy_enabled
+    - ansible_os_family == 'Windows'

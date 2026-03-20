@@ -1,0 +1,81 @@
+---
+- name: Apply Linux production baseline
+  hosts: "linux:&env_prod"
+  become: true
+  gather_facts: true
+  serial: "{{ rolling_batch_linux }}"
+  max_fail_percentage: "{{ max_fail_pct }}"
+  vars_files:
+    - ../vars/global.yml
+    - ../vars/compliance.yml
+  pre_tasks:
+    - name: Abort if change freeze is active
+      ansible.builtin.assert:
+        that:
+          - not change_freeze | bool
+        fail_msg: Change freeze is active for this environment.
+  roles:
+    - common_baseline
+    - cert_trust
+    - linux_baseline
+    - linux_hardening
+    - endpoint_proxy
+    - audit_logging
+    - azure_monitor_agent
+    - defender_for_endpoint
+    - backup_agent
+    - vulnerability_scanner
+    - service_accounts
+    - cis_controls
+    - java_runtime
+    - sql_client_tools
+    - nginx_reverse_proxy
+    - validation
+
+- name: Apply Windows production baseline
+  hosts: "windows:&env_prod"
+  gather_facts: true
+  serial: "{{ rolling_batch_windows }}"
+  max_fail_percentage: "{{ max_fail_pct }}"
+  vars_files:
+    - ../vars/global.yml
+    - ../vars/compliance.yml
+  pre_tasks:
+    - name: Abort if change freeze is active
+      ansible.builtin.assert:
+        that:
+          - not change_freeze | bool
+        fail_msg: Change freeze is active for this environment.
+  roles:
+    - common_baseline
+    - cert_trust
+    - domain_join
+    - windows_baseline
+    - windows_hardening
+    - endpoint_proxy
+    - audit_logging
+    - azure_monitor_agent
+    - defender_for_endpoint
+    - backup_agent
+    - vulnerability_scanner
+    - service_accounts
+    - cis_controls
+    - dotnet_runtime
+    - sql_client_tools
+    - iis_baseline
+    - validation
+
+- name: Build Active Directory foundation on production domain controller hosts
+  hosts: "windows:&env_prod:&role_domaincontroller"
+  gather_facts: true
+  vars_files:
+    - ../vars/global.yml
+    - ../vars/compliance.yml
+  pre_tasks:
+    - name: Abort if change freeze is active
+      ansible.builtin.assert:
+        that:
+          - not change_freeze | bool
+        fail_msg: Change freeze is active for this environment.
+  roles:
+    - ad_foundation

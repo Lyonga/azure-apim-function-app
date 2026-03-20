@@ -1,0 +1,31 @@
+---
+- name: Install baseline Windows features
+  ansible.windows.win_feature:
+    name: "{{ windows_features_common }}"
+    state: present
+    include_management_tools: true
+
+- name: Install standard Windows packages via Chocolatey
+  chocolatey.chocolatey.win_chocolatey:
+    name: "{{ item.name }}"
+    state: present
+  loop: "{{ windows_installers_common }}"
+
+- name: Configure Windows timezone
+  ansible.windows.win_timezone:
+    timezone: "{{ windows_timezone }}"
+
+- name: Configure login banner caption
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+    name: legalnoticecaption
+    data: Authorized Access Only
+    type: string
+
+- name: Configure login banner text
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+    name: legalnoticetext
+    data: "{{ common_login_banner | replace('
+', ' ') }}"
+    type: string

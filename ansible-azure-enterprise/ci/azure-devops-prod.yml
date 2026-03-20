@@ -1,0 +1,27 @@
+trigger:
+  branches:
+    include:
+      - main
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - checkout: self
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.11'
+  - script: |
+      python -m pip install --upgrade pip
+      pip install ansible ansible-lint yamllint
+      ansible-galaxy collection install -r ansible-azure-enterprise/collections/requirements.yml
+    displayName: Install Ansible toolchain
+  - script: |
+      cd ansible-azure-enterprise
+      yamllint .
+      ansible-lint .
+    displayName: Lint repository

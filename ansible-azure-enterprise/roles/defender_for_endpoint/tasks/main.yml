@@ -1,0 +1,12 @@
+---
+- name: Include Linux Defender tasks
+  ansible.builtin.include_tasks: linux.yml
+  when:
+    - defender_enabled
+    - ansible_system == 'Linux'
+
+- name: Include Windows Defender tasks
+  ansible.builtin.include_tasks: windows.yml
+  when:
+    - defender_enabled
+    - ansible_os_family == 'Windows'

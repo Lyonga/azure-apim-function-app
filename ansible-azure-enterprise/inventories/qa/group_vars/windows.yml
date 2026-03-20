@@ -1,0 +1,20 @@
+---
+ansible_connection: "{{ windows_connection_plugin }}"
+ansible_psrp_protocol: https
+ansible_psrp_port: "{{ windows_psrp_port }}"
+ansible_psrp_auth: negotiate
+ansible_psrp_cert_validation: ignore
+ansible_shell_type: powershell
+windows_features_common:
+  - NET-Framework-45-Core
+  - RSAT-AD-PowerShell
+windows_timezone: Eastern Standard Time
+windows_enable_rdp: false
+windows_firewall_domain_profile_enabled: true
+windows_firewall_private_profile_enabled: true
+windows_firewall_public_profile_enabled: true
+windows_installers_common:
+  - name: 7zip
+  - name: notepadplusplus
+  - name: sysinternals
+  - name: microsoft-edge

@@ -1,0 +1,25 @@
+---
+- name: Bootstrap Linux hosts
+  hosts: linux
+  become: true
+  gather_facts: true
+  vars_files:
+    - ../vars/global.yml
+    - ../vars/compliance.yml
+  roles:
+    - common_baseline
+    - cert_trust
+    - linux_baseline
+    - linux_hardening
+    - endpoint_proxy
+    - audit_logging
+    - azure_monitor_agent
+    - defender_for_endpoint
+    - backup_agent
+    - vulnerability_scanner
+    - service_accounts
+    - cis_controls
+    - java_runtime
+    - sql_client_tools
+    - nginx_reverse_proxy
+    - validation

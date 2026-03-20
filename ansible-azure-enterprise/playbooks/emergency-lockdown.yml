@@ -1,0 +1,40 @@
+---
+- name: Emergency lockdown for public-facing Linux systems
+  hosts: "linux:&public_facing"
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Disable password authentication immediately
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: PasswordAuthentication no
+        backup: true
+      notify: restart sshd
+
+    - name: Restrict inbound ports using firewalld when available
+      ansible.posix.firewalld:
+        port: "{{ item }}/tcp"
+        permanent: true
+        state: disabled
+        immediate: true
+      loop:
+        - 80
+        - 3389
+      ignore_errors: true
+  handlers:
+    - name: restart sshd
+      ansible.builtin.service:
+        name: sshd
+        state: restarted
+
+- name: Emergency lockdown for public-facing Windows systems
+  hosts: "windows:&public_facing"
+  gather_facts: true
+  tasks:
+    - name: Disable RDP connections
+      ansible.windows.win_regedit:
+        path: HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server
+        name: fDenyTSConnections
+        data: 1
+        type: dword

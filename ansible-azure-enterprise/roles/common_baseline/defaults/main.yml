@@ -1,0 +1,6 @@
+---
+common_timezone_linux: UTC
+common_timezone_windows: UTC
+common_login_banner: |
+  Authorized access only.
+  This system is monitored and subject to audit.

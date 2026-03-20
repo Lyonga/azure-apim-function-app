@@ -1,0 +1,6 @@
+---
+- name: restart backup agent linux
+  ansible.builtin.service:
+    name: "{{ backup_agent_service_name_linux }}"
+    state: restarted
+  when: ansible_system == 'Linux'

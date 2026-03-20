@@ -1,0 +1,5 @@
+---
+- name: restart winrm
+  ansible.windows.win_service:
+    name: WinRM
+    state: restarted

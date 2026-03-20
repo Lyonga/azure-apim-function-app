@@ -1,0 +1,17 @@
+---
+- name: Download .NET hosting bundle
+  ansible.windows.win_get_url:
+    url: "{{ dotnet_hosting_bundle_url }}"
+    dest: C:\Temp\dotnet-hosting.exe
+  when:
+    - windows_dotnet_required | bool
+    - ansible_os_family == 'Windows'
+
+- name: Install .NET hosting bundle
+  ansible.windows.win_package:
+    path: C:\Temp\dotnet-hosting.exe
+    arguments: /quiet /norestart
+    state: present
+  when:
+    - windows_dotnet_required | bool
+    - ansible_os_family == 'Windows'

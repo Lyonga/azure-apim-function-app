@@ -1,0 +1,23 @@
+---
+baseline_packages_linux:
+  - curl
+  - jq
+  - unzip
+  - rsyslog
+  - chrony
+  - audit
+  - openssl
+  - ca-certificates
+  - python3-pip
+  - bind-utils
+  - nmap-ncat
+baseline_services_linux:
+  - rsyslog
+linux_disable_root_ssh: true
+linux_password_authentication: false
+linux_umask: "027"
+linux_auditd_enabled: true
+linux_fips_mode_required: false
+linux_open_ports_allowlist:
+  - 22
+  - 443

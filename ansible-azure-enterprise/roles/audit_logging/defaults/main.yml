@@ -1,0 +1,2 @@
+---
+audit_linux_rules_file: /etc/audit/rules.d/99-fincorp.rules

@@ -1,0 +1,12 @@
+---
+- name: restart ama linux
+  ansible.builtin.service:
+    name: "{{ ama_service_name_linux }}"
+    state: restarted
+  when: ansible_system == 'Linux'
+
+- name: restart ama windows
+  ansible.windows.win_service:
+    name: "{{ ama_service_name_windows }}"
+    state: restarted
+  when: ansible_os_family == 'Windows'

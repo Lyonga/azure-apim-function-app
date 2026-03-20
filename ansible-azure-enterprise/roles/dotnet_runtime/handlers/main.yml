@@ -1,0 +1,4 @@
+---
+- name: dotnet runtime installed
+  ansible.builtin.debug:
+    msg: Dotnet runtime role completed.

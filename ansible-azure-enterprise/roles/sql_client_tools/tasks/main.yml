@@ -1,0 +1,16 @@
+---
+- name: Install SQL client tools on Linux
+  ansible.builtin.package:
+    name: "{{ sqlcmd_package_linux }}"
+    state: present
+  when:
+    - sql_client_tools_enabled | bool
+    - ansible_system == 'Linux'
+
+- name: Install SQL client tools on Windows
+  ansible.windows.win_package:
+    path: "{{ sqlcmd_msi_windows }}"
+    state: present
+  when:
+    - sql_client_tools_enabled | bool
+    - ansible_os_family == 'Windows'

@@ -1,0 +1,6 @@
+---
+- name: restart defender windows
+  ansible.windows.win_service:
+    name: "{{ defender_windows_service_name }}"
+    state: restarted
+  when: ansible_os_family == 'Windows'

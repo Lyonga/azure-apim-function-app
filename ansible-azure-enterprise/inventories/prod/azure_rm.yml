@@ -1,0 +1,33 @@
+---
+plugin: azure.azcollection.azure_rm
+auth_source: auto
+include_vm_resource_groups:
+  - rg-fin-prod-shared
+  - rg-fin-prod-apps
+  - rg-fin-prod-data
+plain_host_names: true
+keyed_groups:
+  - key: tags.environment
+    prefix: env
+  - key: tags.application
+    prefix: app
+  - key: tags.role
+    prefix: role
+  - key: tags.osfamily
+    prefix: osfamily
+  - key: location
+    prefix: region
+conditional_groups:
+  linux: "'Linux' in os_disk.operating_system_type"
+  windows: "'Windows' in os_disk.operating_system_type"
+  pci_scope: "tags.compliance_scope | default('') == 'pci'"
+  public_facing: "tags.exposure | default('') == 'public'"
+hostvar_expressions:
+  ansible_host: private_ipv4_addresses[0] | default(public_ipv4_addresses[0])
+  private_ip: private_ipv4_addresses[0] | default('')
+  azure_rg: resource_group
+  azure_vm_name: name
+  azure_location: location
+exclude_host_filters:
+  - powerstate != 'running'
+  - tags.lifecycle | default('active') == 'decommissioned'

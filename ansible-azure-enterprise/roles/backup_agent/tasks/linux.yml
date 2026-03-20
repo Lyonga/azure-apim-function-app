@@ -1,0 +1,5 @@
+---
+- name: Install backup agent package
+  ansible.builtin.package:
+    name: fincorp-backup-agent
+    state: present

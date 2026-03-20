@@ -1,0 +1,29 @@
+---
+ad_foundation_enabled: false
+ad_foundation_install_dsc_module: true
+ad_foundation_create_default_ous: true
+ad_foundation_create_default_groups: true
+ad_foundation_domain_server: ""
+ad_foundation_group_scope: global
+ad_foundation_group_category: security
+ad_foundation_group_ou_name: Groups
+ad_foundation_ous:
+  - name: Staff
+    description: User accounts for staff members
+  - name: Admins
+    description: Administrative user accounts
+  - name: Guests
+    description: Restricted guest or external user accounts
+  - name: Servers
+    description: Server computer accounts and delegated administration
+  - name: Service Accounts
+    description: Managed and traditional service accounts
+ad_foundation_groups:
+  - name: Employees
+    description: Standard employee access group
+  - name: Guests
+    description: Guest user access group
+  - name: ServerAdmins
+    description: Delegated server administration group
+  - name: AppSupport
+    description: Application support access group

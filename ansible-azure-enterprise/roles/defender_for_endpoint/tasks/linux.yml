@@ -1,0 +1,11 @@
+---
+- name: Install Microsoft Defender package
+  ansible.builtin.package:
+    name: "{{ defender_linux_package_name }}"
+    state: present
+
+- name: Validate Defender health on Linux
+  ansible.builtin.command: mdatp health
+  register: mdatp_health
+  changed_when: false
+  failed_when: mdatp_health.rc != 0

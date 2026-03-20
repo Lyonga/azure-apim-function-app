@@ -1,0 +1,4 @@
+---
+- name: domain join completed
+  ansible.builtin.debug:
+    msg: Domain join completed successfully.

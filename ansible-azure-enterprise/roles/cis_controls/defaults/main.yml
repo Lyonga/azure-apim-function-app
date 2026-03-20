@@ -1,0 +1,3 @@
+---
+cis_linux_remove_telnet_server: true
+cis_windows_disable_smb1: true

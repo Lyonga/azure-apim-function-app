@@ -1,0 +1,3 @@
+---
+ama_installer_download_dir_linux: /tmp
+ama_installer_download_dir_windows: C:\Temp

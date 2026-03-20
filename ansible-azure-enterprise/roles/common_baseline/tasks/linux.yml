@@ -1,0 +1,39 @@
+---
+- name: Install common Linux packages
+  ansible.builtin.package:
+    name: "{{ baseline_packages_linux }}"
+    state: present
+
+- name: Ensure baseline Linux services are enabled
+  ansible.builtin.service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop: "{{ baseline_services_linux }}"
+
+- name: Ensure operations group exists
+  ansible.builtin.group:
+    name: "{{ linux_admin_group }}"
+    state: present
+
+- name: Ensure ansible service account exists
+  ansible.builtin.user:
+    name: "{{ linux_ansible_user }}"
+    group: "{{ linux_admin_group }}"
+    groups: "{{ linux_ansible_groups | join(',') }}"
+    append: true
+    shell: /bin/bash
+    create_home: true
+    password: "{{ linux_local_admin_password | default(omit) }}"
+    state: present
+
+- name: Configure Linux timezone
+  community.general.timezone:
+    name: "{{ common_timezone_linux }}"
+
+- name: Configure login banner for Linux
+  ansible.builtin.copy:
+    dest: /etc/issue
+    mode: '0644'
+    content: "{{ common_login_banner }}
+"

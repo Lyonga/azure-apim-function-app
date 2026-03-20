@@ -1,0 +1,13 @@
+---
+- name: Patch Windows systems
+  hosts: windows
+  gather_facts: true
+  serial: 3
+  tasks:
+    - name: Install available Windows updates
+      ansible.windows.win_updates:
+        category_names:
+          - CriticalUpdates
+          - SecurityUpdates
+          - UpdateRollups
+        reboot: true

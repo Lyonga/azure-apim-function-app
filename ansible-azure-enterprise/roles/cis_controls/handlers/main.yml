@@ -1,0 +1,4 @@
+---
+- name: cis controls applied
+  ansible.builtin.debug:
+    msg: CIS-inspired controls applied.

@@ -1,0 +1,18 @@
+---
+- name: Deploy rsyslog forwarding config
+  ansible.builtin.template:
+    src: rsyslog-forwarding.conf.j2
+    dest: /etc/rsyslog.d/60-fincorp-forwarding.conf
+    mode: '0644'
+  notify: restart rsyslog
+
+- name: Deploy Linux audit rules
+  ansible.builtin.copy:
+    dest: "{{ audit_linux_rules_file }}"
+    mode: '0640'
+    content: |
+      -w /etc/passwd -p wa -k identity
+      -w /etc/group -p wa -k identity
+      -w /etc/sudoers -p wa -k priv_esc
+      -w /var/log/lastlog -p wa -k logins
+  notify: restart auditd

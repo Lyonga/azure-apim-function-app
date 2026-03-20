@@ -1,0 +1,9 @@
+---
+linux_service_accounts:
+  - name: appsvc01
+    group: ops
+    shell: /sbin/nologin
+windows_service_accounts:
+  - name: appsvc01
+    groups:
+      - Administrators

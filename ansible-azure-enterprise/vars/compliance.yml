@@ -1,0 +1,9 @@
+---
+compliance_frameworks:
+  - CIS
+  - SOX
+  - PCI-DSS
+security_controls:
+  password_rotation_days: 90
+  privileged_access_review_days: 30
+  log_retention_days: 365

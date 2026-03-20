@@ -1,0 +1,4 @@
+---
+- name: sql client tools installed
+  ansible.builtin.debug:
+    msg: SQL client tools role completed.

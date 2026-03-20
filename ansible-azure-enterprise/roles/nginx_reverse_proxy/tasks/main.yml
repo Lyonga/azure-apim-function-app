@@ -1,0 +1,21 @@
+---
+- name: Install nginx
+  ansible.builtin.package:
+    name: nginx
+    state: present
+  when: nginx_reverse_proxy_enabled | bool
+
+- name: Deploy nginx reverse proxy config
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/conf.d/reverse-proxy.conf
+    mode: '0644'
+  when: nginx_reverse_proxy_enabled | bool
+  notify: restart nginx
+
+- name: Ensure nginx is enabled and started
+  ansible.builtin.service:
+    name: nginx
+    enabled: true
+    state: started
+  when: nginx_reverse_proxy_enabled | bool

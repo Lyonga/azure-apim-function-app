@@ -1,0 +1,80 @@
+---
+- name: Ensure NuGet provider is available for PowerShell module installation
+  ansible.windows.win_shell: |
+    Install-PackageProvider -Name NuGet -Force
+  changed_when: false
+  when:
+    - ad_foundation_enabled | bool
+    - ad_foundation_install_dsc_module | bool
+    - ansible_os_family == 'Windows'
+
+- name: Ensure ActiveDirectoryDsc PowerShell module is installed
+  community.windows.win_psmodule:
+    name: ActiveDirectoryDsc
+    state: present
+  when:
+    - ad_foundation_enabled | bool
+    - ad_foundation_install_dsc_module | bool
+    - ansible_os_family == 'Windows'
+
+- name: Build AD base distinguished name
+  ansible.builtin.set_fact:
+    ad_foundation_base_dn: >-
+      {{ ad_domain_name.split('.') | map('regex_replace', '^(.*)$', 'DC=\\1') | join(',') }}
+  when:
+    - ad_foundation_enabled | bool
+    - ansible_os_family == 'Windows'
+
+- name: Build AD groups OU distinguished name
+  ansible.builtin.set_fact:
+    ad_foundation_groups_path: >-
+      OU={{ ad_foundation_group_ou_name }},{{ ad_foundation_base_dn }}
+  when:
+    - ad_foundation_enabled | bool
+    - ansible_os_family == 'Windows'
+
+- name: Create default Active Directory organizational units
+  microsoft.ad.ou:
+    name: "{{ item.name }}"
+    path: "{{ ad_foundation_base_dn }}"
+    description: "{{ item.description | default(omit) }}"
+    state: present
+    domain_server: "{{ ad_foundation_domain_server | default(omit) }}"
+    domain_username: "{{ ad_join_user }}"
+    domain_password: "{{ ad_join_password }}"
+  loop: "{{ ad_foundation_ous }}"
+  when:
+    - ad_foundation_enabled | bool
+    - ad_foundation_create_default_ous | bool
+    - ansible_os_family == 'Windows'
+
+- name: Ensure default groups organizational unit exists
+  microsoft.ad.ou:
+    name: "{{ ad_foundation_group_ou_name }}"
+    path: "{{ ad_foundation_base_dn }}"
+    description: Security group container for delegated access groups
+    state: present
+    domain_server: "{{ ad_foundation_domain_server | default(omit) }}"
+    domain_username: "{{ ad_join_user }}"
+    domain_password: "{{ ad_join_password }}"
+  when:
+    - ad_foundation_enabled | bool
+    - ad_foundation_create_default_groups | bool
+    - ansible_os_family == 'Windows'
+
+- name: Create default Active Directory security groups
+  microsoft.ad.group:
+    name: "{{ item.name }}"
+    scope: "{{ ad_foundation_group_scope }}"
+    category: "{{ ad_foundation_group_category }}"
+    path: "{{ ad_foundation_groups_path }}"
+    description: "{{ item.description | default(omit) }}"
+    state: present
+    domain_server: "{{ ad_foundation_domain_server | default(omit) }}"
+    domain_username: "{{ ad_join_user }}"
+    domain_password: "{{ ad_join_password }}"
+  loop: "{{ ad_foundation_groups }}"
+  when:
+    - ad_foundation_enabled | bool
+    - ad_foundation_create_default_groups | bool
+    - ansible_os_family == 'Windows'

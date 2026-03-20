@@ -1,0 +1,21 @@
+---
+- name: Install IIS features
+  ansible.windows.win_feature:
+    name:
+      - Web-Server
+      - Web-WebServer
+      - Web-Common-Http
+      - Web-Default-Doc
+      - Web-Static-Content
+      - Web-Http-Logging
+      - Web-Request-Monitor
+    state: present
+    include_management_tools: true
+  when: iis_baseline_enabled | bool
+
+- name: Ensure IIS service is started
+  ansible.windows.win_service:
+    name: W3SVC
+    start_mode: auto
+    state: started
+  when: iis_baseline_enabled | bool

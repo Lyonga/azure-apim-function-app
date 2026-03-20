@@ -1,0 +1,4 @@
+---
+windows_baseline_packages:
+  - name: microsoft-edge
+windows_snmp_service_required: false

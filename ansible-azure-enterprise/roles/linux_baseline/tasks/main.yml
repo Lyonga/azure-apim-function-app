@@ -1,0 +1,22 @@
+---
+- name: Configure chrony
+  ansible.builtin.template:
+    src: chrony.conf.j2
+    dest: /etc/chrony.conf
+    mode: '0644'
+  notify: restart chrony
+
+- name: Ensure chrony service is enabled and running
+  ansible.builtin.service:
+    name: "{{ linux_chrony_service_name }}"
+    enabled: true
+    state: started
+
+- name: Configure MOTD
+  ansible.builtin.copy:
+    dest: "{{ linux_motd_path }}"
+    mode: '0644'
+    content: |
+      FINCORP managed Linux host
+      Environment: {{ environment_name }}
+      Owner: {{ organization_name }}

@@ -1,0 +1,57 @@
+---
+environment_name: prod
+organization_name: fincorp
+change_freeze: false
+
+linux_admin_group: ops
+linux_ansible_user: svc_ansible
+linux_ansible_groups:
+  - ops
+
+windows_admin_group: FINCORP\ServerAdmins
+windows_ansible_user: svc_ansible
+windows_local_admin_group: Administrators
+
+proxy_enabled: true
+proxy_url: http://proxy.prod.fincorp.local:8080
+no_proxy_list:
+  - localhost
+  - 127.0.0.1
+  - metadata.azure.internal
+  - management.azure.com
+
+ntp_servers:
+  - ntp1.fincorp.local
+  - ntp2.fincorp.local
+
+monitoring_enabled: true
+defender_enabled: true
+backup_agent_enabled: true
+vuln_scanner_enabled: true
+audit_logging_enabled: true
+service_accounts_enabled: true
+cis_controls_enabled: true
+
+ama_linux_package_url: https://example.com/packages/azuremonitoragent-latest.rpm
+ama_windows_package_url: https://example.com/packages/AzureMonitorAgent.msi
+ama_service_name_linux: azuremonitoragent
+ama_service_name_windows: HealthService
+
+corp_root_ca_linux_dest: /etc/pki/ca-trust/source/anchors/fincorp-root-ca.pem
+corp_intermediate_ca_linux_dest: /etc/pki/ca-trust/source/anchors/fincorp-intermediate-ca.pem
+corp_root_ca_windows_store: Root
+corp_intermediate_ca_windows_store: CA
+
+windows_connection_plugin: psrp
+windows_psrp_port: 5986
+validation_http_timeout: 10
+rolling_batch_linux: 10
+rolling_batch_windows: 5
+max_fail_pct: 10
+
+log_forward_target: logcollector.prod.fincorp.local
+log_forward_port: 514
+backup_agent_package_linux: fincorp-backup-agent
+backup_agent_msi_path: C:\Installers\backup\fincorp-backup-agent.msi
+vuln_scanner_package_linux: fincorp-vuln-agent
+vuln_scanner_msi_path: C:\Installers\scanner\fincorp-vuln-agent.msi

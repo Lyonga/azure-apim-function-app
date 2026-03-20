@@ -1,0 +1,17 @@
+---
+- name: Configure proxy for yum/dnf
+  ansible.builtin.lineinfile:
+    path: /etc/yum.conf
+    regexp: '^proxy='
+    line: "proxy={{ proxy_url }}"
+    create: true
+  when: ansible_os_family == 'RedHat'
+
+- name: Configure environment proxy
+  ansible.builtin.copy:
+    dest: /etc/profile.d/proxy.sh
+    mode: '0644'
+    content: |
+      export http_proxy={{ proxy_url }}
+      export https_proxy={{ proxy_url }}
+      export no_proxy={{ no_proxy_list | join(',') }}

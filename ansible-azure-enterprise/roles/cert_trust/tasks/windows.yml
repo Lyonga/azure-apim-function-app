@@ -1,0 +1,12 @@
+---
+- name: Import corporate root certificate to Windows
+  ansible.windows.win_certificate_store:
+    path: 'Cert:\LocalMachine\{{ corp_root_ca_windows_store }}'
+    state: present
+    file_path: '{{ role_path }}\files\fincorp-root-ca.cer'
+
+- name: Import corporate intermediate certificate to Windows
+  ansible.windows.win_certificate_store:
+    path: 'Cert:\LocalMachine\{{ corp_intermediate_ca_windows_store }}'
+    state: present
+    file_path: '{{ role_path }}\files\fincorp-intermediate-ca.cer'

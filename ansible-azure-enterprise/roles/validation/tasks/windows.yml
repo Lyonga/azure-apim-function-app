@@ -1,0 +1,23 @@
+---
+- name: Gather Windows service info for expected services
+  ansible.windows.win_service_info:
+    name: "{{ item }}"
+  loop: "{{ validation_expected_windows_services }}"
+  register: windows_service_results
+
+- name: Assert expected Windows services are running
+  ansible.builtin.assert:
+    that:
+      - item.exists
+      - item.services[0].state == 'running'
+    fail_msg: "{{ item.item }} is not running"
+  loop: "{{ windows_service_results.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  ignore_errors: true
+
+- name: Validate PSRP listener
+  ansible.windows.win_shell: Test-WSMan localhost
+  register: wsman_test
+  changed_when: false
+  failed_when: wsman_test.rc != 0

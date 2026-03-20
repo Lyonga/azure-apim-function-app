@@ -1,0 +1,45 @@
+---
+- name: Disable root SSH login
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PermitRootLogin'
+    line: "PermitRootLogin {{ 'no' if linux_disable_root_ssh else 'yes' }}"
+    backup: true
+  notify: restart sshd
+
+- name: Disable SSH password authentication
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PasswordAuthentication'
+    line: "PasswordAuthentication {{ 'yes' if linux_password_authentication else 'no' }}"
+    backup: true
+  notify: restart sshd
+
+- name: Enforce umask in /etc/profile
+  ansible.builtin.lineinfile:
+    path: /etc/profile
+    regexp: '^umask '
+    line: "umask {{ linux_umask }}"
+    backup: true
+
+- name: Ensure auditd is enabled
+  ansible.builtin.service:
+    name: auditd
+    enabled: true
+    state: started
+  when: linux_auditd_enabled
+
+- name: Restrict core dumps
+  ansible.builtin.copy:
+    dest: /etc/security/limits.d/99-security.conf
+    mode: '0644'
+    content: |
+      * hard core 0
+      * soft core 0
+
+- name: Set secure PATH in sudoers drop-in
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/99-secure-path
+    mode: '0440'
+    content: 'Defaults secure_path="{{ linux_secure_path }}"'
+    validate: /usr/sbin/visudo -cf %s

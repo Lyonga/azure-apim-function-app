@@ -1,0 +1,5 @@
+---
+- name: Install backup agent MSI
+  ansible.windows.win_package:
+    path: \\fileshare\software\backup\fincorp-backup-agent.msi
+    state: present

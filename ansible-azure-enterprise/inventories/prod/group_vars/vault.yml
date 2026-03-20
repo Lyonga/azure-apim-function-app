@@ -1,0 +1,10 @@
+---
+# Encrypt this file with ansible-vault before use.
+ad_domain_name: fincorp.local
+ad_join_user: FINCORP\svc-domainjoin
+ad_join_password: REPLACE_WITH_VAULT_SECRET
+linux_local_admin_password: REPLACE_WITH_VAULT_SECRET
+windows_local_admin_password: REPLACE_WITH_VAULT_SECRET
+service_account_passwords:
+  appsvc01: REPLACE_WITH_VAULT_SECRET
+  batchsvc01: REPLACE_WITH_VAULT_SECRET

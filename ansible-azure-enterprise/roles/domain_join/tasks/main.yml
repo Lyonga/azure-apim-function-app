@@ -1,0 +1,20 @@
+---
+- name: Join Windows machine to domain
+  microsoft.ad.membership:
+    dns_domain_name: "{{ ad_domain_name }}"
+    domain_admin_user: "{{ ad_join_user }}"
+    domain_admin_password: "{{ ad_join_password }}"
+    domain_ou_path: "{{ domain_join_ou_path }}"
+    state: domain
+  register: domain_join_result
+  when:
+    - domain_join_enabled
+    - ansible_os_family == 'Windows'
+
+- name: Reboot after domain join when required
+  ansible.windows.win_reboot:
+    reboot_timeout: 1800
+  when:
+    - domain_join_enabled
+    - ansible_os_family == 'Windows'
+    - domain_join_result.reboot_required | default(false)

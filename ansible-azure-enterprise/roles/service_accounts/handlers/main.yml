@@ -1,0 +1,4 @@
+---
+- name: service accounts updated
+  ansible.builtin.debug:
+    msg: Service account changes applied.

@@ -1,0 +1,12 @@
+---
+- name: Include Linux certificate trust tasks
+  ansible.builtin.include_tasks: linux.yml
+  when:
+    - cert_trust_manage_linux
+    - ansible_system == 'Linux'
+
+- name: Include Windows certificate trust tasks
+  ansible.builtin.include_tasks: windows.yml
+  when:
+    - cert_trust_manage_windows
+    - ansible_os_family == 'Windows'

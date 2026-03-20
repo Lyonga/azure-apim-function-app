@@ -1,0 +1,3 @@
+---
+linux_chrony_service_name: chronyd
+linux_motd_path: /etc/motd

@@ -1,0 +1,3 @@
+---
+sqlcmd_package_linux: mssql-tools18
+sqlcmd_msi_windows: C:\Installers\sql\MsSqlCmdLnUtils.msi

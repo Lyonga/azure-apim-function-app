@@ -1,0 +1,26 @@
+---
+- name: Install backup agent on Linux
+  ansible.builtin.package:
+    name: "{{ backup_agent_package_linux }}"
+    state: present
+  when:
+    - backup_agent_enabled
+    - ansible_system == 'Linux'
+
+- name: Configure backup agent on Linux
+  ansible.builtin.template:
+    src: backup-agent.conf.j2
+    dest: "{{ backup_agent_config_dir_linux }}/agent.conf"
+    mode: '0600'
+  when:
+    - backup_agent_enabled
+    - ansible_system == 'Linux'
+  notify: restart backup agent linux
+
+- name: Install backup agent on Windows
+  ansible.windows.win_package:
+    path: "{{ backup_agent_msi_path }}"
+    state: present
+  when:
+    - backup_agent_enabled
+    - ansible_os_family == 'Windows'

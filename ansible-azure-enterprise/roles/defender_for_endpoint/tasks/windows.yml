@@ -1,0 +1,10 @@
+---
+- name: Ensure Microsoft Defender service is running
+  ansible.windows.win_service:
+    name: "{{ defender_windows_service_name }}"
+    start_mode: auto
+    state: started
+
+- name: Enable real-time monitoring
+  ansible.windows.win_shell: Set-MpPreference -DisableRealtimeMonitoring $false
+  changed_when: false

@@ -1,0 +1,84 @@
+name: ansible-prod
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'ansible-azure-enterprise/**'
+  push:
+    branches: [ main ]
+    paths:
+      - 'ansible-azure-enterprise/**'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: ansible-prod
+  cancel-in-progress: false
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ansible-azure-enterprise
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install toolchain
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible ansible-lint yamllint
+          ansible-galaxy collection install -r collections/requirements.yml
+      - name: YAML lint
+        run: yamllint .
+      - name: Ansible lint
+        run: ansible-lint .
+
+  inventory-smoke:
+    needs: lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ansible-azure-enterprise
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Install Ansible deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible
+          ansible-galaxy collection install -r collections/requirements.yml
+      - name: Inventory graph
+        run: ansible-inventory -i inventories/prod/azure_rm.yml --graph
+
+  check:
+    needs: inventory-smoke
+    runs-on: ubuntu-latest
+    environment: prod-readonly
+    defaults:
+      run:
+        working-directory: ansible-azure-enterprise
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Install Ansible deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible
+          ansible-galaxy collection install -r collections/requirements.yml
+      - name: Dry run production
+        run: ansible-playbook -i inventories/prod/azure_rm.yml playbooks/site.yml --check --diff

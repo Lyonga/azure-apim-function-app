@@ -1,0 +1,4 @@
+---
+- name: validation completed
+  ansible.builtin.debug:
+    msg: Validation role completed.

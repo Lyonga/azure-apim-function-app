@@ -1,0 +1,8 @@
+---
+release_metadata_owner: sre-platform
+release_metadata_repo: ansible-azure-enterprise
+linux_java_required: false
+windows_dotnet_required: false
+sql_client_tools_enabled: false
+nginx_reverse_proxy_enabled: false
+iis_baseline_enabled: false

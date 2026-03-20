@@ -1,0 +1,6 @@
+---
+- name: Run validation role on all hosts
+  hosts: all
+  gather_facts: true
+  roles:
+    - validation
