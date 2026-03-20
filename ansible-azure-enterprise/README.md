@@ -2,381 +2,524 @@
 
 ## Purpose
 
-This repository applies the guest operating system baseline for Azure virtual
-machines after Terraform has created the infrastructure.
+This repository configures Azure virtual machines after Terraform creates them.
 
-It is the operating-system layer of the landing zone pattern:
+Simple way to think about it:
 
-- Terraform creates subscriptions, resource groups, networks, private
-  connectivity, and virtual machines.
-- Ansible connects to those virtual machines and applies the server baseline.
+- Terraform builds the server.
+- Ansible configures the server.
 
-For a new engineer, the simplest way to think about this repository is:
+This repository is the guest operating system baseline for Linux and Windows
+servers in an Azure landing zone.
 
-- Terraform decides where the server lives.
-- Ansible decides how the server is configured.
+## What This Repository Does
 
-## Why This Repository Exists
-
-Financial companies usually need more than a basic package install on Linux and
-Windows servers. They need a repeatable baseline that can be applied across
-many subscriptions, environments, and application teams.
-
-This repository exists to standardize that baseline:
+It applies a repeatable server baseline such as:
 
 - operating system hardening
-- corporate certificate trust
-- proxy configuration
-- logging and audit forwarding
-- Azure Monitor Agent deployment
+- certificate trust
+- proxy settings
+- logging and audit configuration
+- Azure Monitor Agent
 - endpoint protection
-- backup agent installation
-- vulnerability scanner installation
-- service account creation
+- backup agent
+- vulnerability scanner
+- service accounts
 - CIS-inspired controls
-- optional application runtimes and server features
+- optional runtimes such as Java, IIS, .NET, SQL tools, and `nginx`
 
-Without a repository like this, each application team tends to configure
-servers differently. That leads to audit gaps, inconsistent patching, and
-slower onboarding.
+## What This Repository Does Not Do
 
-## What This Repository Owns
+It does not create Azure infrastructure.
 
-This repository owns guest configuration only.
+It expects these to already exist:
 
-It does not create Azure infrastructure. It assumes the following already
-exist:
-
-- Azure virtual machines
-- network access from the Ansible control node to those virtual machines
-- Azure tags that allow the dynamic inventory to group hosts correctly
-- the private package paths, URLs, or repositories needed for enterprise
+- virtual machines
+- network access from the Ansible control node to the virtual machines
+- Azure tags used by the dynamic inventory
+- internal package locations, MSI paths, and secrets needed by enterprise
   agents
 
-## What It Reads From
+## Quick Start For New Engineers
 
-This repository reads its deployment model from four main places:
+If you are new to this tool, read in this order:
 
-- `inventories/<env>/azure_rm.yml`
-  - Azure dynamic inventory configuration
-  - determines which VMs are in scope and how they are grouped
-- `inventories/<env>/group_vars/all.yml`
-  - environment-wide operational settings such as proxy, monitoring, backup,
-    and scanner paths
-- `inventories/<env>/group_vars/linux.yml`
-  - Linux-specific baseline settings
-- `inventories/<env>/group_vars/windows.yml`
-  - Windows-specific baseline settings
+1. This README
+2. [ansible.cfg](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/ansible.cfg)
+3. One inventory file such as [inventories/dev/azure_rm.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/inventories/dev/azure_rm.yml)
+4. One environment variable set:
+   - [inventories/dev/group_vars/all.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/inventories/dev/group_vars/all.yml)
+   - [inventories/dev/group_vars/linux.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/inventories/dev/group_vars/linux.yml)
+   - [inventories/dev/group_vars/windows.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/inventories/dev/group_vars/windows.yml)
+5. One entry playbook:
+   - [playbooks/bootstrap-linux.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/playbooks/bootstrap-linux.yml)
+   - [playbooks/bootstrap-windows.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/playbooks/bootstrap-windows.yml)
+   - [playbooks/site.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/playbooks/site.yml)
+6. One role, starting with:
+   - [roles/common_baseline](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/roles/common_baseline)
+   - [roles/linux_baseline](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/roles/linux_baseline)
+   - [roles/windows_baseline](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/roles/windows_baseline)
 
-It also reads shared defaults from:
+## Repository Map
 
-- `vars/global.yml`
-- `vars/compliance.yml`
+This is the main folder layout and what each part is for.
 
-## How The Inventory Works
+### Root files
 
-The inventory uses the Azure dynamic inventory plugin in
-[azure_rm.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/inventories/dev/azure_rm.yml).
+- [ansible.cfg](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/ansible.cfg)
+  - default Ansible behavior for this repository
+  - points to the inventory, roles path, collections path, and vault identity files
+- [README.md](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/README.md)
+  - the operator guide for the repository
 
-This is important because the playbooks do not rely on a hand-maintained host
-file. Instead, they discover running VMs directly from Azure and group them by
-metadata.
+### `inventories/`
 
-The current grouping model uses:
+This holds the environment-specific inventory and variables.
 
-- `tags.environment`
-- `tags.application`
-- `tags.role`
-- `tags.osfamily`
-- `location`
+- `inventories/dev`
+- `inventories/qa`
+- `inventories/prod`
 
-Why this matters:
+Each environment folder contains:
 
-- platform teams can target a whole environment without updating static files
-- workload teams can target one application or server role
-- the same playbooks work across dev, qa, and prod
+- `azure_rm.yml`
+  - dynamic Azure inventory configuration
+- `group_vars/all.yml`
+  - shared values for all hosts in that environment
+- `group_vars/linux.yml`
+  - Linux-only values
+- `group_vars/windows.yml`
+  - Windows-only values
+- `group_vars/vault.yml`
+  - secrets, usually encrypted with Ansible Vault
 
-The inventory currently prefers private IP addresses first and falls back to a
-public IP only when needed. That is the right default for enterprise Azure
-estates.
+### `playbooks/`
 
-## How The Repository Is Wired
+This holds the main entry points teams run.
 
-This section explains what happens when a team runs a playbook.
+- `bootstrap-linux.yml`
+- `bootstrap-windows.yml`
+- `site.yml`
+- `patch-linux.yml`
+- `patch-windows.yml`
+- `validate.yml`
+- `emergency-lockdown.yml`
 
-The important idea is that the repository is layered:
+### `roles/`
 
-1. `ansible.cfg` sets the default behavior.
-2. the selected inventory discovers hosts from Azure
-3. inventory variables and shared variables define the deployment inputs
-4. the playbook chooses which roles run and in what order
-5. each role loads its own tasks, files, templates, defaults, and handlers
-6. validation confirms the expected end state
+This holds the reusable building blocks.
 
-### 1. `ansible.cfg` sets the default run behavior
+Each role usually owns one area, such as:
+
+- baseline
+- hardening
+- logging
+- monitoring
+- backup
+- vulnerability management
+- certificate trust
+- runtimes
+
+### `vars/`
+
+This holds shared values used by the playbooks.
+
+- [vars/global.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/vars/global.yml)
+  - shared toggles such as Java, IIS, SQL tools, and reverse proxy
+- [vars/compliance.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/vars/compliance.yml)
+  - compliance and security settings reused across environments
+
+### `collections/`
+
+This holds Ansible collection requirements.
+
+- [collections/requirements.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/collections/requirements.yml)
+
+### `scripts/`
+
+Utility scripts for inventory checks or release-related support.
+
+### `ci/`
+
+Pipeline helpers and CI-related assets.
+
+## How A Run Works
+
+This is the most important section for onboarding.
+
+When someone runs a playbook, the repository works in this order.
+
+### Step 1. `ansible.cfg` sets the defaults
 
 [ansible.cfg](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/ansible.cfg)
-defines the baseline runtime behavior for the whole repository.
+defines:
 
-This includes:
-
-- the default inventory path
-- the roles path
-- the Ansible collections path
+- which inventory is used by default
+- where Ansible should look for roles
+- where Ansible should look for collections
 - enabled inventory plugins
-- SSH settings
+- SSH and connection settings
 - fact caching
 - vault identity files
 
 Why this matters:
 
-- teams do not need to repeat the same command flags every time
-- inventory and vault usage stay consistent across environments
+- engineers do not need to remember the same flags every time
+- the repository behaves consistently across teams and environments
 
-### 2. The inventory discovers hosts from Azure
+### Step 2. The inventory discovers Azure VMs
 
-The inventory file under `inventories/<env>/azure_rm.yml` uses the Azure
-dynamic inventory plugin.
+The inventory file such as
+[inventories/dev/azure_rm.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/inventories/dev/azure_rm.yml)
+uses the Azure dynamic inventory plugin.
 
 That file decides:
 
 - which Azure resource groups are searched
-- how running VMs are grouped
-- which host variables are generated from Azure metadata
+- which running VMs are included
+- how hosts are grouped
+- which Azure metadata becomes host variables
 
-For example, the inventory creates groups from tags such as:
+The inventory groups hosts from tags and metadata, for example:
 
-- `environment`
-- `application`
-- `role`
-- `osfamily`
+- `tags.environment` -> `env_dev`, `env_prod`
+- `tags.application` -> `app_finserv-api`
+- `tags.role` -> `role_domaincontroller`, `role_web`, `role_app`
+- OS type -> `linux`, `windows`
 
-That is why a playbook can target groups like:
+That is why teams can target groups instead of writing host lists by hand.
 
-- `linux`
-- `windows`
-- `env_prod`
-- `role_domaincontroller`
+### Step 3. Variables are loaded
 
-without anyone maintaining a static host list.
+Variables come from several places.
 
-### 3. Variables are loaded from several layers
-
-The repository uses several variable sources, each with a clear purpose.
-
-#### Inventory `group_vars`
-
-These are the first files most teams should learn:
+Use them like this:
 
 - `inventories/<env>/group_vars/all.yml`
+  - environment-specific settings used by most roles
+  - example: proxy, package URLs, backup agent toggle, scanner toggle
 - `inventories/<env>/group_vars/linux.yml`
+  - Linux-specific baseline values
+  - example: package list, SSH settings, open port allowlist
 - `inventories/<env>/group_vars/windows.yml`
+  - Windows-specific baseline values
+  - example: features, Chocolatey packages, remoting settings
 - `inventories/<env>/group_vars/vault.yml`
-
-They answer questions like:
-
-- Which proxy should servers use?
-- Which package URL should the Azure Monitor Agent use?
-- Should backup or vulnerability scanner roles run?
-- What Linux packages make up the baseline?
-- What Windows features and Chocolatey packages should be installed?
-- What domain credentials should be used?
-
-#### Shared `vars_files`
-
-The playbooks also load shared variables from:
-
+  - secrets
+  - example: domain join credentials, local admin passwords
 - [vars/global.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/vars/global.yml)
+  - shared repository-wide toggles
+  - example: install Java, install IIS, install SQL tools
 - [vars/compliance.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/vars/compliance.yml)
+  - shared compliance settings
+- `roles/<role>/defaults/main.yml`
+  - safe fallback values for that role
 
-These files hold settings that are meant to be reused across all environments,
-such as:
+Simple rule for new engineers:
 
-- optional runtime toggles
-- compliance framework references
-- shared security settings
+- change `group_vars` when the value is environment-specific
+- change `vars/global.yml` when the value should apply everywhere
+- change role defaults only when you are changing the shared role behavior
+- put secrets in `vault.yml`, not in plain text files
 
-#### Role defaults
+Practical override path:
 
-Each role also has its own defaults in `roles/<role>/defaults/main.yml`.
+- use `roles/<role>/defaults/main.yml` for safe built-in fallback values
+- use `vars/global.yml` for shared repository settings
+- use `inventories/<env>/group_vars/*.yml` for environment overrides
+- use `-e` only for one-off run-time overrides
 
-Why this matters:
+Example one-off override:
 
-- a role can be reusable on its own
-- the role keeps sensible defaults close to its implementation
-- teams only override what they actually need
+```bash
+ansible-playbook -i inventories/dev/azure_rm.yml playbooks/bootstrap-linux.yml -e "linux_java_required=true"
+```
+
+Use `-e` carefully. It is best for short-lived testing, not as a long-term
+configuration source.
+
+### Step 4. The playbook chooses which roles run
+
+The playbook is the main orchestration layer.
+
+It decides:
+
+- which hosts are targeted
+- which shared variable files are loaded
+- which roles run
+- the order the roles run in
+- any rollout controls such as batching or change-freeze checks
+
+That order matters.
 
 Example:
 
-- [roles/common_baseline/defaults/main.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/roles/common_baseline/defaults/main.yml)
-- [roles/ad_foundation/defaults/main.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/roles/ad_foundation/defaults/main.yml)
-
-At a high level, think of the variable flow like this:
-
-- inventory files decide environment-specific values
-- shared `vars_files` decide repository-wide toggles and compliance settings
-- role defaults provide safe fallbacks
-
-### 4. The playbook chooses the execution order
-
-The playbook is the orchestration layer.
-
-Examples:
-
-- [playbooks/bootstrap-linux.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/playbooks/bootstrap-linux.yml)
-- [playbooks/bootstrap-windows.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/playbooks/bootstrap-windows.yml)
-- [playbooks/site.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/playbooks/site.yml)
-
-Each playbook decides:
-
-- which hosts are in scope
-- which shared variable files are loaded
-- which roles run
-- the order those roles run in
-- any rollout controls such as serial batches or change-freeze checks
-
-Why role order matters:
-
-- proxy and certificate trust should exist before some agent downloads
+- certificate trust and proxy settings should exist before some agent downloads
 - baseline and hardening should happen before final validation
-- production runs may need stricter sequencing than development runs
 
-### 5. Each role owns one functional area
+### Step 5. Roles run their own tasks
 
-The role is the main reusable unit in this repository.
+Each role is a reusable unit with one job.
 
-Each role usually contains:
+Most roles follow this structure:
 
 - `defaults/main.yml`
-  - role-specific default values
+  - role-specific fallback values
 - `tasks/main.yml`
-  - the entry point for the role
+  - role entry point
 - `tasks/linux.yml` or `tasks/windows.yml`
-  - operating-system-specific implementation
+  - OS-specific tasks
 - `handlers/main.yml`
-  - delayed restarts or update actions
+  - delayed actions such as restarts
 - `templates/`
-  - generated config files
+  - configuration files built from variables
 - `files/`
-  - static files such as certificates
+  - static files copied as-is
 
 Examples:
 
 - [roles/common_baseline/tasks/main.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/roles/common_baseline/tasks/main.yml)
-  - decides whether to include Linux or Windows tasks
+  - includes Linux or Windows tasks based on the host OS
 - [roles/common_baseline/tasks/linux.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/roles/common_baseline/tasks/linux.yml)
-  - installs Linux packages and configures timezone and banner
+  - installs Linux baseline packages and settings
 - [roles/common_baseline/tasks/windows.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/roles/common_baseline/tasks/windows.yml)
-  - installs Windows features and packages
+  - installs Windows baseline packages and settings
 - [roles/cert_trust/tasks/main.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/roles/cert_trust/tasks/main.yml)
-  - routes to OS-specific certificate tasks
+  - routes to Linux or Windows trust tasks
 - [roles/cert_trust/tasks/linux.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/roles/cert_trust/tasks/linux.yml)
-  - copies CA files and notifies the trust-update handler
+  - copies CA files and triggers a trust refresh
 
-This structure is what makes the repository understandable for new teams. Each
-role has one job, and the playbook composes those jobs into a full server
-baseline.
+### Step 6. Handlers and templates finish the job
 
-### 6. Handlers and templates finish the configuration
+Handlers run when a task reports a change and a follow-up action is needed.
 
-Handlers are used when a task changes something that requires a follow-up
-action, such as:
+Common examples:
 
-- restarting a service
-- refreshing certificate trust
-- reloading an agent
+- restart a service
+- reload an agent
+- refresh certificate trust
 
-Templates are used when a configuration file needs environment-aware content,
-for example:
+Templates are used when the output file depends on variables.
 
-- proxy settings
+Common examples:
+
+- proxy configuration
 - log forwarding configuration
-- backup-agent configuration
-- `nginx` configuration
+- backup agent configuration
+- reverse proxy configuration
 
-This is why many roles have a `templates/` directory and a `handlers/main.yml`
-file even when the main tasks are short.
+### Step 7. Validation confirms the end state
 
-### 7. Validation closes the loop
+The run usually ends with the `validation` role or
+[playbooks/validate.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/playbooks/validate.yml).
 
-The repository ends with the `validation` role or the dedicated
-[playbooks/validate.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/playbooks/validate.yml)
-playbook.
-
-That role checks that the expected services and settings exist after the run.
+This checks that important services and settings exist after the run.
 
 Why this matters:
 
-- teams get a clear pass/fail signal
-- it is easier to hand the tool to new engineers
-- it reduces the chance that a playbook “succeeds” but leaves the host only
-  partially configured
+- teams get a clear pass/fail result
+- it is easier for junior engineers to trust the result
+- it reduces the chance of partial configuration drift
 
-## Control Node Prerequisites
+## How The Main Playbooks Wire Everything Together
 
-Before a team can run these playbooks, the control node needs:
+This section explains the entry playbooks in plain language.
 
-- Python 3
-- Ansible
-- Azure CLI authenticated to the target subscription or tenant
-- Ansible collections from
-  [collections/requirements.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/collections/requirements.yml)
-- PSRP support for Windows remoting if the control node is Linux or macOS
-- access to the inventory-scoped Ansible Vault password files defined in
-  [ansible.cfg](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/ansible.cfg)
+### `playbooks/bootstrap-linux.yml`
 
-Recommended setup sequence:
+Purpose:
 
-```bash
-cd ansible-azure-enterprise
-python3 -m venv .venv
-source .venv/bin/activate
-pip install "ansible-core>=2.17,<2.19" pypsrp pywinrm
-ansible-galaxy collection install -r collections/requirements.yml
-az login
-```
+- build the full Linux baseline for any Linux hosts returned by the selected
+  inventory
 
-If your organization uses service principals in CI instead of interactive
-login, the Azure inventory can also work with the usual Azure environment
-variables because `auth_source` is set to `auto`.
+How it is wired:
 
-## What Is Deployable Today
+- targets the `linux` host group from the dynamic inventory
+- loads:
+  - `vars/global.yml`
+  - `vars/compliance.yml`
+- automatically also uses inventory `group_vars`
+- then runs roles in this order:
+  - `common_baseline`
+  - `cert_trust`
+  - `linux_baseline`
+  - `linux_hardening`
+  - `endpoint_proxy`
+  - `audit_logging`
+  - `azure_monitor_agent`
+  - `defender_for_endpoint`
+  - `backup_agent`
+  - `vulnerability_scanner`
+  - `service_accounts`
+  - `cis_controls`
+  - `java_runtime`
+  - `sql_client_tools`
+  - `nginx_reverse_proxy`
+  - `validation`
 
-The repository is already structured like a production baseline and is
-deployable once the environment-specific placeholders are replaced.
+Why this is useful:
 
-Deployable now:
+- it gives teams one standard Linux build playbook
+- most Linux baseline work happens here
 
-- Azure dynamic inventory for `dev`, `qa`, and `prod`
-- Linux baseline and hardening
-- Windows baseline and hardening
-- certificate trust deployment
-- audit logging configuration
-- proxy configuration
-- Azure Monitor Agent deployment
-- Microsoft Defender deployment checks
-- backup agent installation
-- vulnerability scanner installation
-- service account creation
-- CIS-inspired settings
-- Linux and Windows patching playbooks
-- validation and emergency lockdown playbooks
+### `playbooks/bootstrap-windows.yml`
 
-Not deployable without organization-specific values:
+Purpose:
 
-- agent package URLs under `group_vars/all.yml`
-- Windows MSI paths for backup, scanners, and optional runtimes
-- real internal package names for backup and vulnerability agents
-- production log forwarding targets
-- real corporate certificate files if the provided files are only placeholders
-- domain join credentials in inventory vault files
+- build the full Windows baseline for any Windows hosts returned by the
+  selected inventory
 
-## Typical Financial-Company Installables Covered Here
+How it is wired:
 
-This repository already covers most of the installables and controls that are
-normally expected on regulated Linux and Windows servers.
+- first play:
+  - targets the `windows` host group
+  - loads:
+    - `vars/global.yml`
+    - `vars/compliance.yml`
+  - automatically also uses inventory `group_vars`
+  - then runs:
+    - `common_baseline`
+    - `cert_trust`
+    - `domain_join`
+    - `windows_baseline`
+    - `windows_hardening`
+    - `endpoint_proxy`
+    - `audit_logging`
+    - `azure_monitor_agent`
+    - `defender_for_endpoint`
+    - `backup_agent`
+    - `vulnerability_scanner`
+    - `service_accounts`
+    - `cis_controls`
+    - `dotnet_runtime`
+    - `sql_client_tools`
+    - `iis_baseline`
+    - `validation`
+- second play:
+  - targets `windows:&role_domaincontroller`
+  - loads the same shared vars
+  - runs `ad_foundation`
 
-### Linux baseline
+Why there are two plays:
+
+- most Windows servers need the normal baseline
+- only domain controller hosts should manage AD OUs and groups
+
+### `playbooks/site.yml`
+
+Purpose:
+
+- production rollout with extra safety controls
+
+How it is wired:
+
+- Linux play:
+  - targets `linux:&env_prod`
+  - uses rolling batches
+  - checks `change_freeze`
+  - runs the Linux production role chain
+- Windows play:
+  - targets `windows:&env_prod`
+  - uses rolling batches
+  - checks `change_freeze`
+  - runs the Windows production role chain
+- AD play:
+  - targets `windows:&env_prod:&role_domaincontroller`
+  - checks `change_freeze`
+  - runs `ad_foundation`
+
+Why this exists:
+
+- production needs stricter rollout control than a simple bootstrap
+
+### `playbooks/patch-linux.yml`
+
+Purpose:
+
+- patch Linux systems and reboot when required
+
+### `playbooks/patch-windows.yml`
+
+Purpose:
+
+- install Windows updates and reboot when required
+
+### `playbooks/validate.yml`
+
+Purpose:
+
+- run only the validation role
+- useful after a rollout or during troubleshooting
+
+### `playbooks/emergency-lockdown.yml`
+
+Purpose:
+
+- apply emergency restrictions quickly
+- this should be reviewed carefully before use because it is intentionally
+  disruptive
+
+## Main Roles And What They Are For
+
+### Baseline roles
+
+- `common_baseline`
+  - shared setup used by both Linux and Windows
+- `linux_baseline`
+  - Linux operating system baseline
+- `windows_baseline`
+  - Windows operating system baseline
+- `linux_hardening`
+  - Linux hardening controls
+- `windows_hardening`
+  - Windows hardening controls
+
+### Security and operations roles
+
+- `cert_trust`
+  - installs corporate trust certificates
+- `endpoint_proxy`
+  - configures approved proxy settings
+- `audit_logging`
+  - configures audit and log forwarding
+- `azure_monitor_agent`
+  - installs Azure Monitor Agent
+- `defender_for_endpoint`
+  - enables or validates endpoint protection
+- `backup_agent`
+  - installs and configures the backup agent
+- `vulnerability_scanner`
+  - installs the vulnerability scanner agent
+- `service_accounts`
+  - creates approved service accounts
+- `cis_controls`
+  - applies CIS-inspired controls
+- `validation`
+  - checks the expected end state
+
+### Optional workload roles
+
+- `domain_join`
+  - joins Windows systems to Active Directory
+- `ad_foundation`
+  - creates baseline AD OUs and security groups on domain controller hosts
+- `java_runtime`
+  - installs Java on Linux
+- `dotnet_runtime`
+  - installs the .NET hosting bundle on Windows
+- `sql_client_tools`
+  - installs SQL tools on Linux or Windows
+- `nginx_reverse_proxy`
+  - enables the Linux reverse proxy pattern
+- `iis_baseline`
+  - installs IIS on Windows
+
+## Typical Installables For A Financial-Company Baseline
+
+This repository already covers most of the installables a financial company
+would normally expect at the OS layer.
+
+### Linux
 
 - `chrony` / `chronyd`
 - `rsyslog`
@@ -389,13 +532,11 @@ normally expected on regulated Linux and Windows servers.
 - `python3-pip`
 - `bind-utils`
 - `nmap-ncat`
-- login banner
-- strict SSH and sudo posture
 - optional Java runtime
 - optional SQL client tools
-- optional `nginx` reverse proxy
+- optional `nginx`
 
-### Windows baseline
+### Windows
 
 - `RSAT-AD-PowerShell`
 - `.NET Framework 4.5` core feature
@@ -404,353 +545,221 @@ normally expected on regulated Linux and Windows servers.
   - `notepadplusplus`
   - `sysinternals`
   - `microsoft-edge`
-- Windows Time service configuration
-- firewall baseline
-- PowerShell logging
-- optional domain join
-- optional IIS baseline
+- optional IIS
 - optional .NET hosting bundle
-- optional SQL client tools
+- optional SQL tools
+- optional AD foundation for domain controller hosts
 
-### Enterprise operational agents and controls
+### Enterprise agents and controls
 
 - Azure Monitor Agent
 - Microsoft Defender for Endpoint / Windows Defender checks
 - backup agent
 - vulnerability scanner
 - audit log forwarding
-- proxy configuration for controlled egress
-- service account scaffolding
-- CIS-inspired operating-system controls
-- validation checks after configuration
-- optional Active Directory OU and security group foundation on domain
-  controller hosts
-
-## Playbooks And When To Use Them
-
-### `playbooks/bootstrap-linux.yml`
-
-Use this to apply the full Linux server baseline to any Linux hosts returned by
-the selected inventory.
-
-It now applies:
-
-- common baseline
-- certificate trust
-- Linux baseline and hardening
 - proxy configuration
-- audit logging
-- Azure Monitor Agent
-- endpoint protection
-- backup agent
-- vulnerability scanner
 - service accounts
 - CIS-inspired controls
-- optional Java, SQL tools, and nginx
-- validation
 
-Why this exists:
+## Important Variables And Where To Change Them
 
-- it gives teams a standard first-pass server build
-- it makes non-production rollout easy without using the production-only site
-  playbook
+This is where engineers usually make changes.
 
-### `playbooks/bootstrap-windows.yml`
+### Environment-specific values
 
-Use this to apply the full Windows server baseline to any Windows hosts
-returned by the selected inventory.
+Change these in `inventories/<env>/group_vars/`:
 
-It now applies:
+- proxy settings
+- package URLs
+- MSI paths
+- logging endpoints
+- environment feature toggles
 
-- common baseline
-- certificate trust
-- optional domain join
-- Windows baseline and hardening
-- proxy configuration
-- audit logging
-- Azure Monitor Agent
-- endpoint protection
-- backup agent
-- vulnerability scanner
-- service accounts
-- CIS-inspired controls
-- optional .NET runtime, SQL tools, and IIS
-- validation
+Main file:
 
-If the inventory contains Windows hosts tagged with `role=domaincontroller`,
-the playbook also runs an additional Active Directory foundation play that can
-create baseline OUs and security groups through the `ad_foundation` role when
-that role is enabled.
+- [inventories/dev/group_vars/all.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/inventories/dev/group_vars/all.yml)
 
-### `playbooks/site.yml`
+### Linux-specific values
 
-Use this for the production baseline rollout.
+Change these in:
 
-This playbook is stricter than the bootstrap playbooks:
+- [inventories/dev/group_vars/linux.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/inventories/dev/group_vars/linux.yml)
 
-- targets `env_prod`
-- uses rolling batches
-- honors change freeze controls
+Typical changes:
 
-It is the right playbook when the team wants a controlled production rollout
-instead of a simple baseline application.
+- baseline package list
+- SSH settings
+- Linux security controls
 
-### `playbooks/patch-linux.yml`
+### Windows-specific values
 
-Use this for Linux package patching and reboot orchestration.
+Change these in:
 
-### `playbooks/patch-windows.yml`
+- [inventories/dev/group_vars/windows.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/inventories/dev/group_vars/windows.yml)
 
-Use this for Windows Update patching and reboot orchestration.
+Typical changes:
 
-### `playbooks/validate.yml`
+- Windows features
+- Chocolatey packages
+- remoting settings
 
-Use this when you only want post-configuration validation checks.
+### Shared repository toggles
 
-### `playbooks/emergency-lockdown.yml`
+Change these in:
 
-Use this when the environment needs a rapid restrictive response. Review it
-carefully before use because this kind of playbook is intentionally disruptive.
+- [vars/global.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/vars/global.yml)
 
-## Main Roles And Why They Matter
-
-### Baseline roles
-
-- `common_baseline`
-  - timezone, banner, shared account setup, and common platform defaults
-- `linux_baseline`
-  - Linux service and host baseline
-- `windows_baseline`
-  - Windows feature and package baseline
-- `linux_hardening`
-  - SSH posture, auditd, sudo path, core dump controls
-- `windows_hardening`
-  - firewall, logging, RDP posture, Windows feature reduction
-
-### Security and operations roles
-
-- `cert_trust`
-  - installs corporate trust roots so internal TLS endpoints work
-- `endpoint_proxy`
-  - configures system proxy settings required in tightly controlled egress
-    environments
-- `audit_logging`
-  - forwards logs and applies audit controls expected by security teams
-- `azure_monitor_agent`
-  - enables Azure monitoring integration
-- `defender_for_endpoint`
-  - ensures endpoint protection is present and running
-- `backup_agent`
-  - installs and configures backup software
-- `vulnerability_scanner`
-  - installs and starts the vulnerability management agent
-- `service_accounts`
-  - creates known service accounts in a standardized way
-- `cis_controls`
-  - applies a baseline set of CIS-inspired settings
-- `validation`
-  - confirms the expected services and connectivity settings exist after the
-    run
-
-### Optional application roles
-
-- `domain_join`
-  - joins Windows systems to Active Directory when enabled
-- `ad_foundation`
-  - installs supporting AD automation components and creates baseline Active
-    Directory OUs and security groups on domain controller hosts when enabled
-- `java_runtime`
-  - installs Java on Linux when required by the workload
-- `dotnet_runtime`
-  - installs the .NET hosting bundle when required
-- `sql_client_tools`
-  - installs SQL tooling on Linux or Windows when needed
-- `nginx_reverse_proxy`
-  - enables a Linux reverse proxy pattern when the workload needs it
-- `iis_baseline`
-  - enables the standard IIS feature set when the workload is Windows-hosted
-
-These optional roles are important because financial companies often want one
-shared baseline repository, but not every server should carry every runtime.
-The toggles let the team keep one pattern without turning every VM into the
-same build.
-
-## Important Inputs And Why They Matter
-
-### Inventory-wide inputs in `group_vars/all.yml`
-
-- `proxy_enabled`, `proxy_url`, `no_proxy_list`
-  - needed when servers must egress through an approved enterprise proxy
-- `monitoring_enabled`
-  - controls whether the Azure Monitor Agent path runs
-- `defender_enabled`
-  - controls endpoint protection tasks
-- `backup_agent_enabled`
-  - controls backup agent installation
-- `vuln_scanner_enabled`
-  - controls vulnerability agent installation
-- `audit_logging_enabled`
-  - controls audit and log-forwarding configuration
-- `service_accounts_enabled`
-  - controls managed service account scaffolding
-- `cis_controls_enabled`
-  - controls CIS-inspired hardening tasks
-- `ama_*`, `backup_agent_*`, `vuln_scanner_*`
-  - these are the values most teams need to replace first because they point to
-    actual installer locations
-
-### Shared defaults in `vars/global.yml`
+Typical changes:
 
 - `linux_java_required`
-  - enables Java runtime installation when the workload needs it
 - `windows_dotnet_required`
-  - enables .NET hosting bundle installation
 - `sql_client_tools_enabled`
-  - enables SQL tooling for DB support workloads
 - `nginx_reverse_proxy_enabled`
-  - enables the Linux reverse-proxy role
 - `iis_baseline_enabled`
-  - enables the IIS role for Windows web workloads
 
-Why these are in shared vars:
+Use this file when the setting should be shared across environments.
 
-- they describe workload shape, not just environment
-- teams can turn them on intentionally instead of having hidden package drift
+Do not put secrets here. This file is for non-secret shared settings.
 
-### Active Directory foundation defaults
+### Compliance settings
 
-The `ad_foundation` role keeps its toggle and object lists inside the role
-defaults so it can stay optional and easy to remove if a team does not want
-Ansible managing AD structure.
+Change these in:
 
-Important values:
+- [vars/compliance.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/vars/compliance.yml)
 
-- `ad_foundation_enabled`
-  - turns the role on
-- `ad_foundation_ous`
-  - defines the baseline OU structure
-- `ad_foundation_groups`
-  - defines the baseline security groups
+Use this file when the setting is part of the shared compliance model.
 
-This role only targets Windows hosts in the `role_domaincontroller` inventory
-group, so normal member servers do not try to manage directory structure.
+### Secrets
 
-## How To Run It
+Store secrets in:
 
-### 1. Test inventory resolution
+- `inventories/<env>/group_vars/vault.yml`
+
+Examples:
+
+- domain join credentials
+- local admin passwords
+- service account passwords
+
+This is the right place for secret overrides by environment.
+
+### Role-level defaults
+
+Change role defaults only when you are intentionally changing the shared role
+behavior for everyone.
+
+Examples:
+
+- [roles/common_baseline/defaults/main.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/roles/common_baseline/defaults/main.yml)
+- [roles/ad_foundation/defaults/main.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/roles/ad_foundation/defaults/main.yml)
+
+## What Is Ready Today
+
+Ready once environment values are populated:
+
+- Azure dynamic inventory
+- Linux and Windows baseline playbooks
+- production rollout playbook
+- patch playbooks
+- validation playbook
+- enterprise roles for monitoring, protection, backup, scanning, and hardening
+
+## What Must Be Replaced Before Production
+
+- internal package URLs
+- Windows MSI paths
+- real backup and scanner package names if placeholders differ
+- real proxy values
+- real log forwarding destinations
+- real corporate certificate files if the current files are placeholders
+- real encrypted secrets in `vault.yml`
+
+## Control Node Prerequisites
+
+Before a team can run the playbooks, the control node needs:
+
+- Python 3
+- Ansible
+- Azure CLI login or service principal authentication
+- Ansible collections from
+  [collections/requirements.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/collections/requirements.yml)
+- PSRP support for Windows if the control node is Linux or macOS
+- access to the vault password files referenced in
+  [ansible.cfg](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/ansible.cfg)
+
+Recommended setup:
+
+```bash
+cd ansible-azure-enterprise
+python3 -m venv .venv
+source .venv/bin/activate
+pip install "ansible-core>=2.17,<2.19" pypsrp pywinrm
+ansible-galaxy collection install -r collections/requirements.yml
+az login
+```
+
+## Common Run Commands
+
+Check the inventory:
 
 ```bash
 ansible-inventory -i inventories/dev/azure_rm.yml --graph
 ```
 
-### 2. Preview which hosts are in scope
+List hosts:
 
 ```bash
 ansible -i inventories/dev/azure_rm.yml all --list-hosts
 ```
 
-### 3. Run Linux bootstrap
+Run Linux bootstrap:
 
 ```bash
 ansible-playbook -i inventories/dev/azure_rm.yml playbooks/bootstrap-linux.yml
 ```
 
-### 4. Run Windows bootstrap
+Run Windows bootstrap:
 
 ```bash
 ansible-playbook -i inventories/dev/azure_rm.yml playbooks/bootstrap-windows.yml
 ```
 
-### 5. Run production rollout with safety controls
+Run production rollout:
 
 ```bash
 ansible-playbook -i inventories/prod/azure_rm.yml playbooks/site.yml --check --diff
 ansible-playbook -i inventories/prod/azure_rm.yml playbooks/site.yml
 ```
 
-### 6. Patch servers
+Run patching:
 
 ```bash
 ansible-playbook -i inventories/prod/azure_rm.yml playbooks/patch-linux.yml
 ansible-playbook -i inventories/prod/azure_rm.yml playbooks/patch-windows.yml
 ```
 
-### 7. Re-run validation only
+Run validation only:
 
 ```bash
 ansible-playbook -i inventories/prod/azure_rm.yml playbooks/validate.yml
 ```
 
-Useful targeting examples:
+Target one application or host group:
 
 ```bash
 ansible-playbook -i inventories/dev/azure_rm.yml playbooks/bootstrap-linux.yml --limit app_finserv-api
-ansible-playbook -i inventories/dev/azure_rm.yml playbooks/bootstrap-windows.yml --limit region_eastus2
-ansible-playbook -i inventories/prod/azure_rm.yml playbooks/site.yml --limit public_facing
+ansible-playbook -i inventories/dev/azure_rm.yml playbooks/bootstrap-windows.yml --limit role_domaincontroller
 ```
 
-## Where Teams Usually Need To Customize First
+## Recommended Onboarding Path
 
-When onboarding this pattern into a real organization, these are usually the
-first files that need review:
-
-- [inventories/dev/group_vars/all.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/inventories/dev/group_vars/all.yml)
-  - replace package URLs, MSI paths, proxy values, and logging endpoints
-- [inventories/dev/group_vars/linux.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/inventories/dev/group_vars/linux.yml)
-  - confirm the Linux package baseline and security posture match the enterprise
-- [inventories/dev/group_vars/windows.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/inventories/dev/group_vars/windows.yml)
-  - confirm Windows features, Chocolatey packages, and remoting settings
-- [vars/global.yml](/Users/charleslyonga/Documents/azure-cloud/azure-apim-function-app/ansible-azure-enterprise/vars/global.yml)
-  - decide which optional runtime roles should be enabled for which workload
-- `roles/cert_trust/files/`
-  - replace certificate placeholders with the real corporate root and
-    intermediate CAs
-
-## Recommended Team Onboarding Order
-
-For a new engineer, the fastest way to understand this repository is:
+For a junior engineer, the easiest way to understand the implementation is:
 
 1. Read this README.
-2. Read the environment inventory under `inventories/<env>/azure_rm.yml`.
-3. Read `group_vars/all.yml` for that environment.
-4. Read the bootstrap playbook for the operating system you care about.
-5. Read the roles in this order:
-   - `common_baseline`
-   - OS baseline
-   - OS hardening
-   - logging / monitoring / defender / backup / scanner
-   - validation
+2. Read `ansible.cfg`.
+3. Read one environment inventory.
+4. Read the related `group_vars`.
+5. Read one entry playbook.
+6. Read the first few roles in that playbook in order.
 
-This sequence explains the pattern from discovery, to inputs, to execution, to
-role implementation.
-
-## Guidance From The External References Reviewed
-
-The external references the team provided were useful mainly for confirming the
-right operating model:
-
-- role-based Ansible composition is easier to scale than large task files
-- Azure dynamic inventory is the right fit for multi-environment VM estates
-- Terraform and Ansible should stay separate, with Terraform creating the VM
-  and Ansible applying the guest baseline
-- the most useful reusable baseline content is security, observability,
-  hardening, and operational agents rather than app-specific deployment logic
-
-That is already the direction of this repository, so the changes here focus on
-making the bootstrap path and documentation match that intent.
-
-## Final Recommendation
-
-This repository is a strong starting point for an enterprise server baseline.
-
-The best way to use it across the organization is:
-
-- keep the core baseline roles shared
-- keep optional runtimes behind clear toggles
-- keep environment-specific agent URLs and secrets in inventory vars and vault
-  files
-- let Terraform decide which VMs exist
-- let Ansible decide how those VMs are configured
-
-That separation is easier for new engineers to understand and easier for a
-platform team to scale across more landing zones.
+That reading order matches how the repository actually runs.
